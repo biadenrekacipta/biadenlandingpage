@@ -203,18 +203,19 @@ Aturan untuk agent:
     - [x] 3. Teks langkah berikutnya diambil dari tahap 2 `alur.json`
     - [x] 4. `npx impeccable detect src/pages/terima-kasih.astro` tanpa temuan
   - Catatan: `npm run check` 0 errors; `npm run build && npm run test:dist` = 31 pass 0 fail (3 tes baru: noindex + sitemap tanpa terima-kasih, langkah berikutnya = judul dan deskripsi tahap nomor 2 alur.json + link ke `/` + satu h1, SLA kondisional). `grep -r terima-kasih dist/sitemap*` = 0 baris; `dist/terima-kasih/index.html` memuat `<meta name="robots" content="noindex">`. SLA: `slaBalasanHariKerja: 3` → dist memuat "dalam 3 hari kerja", null → tidak ada "hari kerja"; site.json dikembalikan (git status src/content bersih). `npx impeccable detect src/pages/terima-kasih.astro dist/terima-kasih/index.html` exit 0 setelah eyebrow "Pengajuan terkirim" dibuang (memicu hero-eyebrow-chip). File: `src/pages/terima-kasih.astro`. Isi tahap 2 masih placeholder [verify] (GR-11). Pengecualian sitemap sudah dari t8.
-- [ ] t18 · Halaman /kebijakan-privasi/ (S)
+- [x] t18 · Halaman /kebijakan-privasi/ (S)
   - Butuh: t2, t7
   - Kerjakan: Buat `src/pages/kebijakan-privasi.astro` dengan satu `h1`: data yang dikumpulkan form (nama, email, institusi, link naskah, pesan), tujuan, pihak ketiga (Web3Forms, Umami tanpa cookie dan tanpa PII), retensi 12 bulan (BR-16), kontak dari `site.json`, tanggal pembaruan. Link dari footer dan dari checkbox form. Title ≤60 dan description ≤155 lewat Head. Teks yang butuh tinjauan hukum UU PDP ditandai `[verify]` (GR-11).
   - Keputusan terbuka:
     - Siapa nama pengendali data dan dasar hukum pengolahan di kebijakan privasi? (usul: Nama penerbit dari `site.json` sebagai pengendali, dasar persetujuan (checkbox); semua ditandai `[verify]` sampai ditinjau pihak hukum.)
   - Cek: `npm run build && npm run test:dist`; `grep 'kebijakan-privasi' dist/sitemap-0.xml`; `npx impeccable detect src/pages/kebijakan-privasi.astro`.
   - Selesai jika:
-    - [ ] 1. Halaman punya satu `h1`, title ≤60, description ≤155
-    - [ ] 2. Teks menyebut retensi 12 bulan dan pihak ketiga Web3Forms dan Umami
-    - [ ] 3. Footer dan form menaut ke `/kebijakan-privasi/`
-    - [ ] 4. Halaman masuk sitemap
-    - [ ] 5. `npx impeccable detect src/pages/kebijakan-privasi.astro` tanpa temuan
+    - [x] 1. Halaman punya satu `h1`, title ≤60, description ≤155
+    - [x] 2. Teks menyebut retensi 12 bulan dan pihak ketiga Web3Forms dan Umami
+    - [x] 3. Footer dan form menaut ke `/kebijakan-privasi/`
+    - [x] 4. Halaman masuk sitemap
+    - [x] 5. `npx impeccable detect src/pages/kebijakan-privasi.astro` tanpa temuan
+  - Catatan: `npm run check` 0 errors; `npm run build && npm run test:dist` = 34 pass 0 fail; `npm run test:content` lulus. Tes baru: satu h1 + title ≤60 + description ≤155; teks memuat "12 bulan", Web3Forms, Umami dan [verify]; footer dan form menaut ke `/kebijakan-privasi/`; sitemap memuat halaman (juga `grep kebijakan-privasi dist/sitemap-0.xml` → `<loc>…/kebijakan-privasi/</loc>`). Mutasi (dikembalikan): href footer diganti `/x/` → test:dist gagal, lalu 34 pass. `npx impeccable detect src/pages/kebijakan-privasi.astro src/components/Footer.astro dist/kebijakan-privasi/index.html dist/index.html` exit 0. Keputusan terbuka (usulan dipakai): pengendali data = `site.nama` (Biadenrekacipta), dasar pengolahan = persetujuan lewat checkbox; keduanya, periode retensi, lokasi pemrosesan pihak ketiga, dan hak subjek data UU PDP ditandai `[verify]` di halaman sampai ditinjau pihak hukum. Kontak dan tanggal dari site.json. File: `src/pages/kebijakan-privasi.astro`, `src/components/Footer.astro`. BreadcrumbList JSON-LD (FR-32) bukan lingkup t18.
 - [ ] t19 · Gate Fase 1: cek exit criteria (S)
   - Butuh: t6, t12, t17, t18
   - Kerjakan: Periksa setiap exit criteria Fase 1 di Rencana Rilis. Jalankan tes, lengkapi yang belum terpenuhi, lalu catat hasilnya. Task fase berikutnya menunggu gate ini.

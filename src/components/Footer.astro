@@ -7,7 +7,10 @@ const site = (await getEntry('site', 'site'))!.data;
 ---
 <footer class="foot">
   <div class="wrap foot-in">
-    <p class="lbl">© {site.nama}</p>
+    <div class="foot-id">
+      <p class="lbl">© {site.nama}</p>
+      <a class="foot-link lbl" href="/kebijakan-privasi/">Kebijakan privasi</a>
+    </div>
     <Kontak />
     <p class="lbl">Terakhir diperbarui: <time datetime={site.lastUpdated}>{formatTanggal(site.lastUpdated)}</time></p>
   </div>
@@ -16,6 +19,8 @@ const site = (await getEntry('site', 'site'))!.data;
   .foot { border-top: 1px solid var(--rule); margin-top: var(--space-5); padding-block: var(--space-3); }
   .foot-in { display: grid; gap: var(--space-2); }
   .foot p { margin: 0; }
+  .foot-id { display: grid; gap: var(--space-1); justify-items: start; }
+  .foot-link { display: inline-flex; align-items: center; min-height: 44px; }
   @media (min-width: 768px) {
     .foot-in { grid-template-columns: 1fr auto 1fr; align-items: center; }
     .foot-in p:last-child { text-align: end; }

@@ -1,0 +1,76 @@
+---
+import { getEntry } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Kontak from '../components/Kontak.astro';
+import { formatTanggal } from '../lib/tanggal';
+// BR-16, SEC-6: isi kebijakan privasi. Keputusan t18: pengendali data = nama penerbit dari site.json, dasar pengolahan = persetujuan (checkbox).
+// Semua klausul hukum (UU PDP) ditandai [verify] sampai ditinjau pihak hukum (GR-11).
+const site = (await getEntry('site', 'site'))!.data;
+---
+<Base
+  title="Kebijakan Privasi"
+  description={`Data apa yang dikumpulkan form pengajuan ${site.nama}, tujuannya, pihak ketiga yang terlibat, dan berapa lama data disimpan.`}
+>
+  <article class="wrap kp">
+    <h1>Kebijakan Privasi</h1>
+    <p class="kp-lead">Halaman ini menjelaskan data yang Anda kirim lewat form di situs {site.nama} dan cara kami memakainya. <span class="verify">[verify] Seluruh teks ini perlu ditinjau pihak hukum terhadap UU No. 27 Tahun 2022 tentang Pelindungan Data Pribadi sebelum rilis.</span></p>
+
+    <section aria-labelledby="kp-pengendali">
+      <h2 id="kp-pengendali">Pengendali data</h2>
+      <p>{site.nama} bertindak sebagai pengendali data untuk pengajuan yang masuk lewat situs ini. <span class="verify">[verify] Nama badan hukum pengendali data.</span></p>
+      <p>Dasar pengolahan: persetujuan Anda lewat kotak centang di form. <span class="verify">[verify] Dasar hukum pengolahan.</span></p>
+    </section>
+
+    <section aria-labelledby="kp-data">
+      <h2 id="kp-data">Data yang dikumpulkan</h2>
+      <p>Form pengajuan mengumpulkan:</p>
+      <ul>
+        <li>nama dan email;</li>
+        <li>peran dan jenis pengajuan;</li>
+        <li>institusi (opsional);</li>
+        <li>judul atau topik dan pesan;</li>
+        <li>tautan naskah (opsional). Situs ini tidak membuka atau menampilkan tautan itu; staf membukanya dari email.</li>
+      </ul>
+      <p>Situs ini tidak menerima unggahan berkas.</p>
+    </section>
+
+    <section aria-labelledby="kp-tujuan">
+      <h2 id="kp-tujuan">Tujuan</h2>
+      <p>Data dipakai untuk menilai pengajuan naskah, membalas pertanyaan Anda, dan menghubungi Anda soal proses penerbitan. Data tidak dipakai untuk iklan.</p>
+    </section>
+
+    <section aria-labelledby="kp-pihak">
+      <h2 id="kp-pihak">Pihak ketiga</h2>
+      <ul>
+        <li><strong>Web3Forms</strong> menerima kiriman form dan meneruskannya ke email staf kami. Data Anda melewati layanan ini.</li>
+        <li><strong>Umami</strong> menghitung kunjungan halaman tanpa cookie dan tanpa data pribadi (nama, email, atau isi form tidak dikirim ke Umami).</li>
+      </ul>
+      <p><span class="verify">[verify] Lokasi pemrosesan data dan syarat transfer lintas negara oleh pihak ketiga.</span></p>
+    </section>
+
+    <section aria-labelledby="kp-retensi">
+      <h2 id="kp-retensi">Retensi</h2>
+      <p>Data pengajuan di email staf dan dasbor Web3Forms disimpan 12 bulan, lalu dihapus. <span class="verify">[verify] Periode retensi.</span></p>
+    </section>
+
+    <section aria-labelledby="kp-hak">
+      <h2 id="kp-hak">Hak Anda dan kontak</h2>
+      <p>Untuk meminta akses, koreksi, atau penghapusan data Anda, hubungi kami:</p>
+      <Kontak />
+      <p><span class="verify">[verify] Hak subjek data dan tata cara permintaan sesuai UU PDP.</span></p>
+    </section>
+
+    <p class="lbl kp-tgl">Terakhir diperbarui: <time datetime={site.lastUpdated}>{formatTanggal(site.lastUpdated)}</time></p>
+  </article>
+</Base>
+<style>
+  .kp { padding-block: 48px; display: grid; gap: var(--space-3); max-width: 760px; }
+  .kp p, .kp ul { margin: 0; }
+  h1 { margin: 0; font-weight: 400; font-size: clamp(40px, 7vw, 88px); line-height: 1; letter-spacing: -0.02em; }
+  .kp-lead { font-size: 19px; }
+  section { border-top: 1px solid var(--rule); padding-top: var(--space-2); display: grid; gap: var(--space-1); }
+  h2 { margin: 0; font-weight: 400; font-size: 26px; line-height: 1.15; }
+  ul { padding-left: 1.2em; display: grid; gap: 6px; }
+  .verify { background: var(--sheet); border: 1px dashed var(--muted); padding: 0 4px; }
+  @media (min-width: 768px) { .kp { padding-block: 96px; } }
+</style>

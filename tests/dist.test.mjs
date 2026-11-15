@@ -304,3 +304,24 @@ test('BR-12: SLA di /terima-kasih/ hanya bila terisi', () => {
   if (sla) assert.ok(html.includes(`dalam ${sla} hari kerja`));
   else assert.ok(!html.includes('hari kerja'));
 });
+
+// t18 / SEC-6 / BR-16: kebijakan privasi.
+const kpHtml = () => readFileSync(join(dist, 'kebijakan-privasi', 'index.html'), 'utf8');
+test('t18: kebijakan privasi punya satu h1, title <=60, description <=155', () => {
+  const html = kpHtml();
+  assert.equal((html.match(/<h1\b/g) || []).length, 1);
+  assert.ok(/<title>([^<]+)<\/title>/.exec(html)[1].length <= 60);
+  assert.ok(/<meta name="description" content="([^"]+)"/.exec(html)[1].length <= 155);
+});
+test('t18: teks menyebut retensi 12 bulan, Web3Forms, dan Umami; klausul hukum bertanda [verify]', () => {
+  const html = kpHtml();
+  assert.ok(html.includes('12 bulan') && html.includes('Web3Forms') && html.includes('Umami'));
+  assert.ok(html.includes('[verify]'));
+});
+test('t18: footer dan form menaut ke /kebijakan-privasi/, halaman masuk sitemap', () => {
+  const idx = readFileSync(join(dist, 'index.html'), 'utf8');
+  assert.match(/<footer[\s\S]*<\/footer>/.exec(idx)[0], /href="\/kebijakan-privasi\/"/);
+  assert.match(formHtml(), /href="\/kebijakan-privasi\/"/);
+  const sm = readdirSync(dist).filter((n) => /^sitemap-\d+\.xml$/.test(n)).map((n) => readFileSync(join(dist, n), 'utf8')).join('');
+  assert.ok(sm.includes('/kebijakan-privasi/'));
+});

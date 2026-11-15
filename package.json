@@ -7,7 +7,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "check": "astro check",
-    "test:content": "node --test tests/content.test.mjs",
+    "test:content": "node --experimental-strip-types --no-warnings --test tests/content.test.mjs",
     "test:dist": "node --test tests/dist.test.mjs",
     "lhci": "lhci autorun"
   },

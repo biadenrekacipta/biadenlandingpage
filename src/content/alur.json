@@ -1,0 +1,5 @@
+[
+  { "id": "1", "nomor": 1, "judul": "[verify] Tahap 1", "deskripsi": "[verify]", "penanggungJawab": "[verify]", "durasi": "[verify]", "biaya": "[verify]", "output": "[verify]" },
+  { "id": "2", "nomor": 2, "judul": "[verify] Tahap 2", "deskripsi": "[verify]", "penanggungJawab": "[verify]", "durasi": "[verify]", "biaya": "[verify]", "output": "[verify]" },
+  { "id": "3", "nomor": 3, "judul": "[verify] Tahap 3", "deskripsi": "[verify]", "penanggungJawab": "[verify]", "durasi": "[verify]", "biaya": "[verify]", "output": "[verify]" }
+]

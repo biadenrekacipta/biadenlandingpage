@@ -1,0 +1,5 @@
+[
+  { "id": "bitechnos", "nama": "Bitechnos", "issn": null, "bidang": "[verify]", "ringkasan": "[verify]", "sampul": "[verify]", "sampulAlt": "[verify]", "link": "[verify]", "status": "terbit", "unggulan": false, "urutan": 1 },
+  { "id": "bedsocart", "nama": "Bedsocart", "issn": null, "bidang": "[verify]", "ringkasan": "[verify]", "sampul": "[verify]", "sampulAlt": "[verify]", "link": "[verify]", "status": "terbit", "unggulan": false, "urutan": 2 },
+  { "id": "beconex", "nama": "Beconex", "issn": null, "bidang": "[verify]", "ringkasan": "[verify]", "sampul": "[verify]", "sampulAlt": "[verify]", "link": "[verify]", "status": "terbit", "unggulan": false, "urutan": 3 }
+]

@@ -35,3 +35,22 @@ Salin `.env.example` ke `.env`: `SITE_URL`, `PUBLIC_WEB3FORMS_KEY`, `PUBLIC_UMAM
 ## Catatan audit dependensi
 
 `npm audit --omit=dev --audit-level=high` bersih (hanya 1 temuan moderate di `astro`, perbaikan tersedia lewat update minor). Temuan high ada di rantai `@lhci/cli` (alat CI, bukan bagian situs). Tahap audit di CI memakai `--omit=dev`; tinjau kembali di t5.
+
+## Skill desain (t2)
+
+Perintah yang dijalankan di root proyek (2026-11-15):
+
+```bash
+npx ui-ux-pro-max-cli init --ai claude
+npx skills add Leonxlnx/taste-skill -a claude-code -y
+npx impeccable install --providers=claude --scope=project
+```
+
+Hasil: `.claude/skills/ui-ux-pro-max`, `.claude/skills/design-taste-frontend` (isi taste-skill), `.claude/skills/impeccable` plus agent di `.claude/agents`, dan hook di `.claude/settings.local.json` (menjalankan binary lokal `impeccable hook` setelah Edit/Write dan saat Stop). Cek manual: `npx impeccable detect src`.
+
+Referensi desain ada di `docs/design-reference.md` (GR-12). UI wajib mengikuti file itu.
+
+## Tes
+
+- `npm run test:content` memvalidasi JSON (BR-1/2/3/4/10/11, tanggal). Memakai `--experimental-strip-types` agar bisa mengimpor `src/lib/*.ts` di Node 22.12. `STRICT=1` menggagalkan tes bila masih ada `[verify]` (wajib hijau sebelum rilis produksi, GR-11).
+- `npm run test:dist` memeriksa `dist/` (jalankan `npm run build` dulu). `DIST_DIR=<folder>` untuk fixture.

@@ -1,12 +1,20 @@
 ---
+import { getCollection } from 'astro:content';
+// Memaksa semua koleksi divalidasi saat build (t3). Dipakai ulang oleh komponen di task berikutnya.
+const [site] = await getCollection('site');
+await Promise.all(
+  ['legalitas', 'alur', 'syarat', 'buku', 'jurnal', 'testimoni', 'mitra', 'faq'].map((c) =>
+    getCollection(c as 'faq'),
+  ),
+);
 ---
 <html lang="id">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Biadenrekacipta</title>
+    <title>{site?.data.nama}</title>
   </head>
   <body>
-    <h1>Biadenrekacipta</h1>
+    <h1>{site?.data.nama}</h1>
   </body>
 </html>

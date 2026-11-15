@@ -109,6 +109,8 @@ const waLink = /^\d{8,15}$/.test(waDigits) ? `https://wa.me/${waDigits}` : null;
   .setuju { display: flex; gap: var(--space-1); align-items: flex-start; }
   .setuju input { width: 24px; height: 24px; margin: 8px 4px 0 0; flex: none; accent-color: var(--cobalt); }
   .setuju label { font-family: var(--serif); font-weight: 400; font-size: 17px; padding-block: 8px; }
+  /* Tautan inline di dalam label: area sentuh 44px tanpa mengubah tinggi baris (EC-1.9). */
+  .setuju label a { display: inline-block; padding-block: 14px; margin-block: -14px; }
   /* Honeypot disembunyikan dari pengguna dan pembaca layar; bot tetap mengisinya (SEC-1). */
   .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
   .btn {

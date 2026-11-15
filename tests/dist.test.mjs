@@ -559,3 +559,35 @@ test('GEO-5 / FR-32: nama, email, lokasi, sameAs di hero/profil, footer, dan JSO
     assert.ok(html.slice(0, html.indexOf('<footer')).includes(escHtml(v)), `konten (profil/kontak) tanpa "${v}"`);
   }
 });
+
+// FR-31 / GEO-1 / GEO-2 / GEO-7 / SEO-3: llms.txt dan robots.txt AI. Kondisional terhadap data yang sedang dibangun.
+test('FR-31 / GEO-5: llms.txt memuat nama, email, lokasi dari site.json dan tanpa legalitas terverifikasi:false', () => {
+  const s = loadJson('site')[0];
+  const t = readFileSync(join(dist, 'llms.txt'), 'utf8');
+  for (const v of [s.nama, s.email, s.lokasi]) assert.ok(t.includes(v), `llms.txt tanpa "${v}"`);
+  assert.ok(t.startsWith(`# ${s.nama}`));
+  for (const l of loadJson('legalitas')) {
+    if (l.terverifikasi !== true || l.nilai.trim() === '') {
+      assert.ok(!t.includes(`${l.label}: ${l.nilai}`), `llms.txt memuat legalitas tak terverifikasi: ${l.label}`);
+    }
+  }
+  assert.ok(!t.includes('## Legalitas terverifikasi') || loadJson('legalitas').some((l) => l.terverifikasi === true && l.nilai.trim() !== ''));
+  // Link anchor hanya ke section yang ada di HTML (BUG-4).
+  const ids = new Set([...readFileSync(join(dist, 'index.html'), 'utf8').matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]));
+  for (const m of t.matchAll(/\]\([^)]*#([a-z]+)\)/g)) assert.ok(ids.has(m[1]), `llms.txt: #${m[1]} tanpa id`);
+});
+
+test('GEO-2: robots.txt mengizinkan kelima crawler AI dan memuat Sitemap', () => {
+  const r = readFileSync(join(dist, 'robots.txt'), 'utf8');
+  for (const b of ['GPTBot', 'OAI-SearchBot', 'ClaudeBot', 'PerplexityBot', 'Google-Extended']) {
+    assert.match(r, new RegExp(`User-agent: ${b}\nAllow: /\n`), b);
+  }
+  assert.match(r, /^Sitemap: https?:\/\/\S+\/sitemap-index\.xml$/m);
+});
+
+test('SEO-3: sitemap memuat `/` dan /kebijakan-privasi/', () => {
+  const sm = walk(dist, '.xml').filter((p) => /sitemap-\d/.test(p)).map((p) => readFileSync(p, 'utf8')).join('');
+  const locs = [...sm.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname);
+  assert.ok(locs.includes('/'));
+  assert.ok(locs.includes('/kebijakan-privasi/'));
+});

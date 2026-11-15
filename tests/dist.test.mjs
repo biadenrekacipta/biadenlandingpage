@@ -591,3 +591,35 @@ test('SEO-3: sitemap memuat `/` dan /kebijakan-privasi/', () => {
   assert.ok(locs.includes('/'));
   assert.ok(locs.includes('/kebijakan-privasi/'));
 });
+
+// FR-33 / SEC-4 / SEC-6 / GR-15: Umami. Kondisional terhadap PUBLIC_UMAMI_ID saat build.
+const UMAMI_ID = process.env.PUBLIC_UMAMI_ID;
+test('FR-33: script Umami hanya ada bila PUBLIC_UMAMI_ID terisi, tepat satu, defer, tanpa inline', () => {
+  for (const [p, html] of htmlFiles()) {
+    const tags = [...html.matchAll(/<script\b[^>]*\bsrc="https:\/\/cloud\.umami\.is\/[^"]*"[^>]*>/g)].map((m) => m[0]);
+    if (!UMAMI_ID) {
+      assert.equal(tags.length, 0, `${p}: script Umami muncul tanpa PUBLIC_UMAMI_ID`);
+      assert.ok(!html.includes('data-website-id'), p);
+    } else {
+      assert.equal(tags.length, 1, p);
+      assert.match(tags[0], /\bdefer\b/);
+      assert.ok(tags[0].includes(`data-website-id="${UMAMI_ID}"`), p);
+    }
+  }
+});
+
+test('FR-33 / SEC-6: CTA Ajukan Naskah punya data-umami-event="cta-ajukan"; event tidak membawa data pengguna', () => {
+  const html = readFileSync(join(dist, 'index.html'), 'utf8');
+  assert.match(html, /<a\b[^>]*href="#ajukan"[^>]*data-umami-event="cta-ajukan"[^>]*>\s*Ajukan Naskah/);
+  for (const [p, h] of htmlFiles()) {
+    assert.ok(!/data-umami-event-/.test(h), `${p}: data-umami-event-* bisa membawa PII`);
+    for (const m of h.matchAll(/data-umami-event="([^"]+)"/g)) assert.equal(m[1], 'cta-ajukan', p);
+  }
+});
+
+test('FR-33 / TC-6: CSP script-src hanya self dan cloud.umami.is, connect-src ke api-gateway.umami.dev, tanpa unsafe-inline', () => {
+  const csp = /Content-Security-Policy:\s*(.*)/.exec(readFileSync(join(dist, '_headers'), 'utf8'))[1];
+  assert.equal(/script-src ([^;]+)/.exec(csp)[1].trim(), "'self' https://cloud.umami.is");
+  assert.ok(/connect-src ([^;]+)/.exec(csp)[1].split(/\s+/).includes('https://api-gateway.umami.dev'));
+  assert.ok(!csp.includes('unsafe-inline') && !csp.includes('unsafe-eval'));
+});

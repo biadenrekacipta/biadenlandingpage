@@ -8,11 +8,14 @@ interface Props {
   noindex?: boolean;
 }
 const { title, description, noindex = false } = Astro.props;
+// FR-33, GR-15: satu-satunya script pihak ketiga. Umami Cloud tanpa cookie; hanya dirender bila PUBLIC_UMAMI_ID terisi.
+const umamiId = import.meta.env.PUBLIC_UMAMI_ID;
 ---
 <!doctype html>
 <html lang="id">
   <head>
     <Head title={title} description={description} noindex={noindex} />
+    {umamiId && <script defer src="https://cloud.umami.is/script.js" data-website-id={umamiId}></script>}
   </head>
   <body>
     <a class="skip lbl" href="#main">Lewati ke konten</a>

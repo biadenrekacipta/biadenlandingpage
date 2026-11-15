@@ -475,3 +475,45 @@ test('FR-29 / BUG-6: jumlah Question = jumlah <details> FAQ, teks identik dengan
   for (const q of qs) assert.equal(q.acceptedAnswer['@type'], 'Answer');
   for (const m of indexHtml().matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)) assert.ok(!m[1].includes('<'));
 });
+
+// FR-30 / SEO-1 / SEO-2 / SEO-4 / BUG-7 / BUG-8: Open Graph, Twitter card, gambar OG, title unik.
+const meta = (html, attr, key) => html.match(new RegExp(`<meta ${attr}="${key}" content="([^"]*)"`))?.[1];
+const SITE = (process.env.SITE_URL || '').replace(/\/$/, '');
+
+test('FR-30: tiap halaman punya og:title/description/image dan twitter:card', () => {
+  for (const [p, html] of htmlFiles()) {
+    for (const k of ['og:title', 'og:description', 'og:image', 'og:url']) assert.ok(meta(html, 'property', k), `${p}: ${k}`);
+    assert.equal(meta(html, 'name', 'twitter:card'), 'summary_large_image', p);
+    assert.ok(meta(html, 'name', 'twitter:image'), `${p}: twitter:image`);
+    assert.equal(meta(html, 'property', 'og:title'), html.match(/<title>([^<]*)<\/title>/)[1], `${p}: og:title ≠ title`);
+  }
+});
+
+test('SEO-4 / BUG-7: og:image menunjuk og.png 1200x630 di host SITE_URL', () => {
+  const png = join(dist, 'og.png');
+  assert.ok(existsSync(png), 'dist/og.png tidak ada');
+  const b = readFileSync(png);
+  assert.equal(b.readUInt32BE(16), 1200);
+  assert.equal(b.readUInt32BE(20), 630);
+  assert.ok(statSync(png).size <= 1024 * 1024, 'og.png > 1 MB');
+  for (const [p, html] of htmlFiles()) {
+    const img = meta(html, 'property', 'og:image');
+    assert.equal(new URL(img).pathname, '/og.png', p);
+    assert.equal(img, meta(html, 'name', 'twitter:image'), p);
+    if (SITE) assert.equal(new URL(img).host, new URL(SITE).host, `${p}: host og:image`);
+    const url = meta(html, 'property', 'og:url');
+    assert.equal(url, html.match(/<link rel="canonical" href="([^"]+)"/)[1], `${p}: og:url ≠ canonical`);
+  }
+});
+
+test('SEO-1 / BUG-8: title unik ≤60 dan description ≤155 di semua halaman', () => {
+  const titles = new Map();
+  for (const [p, html] of htmlFiles()) {
+    const t = html.match(/<title>([^<]*)<\/title>/)?.[1];
+    const d = meta(html, 'name', 'description');
+    assert.ok(t && t.length <= 60, `${p}: title`);
+    assert.ok(d && d.length <= 155, `${p}: description`);
+    assert.ok(!titles.has(t), `title kembar: ${t} (${titles.get(t)} dan ${p})`);
+    titles.set(t, p);
+  }
+});

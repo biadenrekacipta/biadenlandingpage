@@ -144,16 +144,17 @@ Aturan untuk agent:
 
 ## Fase 1 · Alur & Syarat Penerbitan
   - Catatan: npm run check 0 errors; npm run build, test:dist 17 pass, test:content 11 pass. Blok `.legal` ada di Profil.astro, memakai `legalitasTampil` (BR-1). Seed (semua terverifikasi:false): blok tidak dirender, build mencetak "[BR-6] Profil: tidak ada legalitas terverifikasi", build lulus, grep `class="legal"` dist = 0. Uji data (dikembalikan): 3 item (verified+bukti, tidak terverifikasi, nilai kosong) → dist memuat NILAI-A-UJI sekali, NILAI-B-RAHASIA 0 kali, link bukti `<a href="https://contoh.id/bukti" target="_blank" rel="noopener noreferrer">`, test:dist 17 pass. Mutasi: cek `terverifikasi` dihapus dari visible.ts → test:dist 16 pass 1 fail (dikembalikan). Tes baru: content `SEC-9 fixture legalitas`, dist `FR-6 / SEC-9`. Sempat menemukan bug di tes sendiri (nilai kosong cocok dengan string apa pun), sudah diperbaiki. README bagian "Konten legalitas dan testimoni" mencatat reviewer kedua (BR-9). impeccable detect Profil.astro + dist/index.html exit 0. legalitas.json dan visible.ts identik dengan HEAD.
-- [ ] t13 · Section alur terbit dengan durasi dan biaya (M)
+- [x] t13 · Section alur terbit dengan durasi dan biaya (M)
   - Butuh: t2, t10
   - Kerjakan: Buat `src/components/Alur.astro` (`id="alur"`) memakai `<ol>` dari `alur.json` urut `nomor`: judul, deskripsi, penanggung jawab, durasi, biaya, output (FR-9, BR-11). Buka dengan kalimat jawaban otomatis 'Terbit lewat N tahap; durasi dan biaya tiap tahap tertulis di bawah' (GEO-3). Skema zod sudah memblok durasi/biaya kosong; tambah tes di `content.test.mjs` bahwa 100% tahap punya keduanya. Tanggal tidak dipakai di section ini. Daftarkan di `sections.ts`.
   - Cek: `npm run build && npm run test:content && npm run test:dist`; kosongkan `biaya` satu tahap dan `npm run build` harus gagal; jalankan `npx impeccable detect src/components/Alur.astro`.
   - Selesai jika:
-    - [ ] 1. Jumlah `<li>` tahap di `dist/` sama dengan jumlah item `alur.json`
-    - [ ] 2. Setiap tahap menampilkan durasi dan biaya
-    - [ ] 3. Kalimat pembuka menyebut jumlah tahap yang benar
-    - [ ] 4. Build gagal bila satu tahap tanpa `biaya`
-    - [ ] 5. `npx impeccable detect src/components/Alur.astro` tanpa temuan
+    - [x] 1. Jumlah `<li>` tahap di `dist/` sama dengan jumlah item `alur.json`
+    - [x] 2. Setiap tahap menampilkan durasi dan biaya
+    - [x] 3. Kalimat pembuka menyebut jumlah tahap yang benar
+    - [x] 4. Build gagal bila satu tahap tanpa `biaya`
+    - [x] 5. `npx impeccable detect src/components/Alur.astro` tanpa temuan
+  - Catatan: npm run check 0 errors; npm run build lulus; test:dist 18 pass, test:content 12 pass. Alur.astro (`<ol class="alur-item">` per tahap urut nomor: judul, deskripsi, penanggung jawab, durasi, biaya, output; tanpa tanggal). Kalimat pembuka dari panjang daftar: dist memuat "Terbit lewat 3 tahap; durasi dan biaya tiap tahap tertulis di bawah." Uji (dikembalikan, alur.json identik HEAD): biaya tahap 1 dikosongkan → build gagal "alur → 1: biaya wajib (BR-11)"; tambah tahap ke-4 → dist 4 `alur-item`, kalimat "Terbit lewat 4 tahap", test:dist 18 pass. Tes baru: dist `FR-9 / GEO-3` (jumlah li = alur.json, dt Durasi dan Biaya berisi di tiap li, kalimat pembuka), content `kelengkapan transparansi` (100% tahap punya durasi dan biaya). Section alur sudah terdaftar di sections.ts sejak t10; index.astro memakai <Alur />. `npx impeccable detect src/components/Alur.astro dist/index.html` exit 0 tanpa temuan. Isi tahap masih placeholder [verify] (GR-11).
 - [ ] t14 · Syarat naskah, CTA penutup, SLA balasan (S)
   - Butuh: t2, t13
   - Kerjakan: Di `Alur.astro` atau komponen `Syarat.astro` tambah dua grup syarat (buku, jurnal) dari `syarat.json` sebagai `<h3>` + `<ul>` tanpa JS (FR-10). Akhiri section dengan CTA ke `#ajukan` (FR-11). Tampilkan 'dibalas dalam N hari kerja' hanya bila `slaBalasanHariKerja` terisi; bila tidak, teks tidak dirender sama sekali (FR-12, BR-12). Tambah tes dist dengan dua kondisi SLA (terisi, null).

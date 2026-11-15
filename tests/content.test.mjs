@@ -86,3 +86,9 @@ test('SEC-9: fixture legalitas tidak terverifikasi atau bernilai kosong tidak ta
   ];
   assert.deepEqual(legalitasTampil(fx).map((i) => i.label), ['A']);
 });
+
+test('BR-11 / kelengkapan transparansi: 100% tahap alur punya durasi dan biaya', () => {
+  assert.ok(alur.length > 0);
+  const lengkap = alur.filter((a) => a.durasi.trim() !== '' && a.biaya.trim() !== '');
+  assert.equal(lengkap.length / alur.length, 1);
+});

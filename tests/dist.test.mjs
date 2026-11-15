@@ -160,3 +160,17 @@ test('FR-6 / SEC-9: dist hanya memuat legalitas terverifikasi, link bukti pakai 
   }
   for (const m of blok.matchAll(/<a [^>]*>/g)) assert.match(m[0], /rel="noopener noreferrer"/);
 });
+
+test('FR-9 / GEO-3: alur punya satu <li> per tahap, durasi dan biaya tiap tahap, kalimat pembuka benar', () => {
+  const html = readFileSync(join(dist, 'index.html'), 'utf8');
+  const sec = /<section id="alur"[\s\S]*?<\/section>/.exec(html)?.[0];
+  assert.ok(sec, 'section alur tidak ada');
+  const alur = loadJson('alur');
+  const items = sec.match(/<li class="alur-item"[\s\S]*?<\/li>/g) || [];
+  assert.equal(items.length, alur.length);
+  for (const li of items) {
+    assert.match(li, /<dt[^>]*>Durasi<\/dt><dd[^>]*>[^<]+<\/dd>/);
+    assert.match(li, /<dt[^>]*>Biaya<\/dt><dd[^>]*>[^<]+<\/dd>/);
+  }
+  assert.ok(sec.includes(`Terbit lewat ${alur.length} tahap; durasi dan biaya tiap tahap tertulis di bawah.`));
+});

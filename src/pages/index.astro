@@ -3,6 +3,7 @@ import { getEntry, getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import Hero from '../components/Hero.astro';
 import Profil from '../components/Profil.astro';
+import Alur from '../components/Alur.astro';
 import Nav from '../components/Nav.astro';
 import { sectionTampil } from '../lib/sections';
 import { katalogTampil } from '../lib/visible';
@@ -30,7 +31,7 @@ const description = `Penerbit buku dan jurnal akademik ${site.nama}. Lihat profi
   <div class="wrap">
     <Hero />
     {tampil('profil') && <Profil />}
-    {tampil('alur') && <section id="alur"><h2>Alur Terbit</h2></section>}
+    {tampil('alur') && <Alur />}
     {tampil('katalog') && <section id="katalog"><h2>Katalog</h2></section>}
     {tampil('ajukan') && <section id="ajukan"><h2>Ajukan Naskah</h2></section>}
   </div>

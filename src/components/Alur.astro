@@ -1,0 +1,42 @@
+---
+import { getCollection } from 'astro:content';
+// FR-9, BR-11, GEO-3: tahap urut nomor, kalimat pembuka otomatis. Tanpa tanggal di section ini.
+const tahap = (await getCollection('alur')).map((e) => e.data).sort((a, b) => a.nomor - b.nomor);
+---
+<section id="alur" aria-labelledby="alur-title">
+  <p class="lbl">Alur Terbit</p>
+  <h2 id="alur-title">Dari naskah sampai terbit</h2>
+  <p class="alur-lead">Terbit lewat {tahap.length} tahap; durasi dan biaya tiap tahap tertulis di bawah.</p>
+  <ol class="alur-list">
+    {tahap.map((t) => (
+      <li class="alur-item">
+        <span class="alur-no lbl" aria-hidden="true">{String(t.nomor).padStart(2, '0')}</span>
+        <h3>{t.judul}</h3>
+        <p class="alur-desc">{t.deskripsi}</p>
+        <dl class="alur-meta">
+          <div><dt class="lbl">Penanggung jawab</dt><dd>{t.penanggungJawab}</dd></div>
+          <div><dt class="lbl">Durasi</dt><dd>{t.durasi}</dd></div>
+          <div><dt class="lbl">Biaya</dt><dd>{t.biaya}</dd></div>
+          <div><dt class="lbl">Output</dt><dd>{t.output}</dd></div>
+        </dl>
+      </li>
+    ))}
+  </ol>
+</section>
+<style>
+  section { padding: 48px 0; border-top: 1px solid var(--rule); display: grid; gap: var(--space-2); }
+  p { margin: 0; }
+  h2 { margin: 0; font-weight: 400; font-size: clamp(28px, 4.4vw, 56px); line-height: 1.05; letter-spacing: -0.02em; }
+  .alur-lead { max-width: 60ch; font-size: 19px; line-height: 1.5; }
+  .alur-list { list-style: none; margin: var(--space-1) 0 0; padding: 0; display: grid; gap: var(--space-3); }
+  .alur-item { border-top: 1px solid var(--rule); padding-top: var(--space-2); display: grid; gap: var(--space-1); }
+  .alur-item h3 { margin: 0; font-weight: 400; font-size: 26px; line-height: 1.15; }
+  .alur-desc { max-width: 60ch; }
+  .alur-meta { margin: var(--space-1) 0 0; display: grid; gap: var(--space-1); }
+  .alur-meta div { display: grid; gap: 4px; }
+  .alur-meta dd { margin: 0; font-size: 17px; }
+  @media (min-width: 768px) {
+    section { padding: 96px 0; }
+    .alur-meta { grid-template-columns: repeat(4, 1fr); gap: var(--space-2); }
+  }
+</style>

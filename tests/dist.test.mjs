@@ -284,3 +284,23 @@ test('SEC-6: form-action CSP hanya Web3Forms dan action form sama dengan itu', (
   assert.equal(/form-action ([^;]+)/.exec(csp)[1].trim(), 'https://api.web3forms.com');
   for (const [p, html] of htmlFiles()) for (const m of html.matchAll(/<form\b[^>]*\baction="([^"]+)"/g)) assert.equal(m[1], 'https://api.web3forms.com/submit', p);
 });
+
+// t17 / FR-15 / FR-16 / BR-12: halaman terima kasih.
+const tkHtml = () => readFileSync(join(dist, 'terima-kasih', 'index.html'), 'utf8');
+test('FR-16: /terima-kasih/ noindex dan tidak ada di sitemap', () => {
+  assert.match(tkHtml(), /<meta name="robots" content="noindex"\s*\/?>/);
+  for (const f of readdirSync(dist).filter((n) => /^sitemap.*\.xml$/.test(n))) assert.ok(!readFileSync(join(dist, f), 'utf8').includes('terima-kasih'), f);
+});
+test('FR-15: langkah berikutnya diambil dari tahap 2 alur.json, link kembali ke beranda', () => {
+  const t2 = loadJson('alur').find((t) => t.nomor === 2);
+  const html = tkHtml();
+  assert.ok(html.includes(t2.judul) && html.includes(t2.deskripsi));
+  assert.match(html, /<a [^>]*href="\/"/);
+  assert.equal((html.match(/<h1\b/g) || []).length, 1);
+});
+test('BR-12: SLA di /terima-kasih/ hanya bila terisi', () => {
+  const sla = loadJson('site')[0].slaBalasanHariKerja;
+  const html = tkHtml();
+  if (sla) assert.ok(html.includes(`dalam ${sla} hari kerja`));
+  else assert.ok(!html.includes('hari kerja'));
+});

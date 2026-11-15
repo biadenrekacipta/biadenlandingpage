@@ -193,15 +193,16 @@ Aturan untuk agent:
     - [ ] 4. Submission uji di staging mendarat di `/terima-kasih/` staging dan email masuk ke staf
     - [x] 5. CSP `form-action` hanya `https://api.web3forms.com`
   - Catatan: [!] SEBAGIAN. Terbukti statis: poin 1, 2, 5. `npm run check` 0 errors; `npm run build && npm run test:dist` = 28 pass 0 fail (4 tes baru: hidden field FR-14 + action/method, redirect = SITE_URL, honeypot botcheck aria-hidden/tabindex/autocomplete, CSP form-action hanya Web3Forms dan semua action form sama). Lingkungan lain: `SITE_URL=https://staging.example.test npm run build` → `name="redirect" value="https://staging.example.test/terima-kasih/"` dan test:dist 28 pass. Mutasi (dikembalikan): `https://evil.example` ditambah ke `form-action` di `_headers` → 26 pass 2 fail. Keputusan terbuka: key preview terpisah dari key produksi (usulan), ditulis di README. BELUM TERBUKTI: poin 3 (submit dengan `botcheck` terisi ditolak layanan) dan poin 4 (submission uji di staging mendarat di `/terima-kasih/` staging dan email masuk ke staf). Keduanya butuh submission nyata ke api.web3forms.com dengan access key, deploy staging, dan akses email staf; sengaja tidak dilakukan (key = identitas pihak ketiga, dilarang diisi agent). Sisa untuk manusia: isi `PUBLIC_WEB3FORMS_KEY` (preview dan produksi), deploy preview, kirim satu submission uji dan satu dengan botcheck terisi, cek email staf dan URL akhir. Markup form (hidden field, honeypot) ada di `src/components/FormAjukan.astro` sejak t15; `access_key` dirender kosong tanpa env.
-- [ ] t17 · Halaman /terima-kasih/ noindex (S)
+- [x] t17 · Halaman /terima-kasih/ noindex (S)
   - Butuh: t2, t14, t16
   - Kerjakan: Buat `src/pages/terima-kasih.astro`: meta `robots noindex`, tidak masuk sitemap (FR-16). Isi menjelaskan langkah berikutnya dari tahap nomor 2 di `alur.json` dan SLA bila `slaBalasanHariKerja` terisi (FR-15, BR-12). Tambah link kembali ke beranda. Tes dist: meta noindex ada dan URL tidak ada di sitemap.
   - Cek: `npm run build && npm run test:dist`; `grep -r 'terima-kasih' dist/sitemap*` kosong; `npx impeccable detect src/pages/terima-kasih.astro`.
   - Selesai jika:
-    - [ ] 1. `dist/terima-kasih/index.html` memuat `<meta name="robots" content="noindex">`
-    - [ ] 2. `/terima-kasih/` tidak ada di `sitemap-*.xml`
-    - [ ] 3. Teks langkah berikutnya diambil dari tahap 2 `alur.json`
-    - [ ] 4. `npx impeccable detect src/pages/terima-kasih.astro` tanpa temuan
+    - [x] 1. `dist/terima-kasih/index.html` memuat `<meta name="robots" content="noindex">`
+    - [x] 2. `/terima-kasih/` tidak ada di `sitemap-*.xml`
+    - [x] 3. Teks langkah berikutnya diambil dari tahap 2 `alur.json`
+    - [x] 4. `npx impeccable detect src/pages/terima-kasih.astro` tanpa temuan
+  - Catatan: `npm run check` 0 errors; `npm run build && npm run test:dist` = 31 pass 0 fail (3 tes baru: noindex + sitemap tanpa terima-kasih, langkah berikutnya = judul dan deskripsi tahap nomor 2 alur.json + link ke `/` + satu h1, SLA kondisional). `grep -r terima-kasih dist/sitemap*` = 0 baris; `dist/terima-kasih/index.html` memuat `<meta name="robots" content="noindex">`. SLA: `slaBalasanHariKerja: 3` → dist memuat "dalam 3 hari kerja", null → tidak ada "hari kerja"; site.json dikembalikan (git status src/content bersih). `npx impeccable detect src/pages/terima-kasih.astro dist/terima-kasih/index.html` exit 0 setelah eyebrow "Pengajuan terkirim" dibuang (memicu hero-eyebrow-chip). File: `src/pages/terima-kasih.astro`. Isi tahap 2 masih placeholder [verify] (GR-11). Pengecualian sitemap sudah dari t8.
 - [ ] t18 · Halaman /kebijakan-privasi/ (S)
   - Butuh: t2, t7
   - Kerjakan: Buat `src/pages/kebijakan-privasi.astro` dengan satu `h1`: data yang dikumpulkan form (nama, email, institusi, link naskah, pesan), tujuan, pihak ketiga (Web3Forms, Umami tanpa cookie dan tanpa PII), retensi 12 bulan (BR-16), kontak dari `site.json`, tanggal pembaruan. Link dari footer dan dari checkbox form. Title ≤60 dan description ≤155 lewat Head. Teks yang butuh tinjauan hukum UU PDP ditandai `[verify]` (GR-11).

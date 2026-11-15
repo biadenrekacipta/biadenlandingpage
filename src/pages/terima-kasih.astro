@@ -1,0 +1,48 @@
+---
+import { getEntry, getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+// FR-15, FR-16, BR-12: langkah berikutnya dari tahap nomor 2 alur.json; SLA hanya bila terisi. noindex, di luar sitemap.
+const site = (await getEntry('site', 'site'))!.data;
+const tahap2 = (await getCollection('alur')).map((e) => e.data).find((t) => t.nomor === 2);
+const sla = site.slaBalasanHariKerja;
+---
+<Base
+  title="Terima kasih, pengajuan Anda diterima"
+  description="Pengajuan Anda sudah terkirim. Lihat langkah berikutnya dalam proses penerbitan."
+  noindex
+>
+  <div class="wrap tk">
+    <h1>Terima kasih</h1>
+    <p class="tk-lead">Pengajuan Anda sudah kami terima.</p>
+    {tahap2 && (
+      <section class="tk-next" aria-labelledby="tk-next-title">
+        <h2 id="tk-next-title">Langkah berikutnya: {tahap2.judul}</h2>
+        <p>{tahap2.deskripsi}</p>
+        <p class="lbl">Durasi: {tahap2.durasi}</p>
+      </section>
+    )}
+    {sla ? <p>Kami membalas dalam {sla} hari kerja.</p> : null}
+    <p><a class="btn lbl" href="/">Kembali ke beranda</a></p>
+  </div>
+</Base>
+<style>
+  .tk { padding-block: 48px; display: grid; gap: var(--space-2); }
+  .tk p { margin: 0; }
+  h1 { margin: 0; font-weight: 400; font-size: clamp(40px, 7vw, 88px); line-height: 1; letter-spacing: -0.02em; }
+  .tk-lead { font-size: 19px; }
+  .tk-next { border-top: 1px solid var(--rule); padding-top: var(--space-2); display: grid; gap: var(--space-1); max-width: 60ch; }
+  h2 { margin: 0; font-weight: 400; font-size: 26px; line-height: 1.15; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 20px;
+    text-decoration: none;
+    background: var(--cobalt);
+    color: #fff;
+    border: 1px solid var(--cobalt);
+    transition: background-color 0.45s var(--ease);
+  }
+  .btn:hover { background: var(--ink); border-color: var(--ink); }
+  @media (min-width: 768px) { .tk { padding-block: 96px; } }
+</style>

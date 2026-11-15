@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import { katalogBuku, katalogJurnal } from '../lib/visible';
 import JsonLd from './JsonLd.astro';
+import Gambar from './Gambar.astro';
 // FR-19..22, BR-4..6, BUG-5, SEC-10. Dirender hanya bila ada item tampil (index.astro memakai daftar yang sama).
 const buku = katalogBuku((await getCollection('buku')).map((e) => e.data));
 const jurnal = katalogJurnal((await getCollection('jurnal')).map((e) => e.data));
@@ -42,8 +43,8 @@ const graph = [
       <ul class="katalog-grid">
         {buku.map((b) => (
           <li class="kartu kartu-buku">
-            {/* ponytail: sampul dimuat apa adanya dari path (WebP di public/); ukuran tetap 3:4. Upgrade: astro:assets bila sampul masuk src/. */}
-            <img src={b.sampul} alt={b.sampulAlt} width="300" height="400" loading="lazy" decoding="async" />
+            {/* sampul lewat Gambar.astro (astro:assets, WebP, 300x400 = 3:4). */}
+            <Gambar src={b.sampul} alt={b.sampulAlt} width={300} height={400} />
             <div class="kartu-isi">
               {b.status === 'segera-terbit' && <span class="lencana lbl">Segera terbit</span>}
               <h4>{b.judul}</h4>
@@ -62,7 +63,7 @@ const graph = [
       <ul class="katalog-grid">
         {jurnal.map((j) => (
           <li class="kartu kartu-jurnal">
-            <img src={j.sampul} alt={j.sampulAlt} width="300" height="400" loading="lazy" decoding="async" />
+            <Gambar src={j.sampul} alt={j.sampulAlt} width={300} height={400} />
             <div class="kartu-isi">
               {j.status === 'segera-terbit' && <span class="lencana lbl">Segera terbit</span>}
               <h4>{j.nama}</h4>

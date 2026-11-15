@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import { testimoniTampil } from '../lib/visible';
 import Mitra from './Mitra.astro';
+import Gambar from './Gambar.astro';
 // FR-24, BR-2, FR-26: hanya izin:true dengan tanggalIzin terisi. Kutipan verbatim, di-escape otomatis oleh Astro (SEC-3).
 const daftar = testimoniTampil((await getCollection('testimoni')).map((e) => e.data));
 const adaMitra = (await getCollection('mitra')).length > 0;
@@ -18,7 +19,7 @@ if (daftar.length === 0) console.warn('[BR-6] Testimoni: tidak ada item berizin'
         <figure>
           <blockquote><p>{t.kutipan}</p></blockquote>
           <figcaption>
-            {t.foto && t.fotoAlt && <img src={t.foto} alt={t.fotoAlt} width="64" height="64" loading="lazy" decoding="async" />}
+            {t.foto && t.fotoAlt && <Gambar src={t.foto} alt={t.fotoAlt} width={64} height={64} />}
             <span class="testi-nama">{t.nama}</span>
             <span class="testi-peran">{t.peran}, {t.institusi}</span>
           </figcaption>

@@ -98,6 +98,10 @@ Link naskah dari form bisa berbahaya (phishing atau malware). Sebelum membuka:
 
 Situs tidak pernah mengambil (fetch) isi link naskah; hanya staf yang membukanya.
 
+## Gambar (FR-35, TC-9)
+
+Taruh sampul, foto testimoni, dan logo di `src/assets/` (sumber maks 1 MB per berkas; PNG, JPG, WebP, atau AVIF). Di JSON tulis path relatif ke folder itu, mis. `"sampul": "buku/judul.jpg"`. Build mengubahnya jadi WebP sesuai ukuran tampil (hasil maks 200 KB), dan gagal bila berkasnya tidak ada.
+
 ## Deploy: Cloudflare Pages
 
 Pengaturan proyek di dashboard Cloudflare Pages (terhubung ke repo GitHub):

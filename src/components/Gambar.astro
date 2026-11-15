@@ -1,0 +1,17 @@
+---
+import { Image } from 'astro:assets';
+import { gambar } from '../lib/gambar';
+// FR-35, BUG-5: <img> selalu punya width, height, alt. Format WebP, ukuran = ukuran tampil.
+// Default lazy (semua gambar kini di bawah fold); gambar LCP wajib `eager`.
+// ponytail: satu resolusi (1x), tanpa srcset. Upgrade: tambah `densities={[1, 2]}` bila sumber cukup besar untuk layar retina.
+interface Props {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  fit?: 'cover' | 'contain';
+  eager?: boolean;
+}
+const { src, alt, width, height, fit = 'cover', eager = false } = Astro.props;
+---
+<Image src={gambar(src)} alt={alt} width={width} height={height} fit={fit} format="webp" quality={75} loading={eager ? 'eager' : 'lazy'} decoding="async" />

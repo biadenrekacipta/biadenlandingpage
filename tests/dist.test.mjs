@@ -623,3 +623,36 @@ test('FR-33 / TC-6: CSP script-src hanya self dan cloud.umami.is, connect-src ke
   assert.ok(/connect-src ([^;]+)/.exec(csp)[1].split(/\s+/).includes('https://api-gateway.umami.dev'));
   assert.ok(!csp.includes('unsafe-inline') && !csp.includes('unsafe-eval'));
 });
+
+// FR-35 / SEO-9 / BUG-5 / TC-9: pipeline gambar. Berlaku untuk gambar yang ada; tanpa gambar, tes lulus kosong.
+const imgTags = () => htmlFiles().flatMap(([p, html]) => [...html.matchAll(/<img\b[^>]*>/g)].map((m) => [p, m[0]]));
+const imgAttr = (tag, name) => new RegExp(String.raw`\s${name}="([^"]*)"`).exec(tag)?.[1];
+
+test('BUG-5 / FR-35: semua <img> punya width, height, alt tidak kosong, dan loading lazy (tidak ada gambar LCP)', () => {
+  for (const [p, tag] of imgTags()) {
+    assert.ok(/^\d+$/.test(imgAttr(tag, 'width') ?? ''), `${p}: width ${tag}`);
+    assert.ok(/^\d+$/.test(imgAttr(tag, 'height') ?? ''), `${p}: height ${tag}`);
+    assert.ok((imgAttr(tag, 'alt') ?? '').trim() !== '', `${p}: alt ${tag}`);
+    assert.equal(imgAttr(tag, 'loading'), 'lazy', `${p}: gambar di bawah fold harus lazy: ${tag}`);
+  }
+});
+
+test('FR-35: format keluaran <img> WebP/AVIF dan berkasnya ada di dist', () => {
+  for (const [p, tag] of imgTags()) {
+    const src = imgAttr(tag, 'src');
+    assert.match(src, /\.(webp|avif)(\?|$)/, `${p}: ${src}`);
+    assert.ok(existsSync(join(dist, src.split('?')[0].replace(/^\//, ''))), `${p}: ${src} tidak ada di dist`);
+  }
+});
+
+test('TC-9: sumber gambar di src/assets ≤ 1 MB dan hasil optimasi di dist/_astro ≤ 200 KB', () => {
+  const srcDir = join(root, 'src', 'assets');
+  const sumber = existsSync(srcDir) ? walk(srcDir, '').filter((p) => /\.(png|jpe?g|webp|avif)$/i.test(p)) : [];
+  for (const f of sumber) assert.ok(statSync(f).size <= 1024 * 1024, `${f}: sumber > 1 MB`);
+  const astroDir = join(dist, '_astro');
+  const hasil = existsSync(astroDir) ? walk(astroDir, '').filter((p) => /\.(png|jpe?g|webp|avif)$/i.test(p)) : [];
+  for (const f of hasil) {
+    assert.match(f, /\.(webp|avif)$/, `${f}: bukan WebP/AVIF`);
+    assert.ok(statSync(f).size <= 200 * 1024, `${f}: hasil optimasi > 200 KB`);
+  }
+});

@@ -1,0 +1,83 @@
+---
+import { getCollection } from 'astro:content';
+import { katalogBuku, katalogJurnal } from '../lib/visible';
+// FR-19..22, BR-4..6, BUG-5, SEC-10. Dirender hanya bila ada item tampil (index.astro memakai daftar yang sama).
+const buku = katalogBuku((await getCollection('buku')).map((e) => e.data));
+const jurnal = katalogJurnal((await getCollection('jurnal')).map((e) => e.data));
+const ringkasLead = [
+  buku.length ? `${buku.length} buku` : '',
+  jurnal.length ? `${jurnal.length} jurnal` : '',
+]
+  .filter(Boolean)
+  .join(' dan ');
+---
+{buku.length + jurnal.length > 0 && (
+<section id="katalog" aria-labelledby="katalog-title">
+  <p class="lbl">Katalog</p>
+  <h2 id="katalog-title">Terbitan pilihan</h2>
+  <p class="katalog-lead">Daftar di bawah memuat {ringkasLead} terbitan pilihan kami.</p>
+  {buku.length > 0 && (
+    <div class="katalog-grup">
+      <h3>Buku</h3>
+      <ul class="katalog-grid">
+        {buku.map((b) => (
+          <li class="kartu kartu-buku">
+            {/* ponytail: sampul dimuat apa adanya dari path (WebP di public/); ukuran tetap 3:4. Upgrade: astro:assets bila sampul masuk src/. */}
+            <img src={b.sampul} alt={b.sampulAlt} width="300" height="400" loading="lazy" decoding="async" />
+            <div class="kartu-isi">
+              {b.status === 'segera-terbit' && <span class="lencana lbl">Segera terbit</span>}
+              <h4>{b.judul}</h4>
+              <p class="meta">{b.penulis} · {b.tahun}{b.isbn ? ` · ISBN ${b.isbn}` : ''}</p>
+              <p>{b.ringkasan}</p>
+              <a class="tautan" href={b.link} target="_blank" rel="noopener noreferrer">Selengkapnya<span class="sr"> tentang {b.judul} (tab baru)</span></a>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )}
+  {jurnal.length > 0 && (
+    <div class="katalog-grup">
+      <h3>Jurnal</h3>
+      <ul class="katalog-grid">
+        {jurnal.map((j) => (
+          <li class="kartu kartu-jurnal">
+            <img src={j.sampul} alt={j.sampulAlt} width="300" height="400" loading="lazy" decoding="async" />
+            <div class="kartu-isi">
+              {j.status === 'segera-terbit' && <span class="lencana lbl">Segera terbit</span>}
+              <h4>{j.nama}</h4>
+              <p class="meta">{j.bidang}{j.issn ? ` · ISSN ${j.issn}` : ''}</p>
+              <p>{j.ringkasan}</p>
+              <a class="tautan" href={j.link} target="_blank" rel="noopener noreferrer">Kunjungi jurnal<span class="sr"> {j.nama} (tab baru)</span></a>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )}
+</section>
+)}
+<style>
+  section { padding: 48px 0; border-top: 1px solid var(--rule); display: grid; gap: var(--space-2); }
+  p { margin: 0; }
+  h2 { margin: 0; font-weight: 400; font-size: clamp(28px, 4.4vw, 56px); line-height: 1.05; letter-spacing: -0.02em; }
+  h3 { margin: 0; font-weight: 400; font-size: 26px; line-height: 1.15; }
+  h4 { margin: 0; font-weight: 400; font-size: 22px; line-height: 1.2; }
+  .katalog-lead { max-width: 60ch; font-size: 19px; line-height: 1.5; }
+  .katalog-grup { display: grid; gap: var(--space-2); margin-top: var(--space-2); }
+  .katalog-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); grid-template-columns: 1fr; }
+  .kartu { border-top: 1px solid var(--rule); padding-top: var(--space-2); display: grid; gap: var(--space-2); align-content: start; }
+  .kartu img { width: 100%; max-width: 220px; height: auto; aspect-ratio: 3 / 4; object-fit: cover; background: var(--sheet); border: 1px solid var(--rule); }
+  .kartu-isi { display: grid; gap: var(--space-1); }
+  .meta { color: var(--muted); font-size: 15px; }
+  .lencana { justify-self: start; padding: 4px 10px; border: 1px solid var(--cobalt); color: var(--cobalt); }
+  .tautan { display: inline-flex; align-items: center; min-height: 44px; color: var(--cobalt); text-underline-offset: 3px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  @media (min-width: 768px) {
+    section { padding: 96px 0; }
+    .katalog-grid { grid-template-columns: repeat(2, 1fr); gap: var(--space-4) var(--space-3); }
+  }
+  @media (min-width: 1100px) {
+    .katalog-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>

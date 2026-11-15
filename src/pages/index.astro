@@ -4,6 +4,7 @@ import Base from '../layouts/Base.astro';
 import Hero from '../components/Hero.astro';
 import Profil from '../components/Profil.astro';
 import Alur from '../components/Alur.astro';
+import Katalog from '../components/Katalog.astro';
 import FormAjukan from '../components/FormAjukan.astro';
 import Nav from '../components/Nav.astro';
 import { sectionTampil } from '../lib/sections';
@@ -15,7 +16,7 @@ await Promise.all(
   ),
 );
 const site = (await getEntry('site', 'site'))!.data;
-// Katalog: anchor #katalog hanya ada bila ada item tampil (BR-6, BUG-4). Diganti Katalog.astro di t21.
+// Katalog: anchor #katalog hanya ada bila ada item tampil (BR-6, BUG-4).
 const adaKatalog =
   katalogBuku((await getCollection('buku')).map((e) => e.data)).length +
     katalogJurnal((await getCollection('jurnal')).map((e) => e.data)).length >
@@ -33,7 +34,7 @@ const description = `Penerbit buku dan jurnal akademik ${site.nama}. Lihat profi
     <Hero />
     {tampil('profil') && <Profil />}
     {tampil('alur') && <Alur />}
-    {tampil('katalog') && <section id="katalog"><h2>Katalog</h2></section>}
+    {tampil('katalog') && <Katalog />}
     {tampil('ajukan') && <FormAjukan />}
   </div>
 </Base>

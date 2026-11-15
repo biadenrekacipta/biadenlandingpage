@@ -325,3 +325,33 @@ test('t18: footer dan form menaut ke /kebijakan-privasi/, halaman masuk sitemap'
   const sm = readdirSync(dist).filter((n) => /^sitemap-\d+\.xml$/.test(n)).map((n) => readFileSync(join(dist, n), 'utf8')).join('');
   assert.ok(sm.includes('/kebijakan-privasi/'));
 });
+
+// FR-19..22, BR-6, BUG-4, BUG-5: katalog. Kondisional terhadap isi buku.json/jurnal.json yang sedang dibangun.
+const katBuku = loadJson('buku').filter((i) => i.unggulan && i.status !== 'diarsipkan');
+const katJurnal = loadJson('jurnal').filter((i) => i.unggulan && i.status !== 'diarsipkan');
+const indexHtml = () => readFileSync(join(dist, 'index.html'), 'utf8');
+
+test('BR-6 / BUG-4: katalog kosong → tanpa #katalog dan tanpa link nav ke #katalog', { skip: katBuku.length + katJurnal.length > 0 }, () => {
+  const html = indexHtml();
+  assert.ok(!html.includes('id="katalog"'));
+  assert.ok(!html.includes('href="#katalog"'));
+});
+
+test('FR-19..22 / BUG-5 / SEC-10: kartu katalog sesuai data, sampul berdimensi, lencana, rel', { skip: katBuku.length + katJurnal.length === 0 }, () => {
+  const html = indexHtml();
+  const sec = html.match(/<section[^>]*id="katalog"[\s\S]*?<\/section>/)?.[0];
+  assert.ok(sec, 'section #katalog tidak ada');
+  assert.equal((sec.match(/class="[^"]*kartu-buku/g) || []).length, katBuku.length);
+  assert.equal((sec.match(/class="[^"]*kartu-jurnal/g) || []).length, katJurnal.length);
+  const imgs = [...sec.matchAll(/<img[^>]*>/g)].map((m) => m[0]);
+  assert.equal(imgs.length, katBuku.length + katJurnal.length, 'jumlah img');
+  for (const t of imgs) {
+    assert.match(t, /\swidth="\d+"/, t);
+    assert.match(t, /\sheight="\d+"/, t);
+    assert.match(t, /\salt="[^"]+"/, t);
+  }
+  const segera = [...katBuku, ...katJurnal].filter((i) => i.status === 'segera-terbit').length;
+  assert.equal((sec.match(/Segera terbit/g) || []).length, segera, 'lencana');
+  for (const m of sec.matchAll(/<a[^>]*target="_blank"[^>]*>/g)) assert.match(m[0], /rel="noopener noreferrer"/);
+  assert.match(html, /href="#katalog"/);
+});

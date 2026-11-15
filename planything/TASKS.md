@@ -246,17 +246,18 @@ Aturan untuk agent:
     - [x] 3. Item `diarsipkan` tidak ada di hasil
     - [x] 4. Item `terbit` dengan tahun depan gagal validasi, `segera-terbit` tahun depan lulus
   - Catatan: Dijalankan dengan data placeholder atas keputusan user, meski gate t19 belum lulus (KILL-1 belum terpenuhi). `npm run check` 0 errors; `npm run build` lulus; `npm run test:content` 17 pass 0 fail 1 skip (STRICT); `npm run test:dist` lulus. `visible.ts`: `katalogBuku()`/`katalogJurnal()` (filter BR-10, urut `urutan` naik lalu `tahun` turun, throw >12 buku/>6 jurnal, peringatan BR-6 bila kosong); `index.astro` memakainya sehingga batas ditegakkan saat build. BR-10 `terbit` tahun depan: `refine` di skema `buku` di `content.config.ts`. Uji fixture sementara pada `buku.json` (dikembalikan lewat `git checkout`, `git status src/content` bersih): 13 buku unggulan → `npm run build` exit 1 "[BR-4] buku: 13 item unggulan, maksimum 12"; `terbit` tahun 2099 → gagal "tahun buku terbit melebihi tahun berjalan (BR-10)"; `segera-terbit` tahun 2099 → build lulus. Tes baru di `content.test.mjs`: BR-5 urutan, diarsipkan/tidak unggulan, BR-4 (12 lulus, 13 throw; 6/7 jurnal), BR-6 kosong, BR-10 skema. Skema `jurnal` tidak punya `tahun` (Model Data), jadi urutan jurnal praktis hanya `urutan`.
-- [ ] t21 · UI katalog buku dan jurnal (M)
+- [x] t21 · UI katalog buku dan jurnal (M)
   - Butuh: t2, t10, t20
   - Kerjakan: Buat `src/components/Katalog.astro` (`id="katalog"`) dibuka kalimat jawaban singkat, grid buku dan daftar jurnal. Kartu: sampul (width/height diset, `alt` bermakna), judul, penulis atau editor, tahun, ISBN/ISSN, ringkasan ≤200, link eksternal `rel="noopener noreferrer"` (FR-19–21, SEC-10, BUG-5). Lencana 'Segera terbit' untuk `status: segera-terbit` (FR-22). Section dan link nav hilang bila kosong (BR-6, BUG-4). Daftarkan di `sections.ts`.
   - Cek: `npm run build && npm run test:dist`; kosongkan `buku.json`/`jurnal.json`, build ulang, `grep 'id="katalog"' dist/index.html` kosong; `npx impeccable detect src/components/Katalog.astro`.
   - Selesai jika:
-    - [ ] 1. Setiap `<img>` sampul punya width, height, dan alt
-    - [ ] 2. Link eksternal punya `rel="noopener noreferrer"`
-    - [ ] 3. Item `segera-terbit` menampilkan lencana 'Segera terbit'
-    - [ ] 4. Dengan katalog kosong, `#katalog` dan link navnya tidak ada di `dist/`
-    - [ ] 5. `npx impeccable detect src/components/Katalog.astro` tanpa temuan
-- [ ] t22 · JSON-LD Book dan Periodical dari data katalog (S)
+    - [x] 1. Setiap `<img>` sampul punya width, height, dan alt
+    - [x] 2. Link eksternal punya `rel="noopener noreferrer"`
+    - [x] 3. Item `segera-terbit` menampilkan lencana 'Segera terbit'
+    - [x] 4. Dengan katalog kosong, `#katalog` dan link navnya tidak ada di `dist/`
+    - [x] 5. `npx impeccable detect src/components/Katalog.astro` tanpa temuan
+  - Catatan: `npm run check` 0 errors; `npm run build` lulus; `npm run test:content` 17 pass; `npm run test:dist` 35 pass 0 fail 1 skip. `Katalog.astro` (id katalog, kalimat pembuka "Daftar di bawah memuat N buku dan M jurnal", grid buku + daftar jurnal, kartu: img width=300 height=400 + alt dari `sampulAlt`, judul, penulis/bidang, tahun, ISBN/ISSN bila ada, ringkasan, link `target=_blank rel="noopener noreferrer"`, lencana "Segera terbit"); `index.astro` memakai `<Katalog />` menggantikan stub t9; sudah terdaftar di `sections.ts`. Seed kosong (katalog tersembunyi): `grep -c 'id="katalog"\|#katalog' dist/index.html` = 0, tes dist BR-6 lulus (kondisi berisi di-skip). Fixture sementara (2 buku unggulan termasuk satu `segera-terbit` 2099, satu tidak unggulan, satu diarsipkan; 1 jurnal unggulan) lalu dikembalikan lewat `git checkout` (`git status src/content` bersih): dist memuat 2 kartu-buku, 1 kartu-jurnal, 1 "Segera terbit", item tidak-unggulan/diarsipkan tidak muncul, `href="#katalog"` di nav, tes dist kondisi berisi lulus (35 pass). `npx impeccable detect dist/index.html` (build fixture) = ok, `npx impeccable detect src/components/Katalog.astro` exit 0. Tes baru di `tests/dist.test.mjs` (dua tes kondisional: kosong / berisi). Catatan: sampul belum ada berkas nyata (seed `[verify]`), jadi tampilan sampul tidak diuji visual; `ponytail:` di komponen: img apa adanya dari path, upgrade ke `astro:assets`.
+- [~] t22 · JSON-LD Book dan Periodical dari data katalog (S)
   - Butuh: t21
   - Kerjakan: Buat `src/components/JsonLd.astro` (serialisasi `JSON.stringify` ke `<script type="application/ld+json">`, tanpa `set:html` untuk konten bebas — gunakan escape `<` jadi `\u003c`). Hasilkan `Book` per buku dan `Periodical` per jurnal dari daftar yang sama dengan kartu tampil (FR-23). Tambah tes dist: jumlah node Book/Periodical sama dengan jumlah kartu.
   - Cek: `npm run build && npm run test:dist`; salin JSON-LD ke Schema Markup Validator dan pastikan bebas error.

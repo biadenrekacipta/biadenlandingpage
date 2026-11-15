@@ -66,3 +66,60 @@ Tahap 3 memakai `--omit=dev` karena temuan high ada di rantai `@lhci/cli` (devDe
 ## Konten legalitas dan testimoni (BR-9, SEC-9)
 
 Perubahan `src/content/legalitas.json` dan `src/content/testimoni.json` wajib di-approve satu reviewer selain penulis PR. Editor tidak boleh merge perubahan klaim legalnya sendiri. Item legalitas hanya tampil bila `terverifikasi: true` dan `nilai` terisi; tes `content.test.mjs` dan `dist.test.mjs` memeriksanya.
+
+## Env var (detail)
+
+| Var | Fungsi | Catatan |
+|---|---|---|
+| `SITE_URL` | URL kanonik, sitemap, OG | Beda per lingkungan: produksi = domain final, preview = URL preview Cloudflare, lokal = `http://localhost:4321` |
+| `PUBLIC_WEB3FORMS_KEY` | Access key Web3Forms untuk form pengajuan | Key publik form; jangan pakai secret lain di var `PUBLIC_*` |
+| `PUBLIC_UMAMI_ID` | Website ID Umami | Kosong = script analytics tidak dimuat |
+
+Jangan commit `.env`. Hanya `.env.example` yang masuk repo.
+
+## Edit konten lewat PR
+
+Semua konten ada di `src/content/*.json`. Alur: buat branch, edit JSON, jalankan `npm run test:content` dan `npm run build`, buka PR, tunggu CI hijau, minta review, merge. Jangan edit langsung di `main`. Isi faktual (legalitas, testimoni, angka, tanggal izin, jawaban FAQ) berasal dari penerbit; placeholder `[verify]` tidak lolos build produksi.
+
+## Reviewer kedua (BR-9)
+
+PR yang menyentuh `legalitas.json` atau `testimoni.json` butuh approve satu reviewer selain penulis PR. Penulis tidak boleh approve atau merge perubahannya sendiri. Testimoni hanya tampil bila `izin: true` dan `tanggalIzin` terisi.
+
+## Checklist staf: membuka link naskah (SEC-2)
+
+Link naskah dari form bisa berbahaya (phishing atau malware). Sebelum membuka:
+
+1. Pastikan link berawalan `https://`. Tolak `http://`, `javascript:`, dan skema lain.
+2. Baca domain lengkapnya. Waspada domain mirip, subdomain panjang, atau pemendek URL.
+3. Jangan unduh atau jalankan file `.exe`, `.zip`, `.js`, atau dokumen yang minta aktifkan makro.
+4. Buka di browser terbaru, bukan dari aplikasi lain yang mengeksekusi file otomatis. Jangan login atau isi kata sandi bila diminta.
+5. Layanan penyimpanan yang dikenal (Google Drive, Dropbox, OneDrive) lebih aman; tetap periksa pemilik file.
+6. Ragu: jangan buka, balas penulis lewat email resmi yang tercatat, dan laporkan ke penanggung jawab.
+
+Situs tidak pernah mengambil (fetch) isi link naskah; hanya staf yang membukanya.
+
+## Deploy: Cloudflare Pages
+
+Pengaturan proyek di dashboard Cloudflare Pages (terhubung ke repo GitHub):
+
+| Setelan | Nilai |
+|---|---|
+| Production branch | `main` |
+| Build command | `npm run build` |
+| Build output directory | `dist` |
+| `NODE_VERSION` | `22` (sama dengan `.node-version`) |
+| `SITE_URL` | Produksi: domain final. Preview: set terpisah di environment Preview |
+| `PUBLIC_WEB3FORMS_KEY`, `PUBLIC_UMAMI_ID` | Isi di Production dan Preview |
+
+Preview: setiap PR otomatis dapat URL preview. Periksa halaman di URL itu sebelum merge. Header keamanan ada di `public/_headers`.
+
+Status: pengaturan di atas belum diverifikasi di dashboard Cloudflare (butuh akses akun).
+
+## Rollback
+
+Dua cara:
+
+1. Dashboard Cloudflare Pages → Deployments → pilih deployment produksi lama yang sehat → Rollback to this deployment.
+2. Lewat git: `git revert <sha>` pada commit bermasalah di `main`, buka PR, merge, dan Pages membangun ulang.
+
+Bukti uji rollback: belum dilakukan (butuh deployment produksi dan akses dashboard). Catat tanggal dan deployment di sini setelah dicoba.

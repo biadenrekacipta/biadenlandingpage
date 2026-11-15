@@ -1,0 +1,10 @@
+---
+// SEC-3: satu-satunya tempat yang boleh memakai set:html (disepakati di t22). Astro tidak punya cara lain
+// menulis teks mentah ke <script>: set:text meng-escape entitas dan merusak JSON.
+// Aman karena isinya hasil JSON.stringify dengan karakter `<` di-escape, jadi konten tidak bisa menutup script.
+// ponytail: dipakai hanya untuk JSON-LD katalog. Tes SEC-3 di dist.test.mjs mengizinkan hanya berkas ini dan menuntut escape-nya.
+interface Props { data: Record<string, unknown> }
+const { data } = Astro.props;
+const json = JSON.stringify(data).replace(/</g, '\\u003c');
+---
+<script type="application/ld+json" set:html={json} />

@@ -51,7 +51,16 @@ test('SEC-10: target=_blank dan link eksternal pakai rel="noopener noreferrer"',
 
 test('SEC-3 / GR-14: tidak ada set:html di src/', () => {
   const files = [...walk(join(root, 'src'), '.astro'), ...walk(join(root, 'src'), '.ts')];
-  for (const f of files) assert.ok(!readFileSync(f, 'utf8').includes('set:html'), f);
+  for (const f of files) {
+    const src = readFileSync(f, 'utf8');
+    if (f.replaceAll('\\', '/').endsWith('src/components/JsonLd.astro')) {
+      // t22: satu pengecualian, hanya bila JSON di-escape (< jadi u003c) sebelum ditulis.
+      assert.ok(src.includes("replace(/</g, '" + String.fromCharCode(92, 92) + "u003c')"), 'JsonLd.astro harus meng-escape <');
+      continue;
+    }
+
+    assert.ok(!src.includes('set:html'), f);
+  }
 });
 
 const SITE_URL = process.env.SITE_URL || 'http://localhost:4321';
@@ -354,4 +363,24 @@ test('FR-19..22 / BUG-5 / SEC-10: kartu katalog sesuai data, sampul berdimensi, 
   assert.equal((sec.match(/Segera terbit/g) || []).length, segera, 'lencana');
   for (const m of sec.matchAll(/<a[^>]*target="_blank"[^>]*>/g)) assert.match(m[0], /rel="noopener noreferrer"/);
   assert.match(html, /href="#katalog"/);
+});
+
+function jsonLdNodes() {
+  const html = indexHtml();
+  const nodes = [];
+  for (const m of html.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)) {
+    const d = JSON.parse(m[1]); // valid JSON, tidak ada </script> mentah di dalamnya
+    nodes.push(...(d['@graph'] || [d]));
+  }
+  return nodes;
+}
+
+test('FR-23 / SEC-3: JSON-LD Book/Periodical sama dengan jumlah kartu, valid JSON, tanpa </script> mentah', () => {
+  const nodes = jsonLdNodes();
+  assert.equal(nodes.filter((n) => n['@type'] === 'Book').length, katBuku.length);
+  assert.equal(nodes.filter((n) => n['@type'] === 'Periodical').length, katJurnal.length);
+  const html = indexHtml();
+  for (const m of html.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)) assert.ok(!m[1].includes('<'));
+  const kartu = (html.match(/class="kartu kartu-(buku|jurnal)/g) || []).length;
+  assert.equal(nodes.filter((n) => n['@type'] === 'Book' || n['@type'] === 'Periodical').length, kartu);
 });

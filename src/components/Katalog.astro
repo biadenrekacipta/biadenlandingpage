@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import { katalogBuku, katalogJurnal } from '../lib/visible';
+import JsonLd from './JsonLd.astro';
 // FR-19..22, BR-4..6, BUG-5, SEC-10. Dirender hanya bila ada item tampil (index.astro memakai daftar yang sama).
 const buku = katalogBuku((await getCollection('buku')).map((e) => e.data));
 const jurnal = katalogJurnal((await getCollection('jurnal')).map((e) => e.data));
@@ -10,6 +11,25 @@ const ringkasLead = [
 ]
   .filter(Boolean)
   .join(' dan ');
+// FR-23: JSON-LD dari daftar yang sama dengan kartu (item diarsipkan/tidak unggulan sudah tersaring).
+const graph = [
+  ...buku.map((b) => ({
+    '@type': 'Book',
+    name: b.judul,
+    author: { '@type': 'Person', name: b.penulis },
+    datePublished: String(b.tahun),
+    ...(b.isbn ? { isbn: b.isbn } : {}),
+    description: b.ringkasan,
+    url: b.link,
+  })),
+  ...jurnal.map((j) => ({
+    '@type': 'Periodical',
+    name: j.nama,
+    ...(j.issn ? { issn: j.issn } : {}),
+    description: j.ringkasan,
+    url: j.link,
+  })),
+];
 ---
 {buku.length + jurnal.length > 0 && (
 <section id="katalog" aria-labelledby="katalog-title">
@@ -55,6 +75,7 @@ const ringkasLead = [
       </ul>
     </div>
   )}
+  <JsonLd data={{ '@context': 'https://schema.org', '@graph': graph }} />
 </section>
 )}
 <style>

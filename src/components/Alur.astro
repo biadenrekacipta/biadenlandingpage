@@ -1,5 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
+import Syarat from './Syarat.astro';
 // FR-9, BR-11, GEO-3: tahap urut nomor, kalimat pembuka otomatis. Tanpa tanggal di section ini.
 const tahap = (await getCollection('alur')).map((e) => e.data).sort((a, b) => a.nomor - b.nomor);
 ---
@@ -22,6 +23,7 @@ const tahap = (await getCollection('alur')).map((e) => e.data).sort((a, b) => a.
       </li>
     ))}
   </ol>
+  <Syarat />
 </section>
 <style>
   section { padding: 48px 0; border-top: 1px solid var(--rule); display: grid; gap: var(--space-2); }

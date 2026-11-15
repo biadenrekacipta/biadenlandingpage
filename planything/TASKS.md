@@ -155,18 +155,19 @@ Aturan untuk agent:
     - [x] 4. Build gagal bila satu tahap tanpa `biaya`
     - [x] 5. `npx impeccable detect src/components/Alur.astro` tanpa temuan
   - Catatan: npm run check 0 errors; npm run build lulus; test:dist 18 pass, test:content 12 pass. Alur.astro (`<ol class="alur-item">` per tahap urut nomor: judul, deskripsi, penanggung jawab, durasi, biaya, output; tanpa tanggal). Kalimat pembuka dari panjang daftar: dist memuat "Terbit lewat 3 tahap; durasi dan biaya tiap tahap tertulis di bawah." Uji (dikembalikan, alur.json identik HEAD): biaya tahap 1 dikosongkan → build gagal "alur → 1: biaya wajib (BR-11)"; tambah tahap ke-4 → dist 4 `alur-item`, kalimat "Terbit lewat 4 tahap", test:dist 18 pass. Tes baru: dist `FR-9 / GEO-3` (jumlah li = alur.json, dt Durasi dan Biaya berisi di tiap li, kalimat pembuka), content `kelengkapan transparansi` (100% tahap punya durasi dan biaya). Section alur sudah terdaftar di sections.ts sejak t10; index.astro memakai <Alur />. `npx impeccable detect src/components/Alur.astro dist/index.html` exit 0 tanpa temuan. Isi tahap masih placeholder [verify] (GR-11).
-- [ ] t14 · Syarat naskah, CTA penutup, SLA balasan (S)
+- [x] t14 · Syarat naskah, CTA penutup, SLA balasan (S)
   - Butuh: t2, t13
   - Kerjakan: Di `Alur.astro` atau komponen `Syarat.astro` tambah dua grup syarat (buku, jurnal) dari `syarat.json` sebagai `<h3>` + `<ul>` tanpa JS (FR-10). Akhiri section dengan CTA ke `#ajukan` (FR-11). Tampilkan 'dibalas dalam N hari kerja' hanya bila `slaBalasanHariKerja` terisi; bila tidak, teks tidak dirender sama sekali (FR-12, BR-12). Tambah tes dist dengan dua kondisi SLA (terisi, null).
   - Cek: `npm run build && npm run test:dist`; ubah `slaBalasanHariKerja` antara null dan 3, build ulang, `grep 'hari kerja' dist/index.html`; `npx impeccable detect src/components`.
   - Selesai jika:
-    - [ ] 1. Dua grup syarat tampil sebagai daftar tanpa script
-    - [ ] 2. CTA penutup mengarah ke `#ajukan`
-    - [ ] 3. Dengan `slaBalasanHariKerja` null, tidak ada teks 'hari kerja' di `dist/`
-    - [ ] 4. Dengan `slaBalasanHariKerja: 3`, teks 'dibalas dalam 3 hari kerja' tampil
-    - [ ] 5. `npx impeccable detect` pada file Syarat tanpa temuan
+    - [x] 1. Dua grup syarat tampil sebagai daftar tanpa script
+    - [x] 2. CTA penutup mengarah ke `#ajukan`
+    - [x] 3. Dengan `slaBalasanHariKerja` null, tidak ada teks 'hari kerja' di `dist/`
+    - [x] 4. Dengan `slaBalasanHariKerja: 3`, teks 'dibalas dalam 3 hari kerja' tampil
+    - [x] 5. `npx impeccable detect` pada file Syarat tanpa temuan
 
 ## Fase 1 · Form Pengajuan Naskah & Kontak
+  - Catatan: npm run check 0 errors; npm run build lulus; test:dist 20 pass, test:content 12 pass. Syarat.astro (dirender di akhir section #alur lewat Alur.astro): dua grup `<h3>` + `<ul>` (buku, jurnal) dari syarat.json, tanpa script; CTA penutup `<a class="btn lbl" href="#ajukan">Ajukan Naskah</a>`. SLA: dengan slaBalasanHariKerja null `grep -c "hari kerja" dist/index.html` = 0; diubah ke 3 → dist memuat "dibalas dalam 3 hari kerja", test:dist 20 pass di kedua kondisi; site.json dikembalikan (git status bersih untuk src/content). Tes dist baru: grup syarat + CTA, dan tes SLA yang membaca site.json (null → tanpa teks, terisi → teks N). `npx impeccable detect src/components dist/index.html` exit 0 tanpa temuan. Syarat masih placeholder [verify] (GR-11). Catatan: tes SLA bersifat kondisional terhadap site.json yang sedang dibangun; dua kondisi dibuktikan lewat dua build manual di atas.
 - [ ] t15 · Markup form pengajuan dengan validasi HTML5 (M)
   - Butuh: t2, t14
   - Kerjakan: Buat `src/components/FormAjukan.astro` (`id="ajukan"`) dengan field BR-7: `nama` (2–100), `email`, `peran` (select: Mahasiswa, Dosen, Peneliti, Penulis umum, Lainnya), `jenis` (select: Ajukan naskah buku, Ajukan artikel jurnal, Pertanyaan umum), `judul_atau_topik` (3–200), `pesan` (20–1000), `persetujuan` checkbox required menaut ke `/kebijakan-privasi/`, opsional `institusi` (≤150) dan `link_naskah` (`type=url`, `pattern="https://.*"`, `maxlength=500` — SEC-2). Label terlihat, tanpa JavaScript. Di sebelah form tampilkan link email dan WhatsApp dari `site.json` (FR-18). Tambah tes dist untuk atribut tiap field dan bahwa pattern menolak `javascript:` dan `http://` tetapi menerima `https://x.id/a`.

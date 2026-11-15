@@ -174,3 +174,20 @@ test('FR-9 / GEO-3: alur punya satu <li> per tahap, durasi dan biaya tiap tahap,
   }
   assert.ok(sec.includes(`Terbit lewat ${alur.length} tahap; durasi dan biaya tiap tahap tertulis di bawah.`));
 });
+
+test('FR-10 / FR-11: dua grup syarat sebagai h3 + ul tanpa script, CTA penutup ke #ajukan', () => {
+  const html = readFileSync(join(dist, 'index.html'), 'utf8');
+  const sec = /<section id="alur"[\s\S]*?<\/section>/.exec(html)?.[0];
+  const syarat = /<div class="syarat"[\s\S]*<\/section>/.exec(sec)?.[0] ?? '';
+  assert.equal((syarat.match(/<h3[^>]*>[^<]+<\/h3>\s*<ul/g) || []).length, 2);
+  assert.ok(!/<script/.test(syarat));
+  assert.match(syarat, /<a [^>]*class="btn lbl"[^>]*href="#ajukan"/);
+});
+
+// BR-12: SLA mengikuti site.json yang sedang dibangun (jalankan build dengan kedua kondisi untuk bukti penuh).
+test('FR-12 / BR-12: teks "hari kerja" ada hanya bila slaBalasanHariKerja terisi', () => {
+  const html = readFileSync(join(dist, 'index.html'), 'utf8');
+  const sla = loadJson('site')[0].slaBalasanHariKerja;
+  if (sla) assert.ok(html.includes(`dibalas dalam ${sla} hari kerja`));
+  else assert.ok(!html.includes('hari kerja'), 'teks SLA tidak boleh dirender saat null');
+});

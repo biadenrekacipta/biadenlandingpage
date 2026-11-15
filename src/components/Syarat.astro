@@ -1,0 +1,53 @@
+---
+import { getCollection, getEntry } from 'astro:content';
+// FR-10, FR-11, FR-12, BR-12: dua grup syarat, CTA penutup, SLA hanya bila terisi.
+const site = (await getEntry('site', 'site'))!.data;
+const semua = (await getCollection('syarat')).map((e) => e.data);
+const grup = [
+  { jenis: 'buku', judul: 'Syarat naskah buku' },
+  { jenis: 'jurnal', judul: 'Syarat artikel jurnal' },
+]
+  .map((g) => ({ ...g, butir: semua.filter((s) => s.jenis === g.jenis).flatMap((s) => s.butir) }))
+  .filter((g) => g.butir.length > 0);
+const sla = site.slaBalasanHariKerja;
+---
+<div class="syarat">
+  <div class="syarat-grup">
+    {grup.map((g) => (
+      <div class="syarat-box">
+        <h3>{g.judul}</h3>
+        <ul>
+          {g.butir.map((b) => <li>{b}</li>)}
+        </ul>
+      </div>
+    ))}
+  </div>
+  <div class="syarat-cta">
+    <a class="btn lbl" href="#ajukan">Ajukan Naskah</a>
+    {sla ? <p>Pertanyaan dan naskah Anda dibalas dalam {sla} hari kerja.</p> : null}
+  </div>
+</div>
+<style>
+  .syarat { display: grid; gap: var(--space-3); margin-top: var(--space-3); }
+  .syarat-grup { display: grid; gap: var(--space-3); }
+  .syarat-box { border-top: 1px solid var(--rule); padding-top: var(--space-2); display: grid; gap: var(--space-1); }
+  h3 { margin: 0; font-weight: 400; font-size: 26px; line-height: 1.15; }
+  ul { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
+  .syarat-cta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+  .syarat-cta p { margin: 0; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 20px;
+    text-decoration: none;
+    background: var(--cobalt);
+    color: #fff;
+    border: 1px solid var(--cobalt);
+    transition: background-color 0.45s var(--ease);
+  }
+  .btn:hover { background: var(--ink); border-color: var(--ink); }
+  @media (min-width: 768px) {
+    .syarat-grup { grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+  }
+</style>

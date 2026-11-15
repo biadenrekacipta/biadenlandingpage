@@ -77,3 +77,12 @@ test('GR-11: STRICT=1 menolak placeholder [verify]', { skip: process.env.STRICT 
 test('FR-3: item legalitas dengan tampilDiHero:true maksimal 3', () => {
   assert.ok(legalitas.filter((i) => i.tampilDiHero).length <= 3);
 });
+
+test('SEC-9: fixture legalitas tidak terverifikasi atau bernilai kosong tidak tampil', () => {
+  const fx = [
+    { label: 'A', nilai: 'ok-1', terverifikasi: true, tampilDiHero: false },
+    { label: 'B', nilai: 'rahasia-2', terverifikasi: false, tampilDiHero: true },
+    { label: 'C', nilai: '', terverifikasi: true, tampilDiHero: false },
+  ];
+  assert.deepEqual(legalitasTampil(fx).map((i) => i.label), ['A']);
+});

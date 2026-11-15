@@ -132,17 +132,18 @@ Aturan untuk agent:
     - [x] 4. Build gagal bila `klaimAngka` tanpa `sumber`
     - [x] 5. `npx impeccable detect` pada file Profil tanpa temuan
   - Catatan: npm run check 0 errors; npm run build lulus; test:dist 16 pass, test:content 10 pass. Tes dist baru: paragraf `profil-lead` sama persis dengan `site.profil`; blok `<address class="kontak">` di profil dan footer identik (sama komponen `Kontak.astro`, sumber site.json); tiap klaim tampil dengan "Sumber: ...". Uji dengan klaimAngka {label,nilai,sumber} → dist memuat "Sumber: Sumber uji", test:dist 16 pass; hapus `sumber` → build gagal "klaimAngka.0.sumber: Required"; site.json dikembalikan (git diff src/content kosong), build+test lulus lagi. `npx impeccable detect src/components/Profil.astro src/components/Kontak.astro src/components/Footer.astro dist/index.html` exit 0 tanpa temuan (padding section dibuat px eksplisit agar detector membaca inset). WhatsApp jadi link wa.me hanya bila nilai berupa angka 8-15 digit; placeholder [verify] tetap teks. Profil didaftarkan di sections.ts sejak t10 (id profil); index.astro kini memakai <Profil />. Seed profil/kontak masih placeholder [verify] (GR-11).
-- [ ] t12 · Daftar legalitas terverifikasi (S)
+- [x] t12 · Daftar legalitas terverifikasi (S)
   - Butuh: t2, t11
   - Kerjakan: Tambah blok legalitas di `Profil.astro` memakai filter `visible.ts` (BR-1): tampil hanya `terverifikasi:true` dan `nilai` tidak kosong, dengan label, nilai, dan link bukti opsional (`rel="noopener noreferrer"`, SEC-10) (FR-6). Bila 0 item lolos, blok disembunyikan dengan peringatan build (BR-6). Tambah tes konten untuk SEC-9: fixture item `terverifikasi:false` tidak muncul di `dist/`. Catat di README bahwa perubahan `legalitas.json` butuh reviewer kedua (BR-9).
   - Cek: `npm run build && npm run test:content && npm run test:dist`; set satu item `terverifikasi:false` lalu `grep` nilainya di `dist/index.html` harus kosong.
   - Selesai jika:
-    - [ ] 1. Item `terverifikasi:false` atau `nilai` kosong tidak ada di `dist/index.html`
-    - [ ] 2. Link bukti memakai `rel="noopener noreferrer"`
-    - [ ] 3. Dengan legalitas kosong, blok hilang dan build hanya memberi peringatan
-    - [ ] 4. `content.test.mjs` memuat tes SEC-9 untuk legalitas dan lulus
+    - [x] 1. Item `terverifikasi:false` atau `nilai` kosong tidak ada di `dist/index.html`
+    - [x] 2. Link bukti memakai `rel="noopener noreferrer"`
+    - [x] 3. Dengan legalitas kosong, blok hilang dan build hanya memberi peringatan
+    - [x] 4. `content.test.mjs` memuat tes SEC-9 untuk legalitas dan lulus
 
 ## Fase 1 · Alur & Syarat Penerbitan
+  - Catatan: npm run check 0 errors; npm run build, test:dist 17 pass, test:content 11 pass. Blok `.legal` ada di Profil.astro, memakai `legalitasTampil` (BR-1). Seed (semua terverifikasi:false): blok tidak dirender, build mencetak "[BR-6] Profil: tidak ada legalitas terverifikasi", build lulus, grep `class="legal"` dist = 0. Uji data (dikembalikan): 3 item (verified+bukti, tidak terverifikasi, nilai kosong) → dist memuat NILAI-A-UJI sekali, NILAI-B-RAHASIA 0 kali, link bukti `<a href="https://contoh.id/bukti" target="_blank" rel="noopener noreferrer">`, test:dist 17 pass. Mutasi: cek `terverifikasi` dihapus dari visible.ts → test:dist 16 pass 1 fail (dikembalikan). Tes baru: content `SEC-9 fixture legalitas`, dist `FR-6 / SEC-9`. Sempat menemukan bug di tes sendiri (nilai kosong cocok dengan string apa pun), sudah diperbaiki. README bagian "Konten legalitas dan testimoni" mencatat reviewer kedua (BR-9). impeccable detect Profil.astro + dist/index.html exit 0. legalitas.json dan visible.ts identik dengan HEAD.
 - [ ] t13 · Section alur terbit dengan durasi dan biaya (M)
   - Butuh: t2, t10
   - Kerjakan: Buat `src/components/Alur.astro` (`id="alur"`) memakai `<ol>` dari `alur.json` urut `nomor`: judul, deskripsi, penanggung jawab, durasi, biaya, output (FR-9, BR-11). Buka dengan kalimat jawaban otomatis 'Terbit lewat N tahap; durasi dan biaya tiap tahap tertulis di bawah' (GEO-3). Skema zod sudah memblok durasi/biaya kosong; tambah tes di `content.test.mjs` bahwa 100% tahap punya keduanya. Tanggal tidak dipakai di section ini. Daftarkan di `sections.ts`.

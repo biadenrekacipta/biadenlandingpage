@@ -147,3 +147,16 @@ test('FR-8 / BR-3: setiap klaim angka tampil bersama sumbernya', () => {
   assert.equal((html.match(/class="klaim-item"/g) || []).length, klaim.length);
   for (const k of klaim) assert.ok(html.includes(`Sumber: ${esc(k.sumber)}`), k.label);
 });
+
+test('FR-6 / SEC-9: dist hanya memuat legalitas terverifikasi, link bukti pakai rel aman', () => {
+  const html = readFileSync(join(dist, 'index.html'), 'utf8');
+  const items = loadJson('legalitas');
+  const ok = items.filter((i) => i.terverifikasi === true && i.nilai.trim() !== '');
+  const blok = /<div class="legal"[\s\S]*?<\/ul>/.exec(html)?.[0] ?? '';
+  assert.equal((blok.match(/class="legal-item"/g) || []).length, ok.length);
+  for (const i of items.filter((x) => !ok.includes(x))) {
+    if (i.nilai.trim() === '' || ok.some((o) => o.nilai === i.nilai)) continue;
+    assert.ok(!blok.includes(esc(i.nilai)), `legalitas tak terverifikasi bocor: ${i.label}`);
+  }
+  for (const m of blok.matchAll(/<a [^>]*>/g)) assert.match(m[0], /rel="noopener noreferrer"/);
+});

@@ -1,10 +1,14 @@
 ---
-import { getEntry } from 'astro:content';
+import { getEntry, getCollection } from 'astro:content';
+import { legalitasTampil } from '../lib/visible';
 import Kontak from './Kontak.astro';
 // FR-5, FR-7, FR-8: profil, kontak, dan angka klaim dari site.json.
 // BR-3: klaim hanya tampil bila sumber terisi (skema zod juga menggagalkan build tanpa sumber).
 const site = (await getEntry('site', 'site'))!.data;
 const klaim = site.klaimAngka.filter((k) => k.sumber.trim() !== '');
+// FR-6, BR-1: legalitas tampil hanya bila terverifikasi dan nilai terisi; 0 item = blok hilang + peringatan (BR-6).
+const legal = legalitasTampil((await getCollection('legalitas')).map((e) => e.data));
+if (legal.length === 0) console.warn('[BR-6] Profil: tidak ada legalitas terverifikasi, blok legalitas disembunyikan.');
 ---
 <section id="profil" aria-labelledby="profil-title">
   <p class="lbl">Profil</p>
@@ -14,6 +18,22 @@ const klaim = site.klaimAngka.filter((k) => k.sumber.trim() !== '');
     <p class="lbl">Kontak resmi</p>
     <Kontak />
   </div>
+  {legal.length > 0 && (
+    <div class="legal">
+      <h3 class="lbl">Legalitas terverifikasi</h3>
+      <ul class="legal-list">
+        {legal.map((l) => (
+          <li class="legal-item">
+            <span class="lbl">{l.label}</span>
+            <span class="legal-nilai">{l.nilai}</span>
+            {l.buktiUrl && l.buktiUrl !== '[verify]' && (
+              <a href={l.buktiUrl} target="_blank" rel="noopener noreferrer">Lihat bukti<span class="sr"> {l.label} (tab baru)</span></a>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )}
   {klaim.length > 0 && (
     <dl class="klaim">
       {klaim.map((k) => (
@@ -32,6 +52,12 @@ const klaim = site.klaimAngka.filter((k) => k.sumber.trim() !== '');
   h2 { margin: 0; font-weight: 400; font-size: clamp(28px, 4.4vw, 56px); line-height: 1.05; letter-spacing: -0.02em; }
   .profil-lead { max-width: 60ch; font-size: 19px; line-height: 1.5; }
   .profil-kontak { display: grid; gap: var(--space-1); }
+  .legal { display: grid; gap: var(--space-1); }
+  .legal h3 { margin: 0; }
+  .legal-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-1); }
+  .legal-item { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-2); border-top: 1px solid var(--rule); padding-top: var(--space-1); }
+  .legal-item a { display: inline-flex; align-items: center; min-height: 44px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .klaim { display: grid; gap: var(--space-2); margin: var(--space-1) 0 0; }
   .klaim-item { border-top: 1px solid var(--rule); padding-top: var(--space-1); display: grid; gap: 4px; }
   .klaim-item dd { margin: 0; }

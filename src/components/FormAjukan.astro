@@ -7,6 +7,7 @@ const peran = ['Mahasiswa', 'Dosen', 'Peneliti', 'Penulis umum', 'Lainnya'];
 const jenis = ['Ajukan naskah buku', 'Ajukan artikel jurnal', 'Pertanyaan umum'];
 // ponytail: access key dibaca dari env publik; kosong saat dev/CI. Key produksi dibatasi domain di dashboard (SEC-5).
 const accessKey = import.meta.env.PUBLIC_WEB3FORMS_KEY ?? '';
+if (!accessKey) console.warn('[t16] PUBLIC_WEB3FORMS_KEY kosong: form tidak akan terkirim sebelum key diisi di env.');
 const siteUrl = (Astro.site?.href ?? 'http://localhost:4321/').replace(/\/$/, '');
 const redirect = `${siteUrl}/terima-kasih/`;
 const isEmail = site.email.includes('@');
@@ -24,7 +25,7 @@ const waLink = /^\d{8,15}$/.test(waDigits) ? `https://wa.me/${waDigits}` : null;
       <input type="hidden" name="from_name" value={`Situs ${site.nama}`} />
       <input type="hidden" name="redirect" value={redirect} />
       <p class="hp" aria-hidden="true">
-        <label>Jangan diisi <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" /></label>
+        <label>Jangan diisi <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true" /></label>
       </p>
 
       <div class="field">

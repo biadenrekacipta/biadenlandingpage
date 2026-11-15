@@ -251,3 +251,36 @@ test('FR-18: link email dan WhatsApp tampil di samping form', () => {
   assert.ok(/<aside\b/.test(sec) && sec.includes(site.email));
   assert.ok(sec.includes(site.whatsapp));
 });
+
+// t16 / FR-14 / BUG-2 / SEC-1 / SEC-6: koneksi Web3Forms.
+test('FR-14: form POST ke Web3Forms dengan hidden field access_key, subject, from_name, redirect', () => {
+  const sec = formHtml();
+  const form = /<form\b[^>]*>/.exec(sec)[0];
+  assert.match(form, /action="https:\/\/api\.web3forms\.com\/submit"/);
+  assert.match(form, /method="POST"/i);
+  for (const n of ['access_key', 'subject', 'from_name', 'redirect']) {
+    const tag = tagOf(sec, n);
+    assert.ok(tag && /type="hidden"/.test(tag), `hidden ${n}`);
+  }
+  assert.ok(sec.includes('name="subject" value="') && !/name="subject" value(?=[\s>])/.test(sec), 'subject tidak boleh kosong');
+});
+
+test('BUG-2: redirect = SITE_URL lingkungan + /terima-kasih/', () => {
+  const tag = tagOf(formHtml(), 'redirect');
+  assert.equal(attr(tag, 'value'), `${SITE_URL.replace(/\/$/, '')}/terima-kasih/`);
+});
+
+test('SEC-1: honeypot botcheck tersembunyi dari pengguna dan teknologi bantu', () => {
+  const tag = tagOf(formHtml(), 'botcheck');
+  assert.ok(tag);
+  assert.equal(attr(tag, 'tabindex'), '-1');
+  assert.equal(attr(tag, 'autocomplete'), 'off');
+  assert.equal(attr(tag, 'aria-hidden'), 'true');
+  assert.ok(!/\brequired\b/.test(tag));
+});
+
+test('SEC-6: form-action CSP hanya Web3Forms dan action form sama dengan itu', () => {
+  const csp = /Content-Security-Policy:\s*(.*)/.exec(readFileSync(join(dist, '_headers'), 'utf8'))[1];
+  assert.equal(/form-action ([^;]+)/.exec(csp)[1].trim(), 'https://api.web3forms.com');
+  for (const [p, html] of htmlFiles()) for (const m of html.matchAll(/<form\b[^>]*\baction="([^"]+)"/g)) assert.equal(m[1], 'https://api.web3forms.com/submit', p);
+});

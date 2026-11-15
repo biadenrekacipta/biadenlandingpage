@@ -180,18 +180,19 @@ Aturan untuk agent:
     - [x] 4. Link email dan WhatsApp tampil di samping form
     - [x] 5. `npx impeccable detect src/components/FormAjukan.astro` tanpa temuan
   - Catatan: `npm run check` 0 errors; `npm run build && npm run test:dist` = 24 pass 0 fail (4 tes baru: atribut BR-7 tiap field + opsi select + tanpa script, pattern link_naskah, persetujuan menaut /kebijakan-privasi/, aside email/WhatsApp). Mutasi (dikembalikan): `required` dihapus dari `nama` → 23 pass 1 fail. Browser (`astro preview`, `checkValidity`): form kosong invalid dengan 7 field wajib (nama, email, peran, jenis, judul_atau_topik, pesan, persetujuan); `link_naskah` `http://x.id` dan `javascript:alert(1)` patternMismatch=true, `https://x.id/a` valid. `npx impeccable detect src/components/FormAjukan.astro dist/index.html` exit 0 tanpa temuan (engine regex untuk .astro). File: `src/components/FormAjukan.astro`, `index.astro` memakainya (ganti stub). Field hidden/honeypot untuk t16 sudah ada di komponen ini. Belum diuji: 360/768/1280 px visual (pane tersembunyi, lebar viewport 0); dicek di gate t19.
-- [ ] t16 · Sambungkan form ke Web3Forms (redirect, honeypot, CSP) (M)
+- [!] t16 · Sambungkan form ke Web3Forms (redirect, honeypot, CSP) (M)
   - Butuh: t8, t15
   - Kerjakan: Set `action="https://api.web3forms.com/submit"` `method="POST"` dan hidden field `access_key` (dari `PUBLIC_WEB3FORMS_KEY`), `subject`, `from_name`, `redirect` = `${SITE_URL}/terima-kasih/` (BUG-2), dan honeypot `botcheck` yang disembunyikan dari pengguna (`aria-hidden`, `tabindex=-1`, `autocomplete=off`) (FR-14, SEC-1). Pastikan CSP `form-action` hanya ke Web3Forms (SEC-6). Uji manual di staging dan produksi.
   - Keputusan terbuka:
     - Access key untuk preview *.pages.dev: pakai key yang sama atau terpisah? (usul: Key terpisah untuk preview lewat env Cloudflare Pages tingkat preview; key produksi dibatasi ke domain produksi (SEC-5).)
   - Cek: `npm run build && npm run test:dist` untuk cek hidden field dan `_headers`; kirim satu submission uji di preview, cek email staf masuk dan URL akhir; kirim dengan `botcheck` terisi dan pastikan tidak ada email.
   - Selesai jika:
-    - [ ] 1. Form POST ke endpoint Web3Forms dengan semua hidden field yang diminta FR-14
-    - [ ] 2. Nilai `redirect` memakai `SITE_URL` lingkungan masing-masing
+    - [x] 1. Form POST ke endpoint Web3Forms dengan semua hidden field yang diminta FR-14
+    - [x] 2. Nilai `redirect` memakai `SITE_URL` lingkungan masing-masing
     - [ ] 3. Submit dengan `botcheck` terisi ditolak layanan
     - [ ] 4. Submission uji di staging mendarat di `/terima-kasih/` staging dan email masuk ke staf
-    - [ ] 5. CSP `form-action` hanya `https://api.web3forms.com`
+    - [x] 5. CSP `form-action` hanya `https://api.web3forms.com`
+  - Catatan: [!] SEBAGIAN. Terbukti statis: poin 1, 2, 5. `npm run check` 0 errors; `npm run build && npm run test:dist` = 28 pass 0 fail (4 tes baru: hidden field FR-14 + action/method, redirect = SITE_URL, honeypot botcheck aria-hidden/tabindex/autocomplete, CSP form-action hanya Web3Forms dan semua action form sama). Lingkungan lain: `SITE_URL=https://staging.example.test npm run build` → `name="redirect" value="https://staging.example.test/terima-kasih/"` dan test:dist 28 pass. Mutasi (dikembalikan): `https://evil.example` ditambah ke `form-action` di `_headers` → 26 pass 2 fail. Keputusan terbuka: key preview terpisah dari key produksi (usulan), ditulis di README. BELUM TERBUKTI: poin 3 (submit dengan `botcheck` terisi ditolak layanan) dan poin 4 (submission uji di staging mendarat di `/terima-kasih/` staging dan email masuk ke staf). Keduanya butuh submission nyata ke api.web3forms.com dengan access key, deploy staging, dan akses email staf; sengaja tidak dilakukan (key = identitas pihak ketiga, dilarang diisi agent). Sisa untuk manusia: isi `PUBLIC_WEB3FORMS_KEY` (preview dan produksi), deploy preview, kirim satu submission uji dan satu dengan botcheck terisi, cek email staf dan URL akhir. Markup form (hidden field, honeypot) ada di `src/components/FormAjukan.astro` sejak t15; `access_key` dirender kosong tanpa env.
 - [ ] t17 · Halaman /terima-kasih/ noindex (S)
   - Butuh: t2, t14, t16
   - Kerjakan: Buat `src/pages/terima-kasih.astro`: meta `robots noindex`, tidak masuk sitemap (FR-16). Isi menjelaskan langkah berikutnya dari tahap nomor 2 di `alur.json` dan SLA bila `slaBalasanHariKerja` terisi (FR-15, BR-12). Tambah link kembali ke beranda. Tes dist: meta noindex ada dan URL tidak ada di sitemap.

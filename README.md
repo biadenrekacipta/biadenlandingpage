@@ -123,3 +123,11 @@ Dua cara:
 2. Lewat git: `git revert <sha>` pada commit bermasalah di `main`, buka PR, merge, dan Pages membangun ulang.
 
 Bukti uji rollback: belum dilakukan (butuh deployment produksi dan akses dashboard). Catat tanggal dan deployment di sini setelah dicoba.
+
+## Form pengajuan (Web3Forms)
+
+- Form mengirim POST langsung ke `https://api.web3forms.com/submit`; CSP `form-action` hanya mengizinkan host itu.
+- Access key dibaca dari env `PUBLIC_WEB3FORMS_KEY`; jangan di-commit. Build mencetak peringatan bila kosong.
+- `redirect` = `${SITE_URL}/terima-kasih/`, jadi tiap lingkungan mendarat di domainnya sendiri (BUG-2).
+- Keputusan: key preview (`*.pages.dev`) terpisah dari key produksi. Set `PUBLIC_WEB3FORMS_KEY` per lingkungan di Cloudflare Pages (tingkat Preview dan Production). Key produksi dibatasi ke domain produksi di dashboard Web3Forms (SEC-5).
+- Honeypot `botcheck` disembunyikan dari pengguna. Uji kirim dengan `botcheck` terisi harus ditolak layanan (belum diuji, butuh key).

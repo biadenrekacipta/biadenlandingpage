@@ -1,0 +1,58 @@
+---
+import type { Section } from '../lib/sections';
+interface Props {
+  nama: string;
+  sections: Section[];
+}
+const { nama, sections } = Astro.props;
+---
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="nav-brand" href="/">{nama}</a>
+    <nav aria-label="Navigasi utama">
+      {/* ponytail: dua daftar (inline di desktop, <details> di mobile) tanpa JS. Satu <details> yang dipaksa terbuka di desktop butuh ::details-content yang belum merata di browser. */}
+      <ul class="nav-desktop">
+        {sections.map((s) => <li><a class="nav-link lbl" href={`#${s.id}`}>{s.label}</a></li>)}
+      </ul>
+      <details class="nav-mobile">
+        <summary class="box lbl">Menu</summary>
+        <ul class="nav-panel">
+          {sections.map((s) => <li><a class="nav-link lbl" href={`#${s.id}`}>{s.label}</a></li>)}
+        </ul>
+      </details>
+    </nav>
+  </div>
+</header>
+<style>
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    height: var(--header-h);
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
+  }
+  .nav-in { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+  .nav-brand { font-size: 22px; letter-spacing: -0.01em; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
+  ul { list-style: none; margin: 0; padding: 0; }
+  .nav-desktop { display: none; gap: var(--space-1); }
+  .nav-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; text-decoration: none; }
+  .nav-link:hover { color: var(--cobalt); }
+  .nav-mobile { position: static; }
+  summary { cursor: pointer; list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+  .nav-panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: var(--header-h);
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
+    padding: var(--space-1) var(--gutter) var(--space-2);
+  }
+  .nav-panel .nav-link { width: 100%; }
+  @media (min-width: 768px) {
+    .nav-desktop { display: flex; }
+    .nav-mobile { display: none; }
+  }
+</style>

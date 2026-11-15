@@ -109,17 +109,17 @@ Aturan untuk agent:
     - [x] 4. CTA 'Ajukan Naskah' terlihat tanpa scroll di viewport 360x640
     - [x] 5. `npx impeccable detect src/components/Hero.astro` tanpa temuan
   - Catatan: `npm run build && npm run test:dist && npm run test:content` lulus (dist 11 pass, content 10 pass); `npm run check` 0 errors. Tes baru: dist (tepat satu `<h1`, CTA `href="#ajukan"` dengan `data-umami-event="cta-ajukan"`, badge ≤3), content (`tampilDiHero:true` ≤3). `grep -o '<h1' dist/index.html` = 1. Kondisi katalog kosong (seed): CTA kedua `Lihat Alur Terbit` href `#alur`, tanpa `id="katalog"`. Mutasi (dikembalikan): jurnal `unggulan:true` → `Lihat Katalog` href `#katalog`, `id="katalog"` ada, test:dist 11 pass; 4 legalitas terverifikasi+tampilDiHero → hanya 2 badge karena seed cuma 2 item (batas 3 dijaga `.slice(0,3)` dan tes konten); legalitas `terverifikasi:false` dengan nilai FIX-2 → 0 kemunculan di dist. 360x640 (browser pane, `astro preview`): tombol 'Ajukan Naskah' top 205,8 px, bottom 249,8 px (< 640, ruang untuk header 64 px di t10), scrollWidth 360 (tanpa scroll horizontal), h1 Newsreader. `npx impeccable detect src/components/Hero.astro dist/index.html` tanpa temuan (eyebrow nama dibuang karena memicu `hero-eyebrow-chip`). `index.astro` memuat `<section id="katalog">` stub hanya bila ada item katalog tampil, agar CTA tidak mati (BUG-4) sampai Katalog.astro (t21). Tagline/ringkasan masih placeholder `[verify]` dari `site.json` (GR-11).
-- [ ] t10 · Nav header tanpa JS dari section yang tampil (M)
+- [x] t10 · Nav header tanpa JS dari section yang tampil (M)
   - Butuh: t2, t9
   - Kerjakan: Buat `src/lib/sections.ts` yang mendaftar section yang benar-benar dirender (id + label) dan `src/components/Nav.astro` yang membangun anchor dari daftar itu (FR-2, BR-6). Menu mobile pakai `<details>` tanpa JavaScript (TC-7). Set `scroll-margin-top` sebesar tinggi header pada semua section target (BUG-3). Target sentuh ≥44 px, fokus terlihat. Tes dist: setiap `href="#x"` di nav punya `id="x"`, dan build dengan `testimoni.json` kosong tidak punya link `#testimoni` (BUG-4).
   - Cek: `npm run build && npm run test:dist`; di DevTools 360 px klik tiap link nav dan cek judul section tidak tertutup; `npx impeccable detect src/components/Nav.astro`.
   - Selesai jika:
-    - [ ] 1. Nav hanya berisi anchor ke section yang ada di HTML
-    - [ ] 2. Menu mobile memakai `<details>` dan tidak ada script
-    - [ ] 3. Tes dist: setiap `href="#x"` punya `id="x"` (BUG-4)
-    - [ ] 4. Anchor tidak tertutup header sticky di 360 px (BUG-3)
-    - [ ] 5. `npx impeccable detect` pada file Nav tanpa temuan
-
+    - [x] 1. Nav hanya berisi anchor ke section yang ada di HTML
+    - [x] 2. Menu mobile memakai `<details>` dan tidak ada script
+    - [x] 3. Tes dist: setiap `href="#x"` punya `id="x"` (BUG-4)
+    - [x] 4. Anchor tidak tertutup header sticky di 360 px (BUG-3)
+    - [x] 5. `npx impeccable detect` pada file Nav tanpa temuan
+  - Catatan: `npm run check` 0 errors; `npm run build && npm run test:dist` = 13 pass 0 fail; `npm run test:content` 10 pass. `src/lib/sections.ts` (`sectionTampil`, fungsi murni) jadi sumber tunggal nav dan markup di `index.astro`; hanya section yang sudah dirender yang didaftarkan (profil, alur, katalog bila ada item, ajukan); testimoni dan FAQ didaftarkan saat komponennya dibuat (t23, t25), jadi tanpa testimoni tidak ada `#testimoni` di dist. Tes dist baru: nav ⊂ id section dan tiap section ada di nav, menu `<details class="nav-mobile">`, tanpa `<script>` di header, `section[id]` punya `scroll-margin-top: var(--header-h)`. Mutasi (dikembalikan): jurnal `unggulan:true` → `#katalog` muncul di nav dan section, test:dist 13 pass. Browser pane 360x640 (`astro preview`): header 64 px, tombol Menu 44 px, tiap link panel 44 px, scrollWidth 360; dengan spacer 2000 px (halaman kerangka terlalu pendek untuk scroll), klik tiap link menempatkan section di top=64 px, `scroll-margin-top` terhitung 64px = tinggi header. `npx impeccable detect src/components/Nav.astro src/pages/index.astro dist/index.html dist/404.html` tanpa temuan. Catatan: nav punya dua daftar link (inline desktop + `<details>` mobile; ditandai komentar `ponytail:`) karena satu `<details>` terbuka di desktop butuh `::details-content`. Fokus terlihat memakai `:focus-visible` global (outline cobalt); belum diuji keyboard manual.
 ## Fase 1 · Profil Penerbit & Legalitas
 - [ ] t11 · Section profil, kontak, angka klaim (S)
   - Butuh: t2, t10

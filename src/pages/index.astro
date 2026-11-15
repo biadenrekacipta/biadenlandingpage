@@ -2,6 +2,8 @@
 import { getEntry, getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import Hero from '../components/Hero.astro';
+import Nav from '../components/Nav.astro';
+import { sectionTampil } from '../lib/sections';
 import { katalogTampil } from '../lib/visible';
 // Memaksa semua koleksi divalidasi saat build (t3).
 await Promise.all(
@@ -15,16 +17,20 @@ const adaKatalog =
   katalogTampil((await getCollection('buku')).map((e) => e.data)).length +
     katalogTampil((await getCollection('jurnal')).map((e) => e.data)).length >
   0;
+// Daftar section = sumber tunggal untuk nav dan markup (t10). Section lain didaftarkan saat komponennya dibuat.
+const ada = sectionTampil({ profil: true, alur: true, katalog: adaKatalog, ajukan: true });
+const tampil = (id: string) => ada.some((s) => s.id === id);
 // ponytail: kerangka section; isi diganti komponen di t9-t25. Judul di bawah hanya struktur, bukan klaim.
 const title = `${site.nama}: Penerbit Buku dan Jurnal Akademik`;
 const description = `Penerbit buku dan jurnal akademik ${site.nama}. Lihat profil, alur terbit, dan ajukan naskah Anda.`;
 ---
 <Base title={title} description={description}>
+  <Nav slot="header" nama={site.nama} sections={ada} />
   <div class="wrap">
     <Hero />
-    <section id="profil"><h2>Profil</h2></section>
-    <section id="alur"><h2>Alur Terbit</h2></section>
-    {adaKatalog && <section id="katalog"><h2>Katalog</h2></section>}
-    <section id="ajukan"><h2>Ajukan Naskah</h2></section>
+    {tampil('profil') && <section id="profil"><h2>Profil</h2></section>}
+    {tampil('alur') && <section id="alur"><h2>Alur Terbit</h2></section>}
+    {tampil('katalog') && <section id="katalog"><h2>Katalog</h2></section>}
+    {tampil('ajukan') && <section id="ajukan"><h2>Ajukan Naskah</h2></section>}
   </div>
 </Base>

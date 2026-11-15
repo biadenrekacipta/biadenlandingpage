@@ -101,3 +101,22 @@ test('FR-1 / SEO-6: beranda punya tepat satu h1, CTA utama, dan badge hero maks 
   assert.match(html, /<a [^>]*href="#ajukan"[^>]*data-umami-event="cta-ajukan"[^>]*>Ajukan Naskah<\/a>/);
   assert.ok((html.match(/class="badge /g) || []).length <= 3);
 });
+
+test('FR-2 / BUG-4: nav hanya berisi anchor ke section yang ada, menu mobile <details>, tanpa script', () => {
+  const html = readFileSync(join(dist, 'index.html'), 'utf8');
+  const nav = /<header class="nav"[\s\S]*?<\/header>/.exec(html)?.[0];
+  assert.ok(nav, 'header nav tidak ada');
+  assert.match(nav, /<details class="nav-mobile"/);
+  assert.ok(!/<script/.test(nav), 'nav tidak boleh berisi script');
+  const ids = new Set([...html.matchAll(/<section[^>]*\sid="([^"]+)"/g)].map((m) => m[1]));
+  const links = [...nav.matchAll(/href="#([^"]+)"/g)].map((m) => m[1]);
+  assert.ok(links.length > 0);
+  for (const id of links) assert.ok(ids.has(id), `nav menaut ke #${id} yang tidak ada`);
+  // tiap section tampil punya link di nav
+  for (const id of ids) assert.ok(links.includes(id), `section #${id} tidak ada di nav`);
+});
+
+test('BUG-3: semua section[id] mendapat scroll-margin-top setinggi header', () => {
+  const cssFile = walk(join(dist, '_astro'), '.css').map((f) => readFileSync(f, 'utf8')).join('\n');
+  assert.match(cssFile, /section\[id\][^{]*\{[^}]*scroll-margin-top:\s*var\(--header-h\)/);
+});

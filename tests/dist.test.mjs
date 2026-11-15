@@ -656,3 +656,76 @@ test('TC-9: sumber gambar di src/assets ≤ 1 MB dan hasil optimasi di dist/_ast
     assert.ok(statSync(f).size <= 200 * 1024, `${f}: hasil optimasi > 200 KB`);
   }
 });
+
+// ---- t32: SEO/GEO ----
+const stripTags = (s) => s.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+const decode = (s) => s.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+const readJson = (n) => JSON.parse(readFileSync(join(root, 'src', 'content', `${n}.json`), 'utf8'));
+
+test('SEO-6: tepat satu <h1> per halaman dan urutan heading tidak melompat', () => {
+  for (const [p, html] of htmlFiles()) {
+    const levels = [...html.matchAll(/<h([1-6])\b/g)].map((m) => Number(m[1]));
+    assert.equal(levels.filter((l) => l === 1).length, 1, `${p}: jumlah h1`);
+    assert.equal(levels[0], 1, `${p}: heading pertama bukan h1`);
+    for (let i = 1; i < levels.length; i++) assert.ok(levels[i] - levels[i - 1] <= 1, `${p}: heading melompat h${levels[i - 1]} ke h${levels[i]}`);
+  }
+});
+
+test('SEO-6: teks link deskriptif (bukan "klik di sini") dan tidak kosong', () => {
+  const buruk = /^(klik di sini|klik disini|di sini|disini|klik|link|tautan|selengkapnya|baca selengkapnya|click here|here)$/i;
+  for (const [p, html] of htmlFiles()) {
+    for (const m of html.matchAll(/<a\b[^>]*>([\s\S]*?)<\/a>/g)) {
+      const teks = decode(stripTags(m[1].replace(/<span class="sr">[\s\S]*?<\/span>/g, (s) => s)));
+      assert.ok(teks !== '', `${p}: link tanpa teks ${m[0]}`);
+      assert.ok(!buruk.test(teks), `${p}: teks link tidak deskriptif "${teks}"`);
+    }
+  }
+});
+
+test('SEO-7: teks hero, alur, dan katalog ada di HTML hasil build (tanpa JS)', () => {
+  const html = decode(indexHtml());
+  const teks = decode(stripTags(html));
+  const site = readJson('site')[0];
+  assert.ok(teks.includes(site.tagline), 'tagline hero tidak ada di HTML');
+  assert.ok(teks.includes(site.ringkasan), 'ringkasan hero tidak ada di HTML');
+  for (const t of readJson('alur')) {
+    assert.ok(teks.includes(t.judul), `judul tahap alur "${t.judul}" tidak ada di HTML`);
+    assert.ok(teks.includes(t.durasi) && teks.includes(t.biaya), `durasi/biaya tahap "${t.judul}" tidak ada`);
+  }
+  const buku = readJson('buku').filter((b) => b.unggulan && b.status !== 'diarsipkan');
+  const jurnal = readJson('jurnal').filter((j) => j.unggulan && j.status !== 'diarsipkan');
+  for (const b of buku) assert.ok(teks.includes(b.judul), `judul buku "${b.judul}" tidak ada di HTML`);
+  for (const j of jurnal) assert.ok(teks.includes(j.nama), `nama jurnal "${j.nama}" tidak ada di HTML`);
+  // Tidak ada hasil render sisi klien: konten tidak boleh bergantung pada <script> non-JSON-LD, kecuali Umami.
+  for (const m of html.matchAll(/<script\b([^>]*)>/g)) {
+    assert.ok(/application\/ld\+json/.test(m[1]) || /cloud\.umami\.is/.test(m[1]), `script tak terduga: ${m[0]}`);
+  }
+});
+
+test('GEO-3: paragraf pembuka tiap section kunci ada (hero, profil, alur, katalog bila tampil)', () => {
+  const html = indexHtml();
+  const ada = (cls) => new RegExp(String.raw`<p class="${cls}"[^>]*>\s*\S`).test(html);
+  assert.ok(ada('hero-sum'), 'paragraf pembuka hero');
+  assert.ok(ada('profil-lead'), 'paragraf pembuka profil');
+  assert.ok(ada('alur-lead'), 'paragraf pembuka alur');
+  if (/<section[^>]*\bid="katalog"/.test(html)) assert.ok(ada('katalog-lead'), 'paragraf pembuka katalog');
+});
+
+test('GEO-6 / BR-17: footer memuat "Terakhir diperbarui" dengan tanggal dari site.json', () => {
+  const site = readJson('site')[0];
+  for (const [p, html] of htmlFiles()) {
+    const foot = /<footer[\s\S]*?<\/footer>/.exec(html)?.[0];
+    assert.ok(foot, `${p}: tidak ada footer`);
+    assert.match(foot, /Terakhir diperbarui/, p);
+    assert.ok(foot.includes(`datetime="${site.lastUpdated}"`), `${p}: datetime`);
+  }
+});
+
+test('GEO-6: tiap kartu buku menampilkan penulis (jurnal belum punya field editor di Model Data)', () => {
+  const html = decode(indexHtml());
+  for (const b of readJson('buku').filter((x) => x.unggulan && x.status !== 'diarsipkan')) {
+    const kartu = html.split('<li class="kartu kartu-buku"').slice(1).find((k) => k.includes(b.judul));
+    assert.ok(kartu, `kartu buku "${b.judul}" tidak ada`);
+    assert.ok(kartu.includes(b.penulis), `penulis "${b.penulis}" tidak tampil di kartu "${b.judul}"`);
+  }
+});

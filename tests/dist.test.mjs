@@ -450,5 +450,28 @@ test('FR-27 / SEC-3: tiap item FAQ jadi <details><summary>, teks ter-escape, tan
     assert.ok(sec.includes(esc(f.pertanyaan)), `pertanyaan hilang: ${f.pertanyaan}`);
     assert.ok(sec.includes(esc(f.jawaban)), `jawaban hilang: ${f.id}`);
   }
-  assert.ok(!/<script/.test(sec), 'script di dalam FAQ');
+  assert.ok(!/<script(?![^>]*ld\+json)/.test(sec), 'script di dalam FAQ');
+});
+
+// FR-29 / BUG-6 / GEO-4: JSON-LD FAQPage dari data yang sama dengan <details>.
+const faqLd = () =>
+  [...indexHtml().matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)]
+    .map((m) => JSON.parse(m[1]))
+    .flatMap((j) => (j['@graph'] ? j['@graph'] : [j]))
+    .filter((n) => n['@type'] === 'FAQPage');
+
+test('FR-29: FAQ kosong → tanpa FAQPage', { skip: faqAll.length > 0 }, () => {
+  assert.equal(faqLd().length, 0);
+});
+
+test('FR-29 / BUG-6: jumlah Question = jumlah <details> FAQ, teks identik dengan <summary>', { skip: faqAll.length === 0 }, () => {
+  const nodes = faqLd();
+  assert.equal(nodes.length, 1);
+  const qs = nodes[0].mainEntity.filter((q) => q['@type'] === 'Question');
+  const sec = faqSec();
+  assert.equal(qs.length, (sec.match(/<details/g) || []).length);
+  const sums = [...sec.matchAll(/<summary[^>]*>([\s\S]*?)<\/summary>/g)].map((m) => m[1]);
+  assert.deepEqual(qs.map((q) => esc(q.name)), sums);
+  for (const q of qs) assert.equal(q.acceptedAnswer['@type'], 'Answer');
+  for (const m of indexHtml().matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)) assert.ok(!m[1].includes('<'));
 });

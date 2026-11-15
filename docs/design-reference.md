@@ -405,3 +405,24 @@ Dibuat 2026-11-15 atas arahan user: prompt di atas dipakai sebagai referensi UI.
 - PRD melarang JavaScript selain Umami (TC-7), tanpa inline script (TC-6), dan melarang halaman detail per item (bagian 6). Referensi mengandalkan JS (rak 3D, kursor, caption, sheet detail).
 - Usul: seluruh konten tetap ada di HTML statis tanpa JS (SEO-7). Rak 3D, kursor, dan animasi hanya peningkatan progresif lewat skrip eksternal `'self'` (bukan inline) yang diizinkan CSP; tanpa JS, katalog tampil sebagai grid kartu biasa. Jika PRD tidak boleh dilonggarkan, kerjakan versi CSS-only dan catat kekurangannya.
 - Sheet detail dipakai sebagai panel ringkasan di halaman yang sama (tanpa route baru), dengan link eksternal ke toko/situs jurnal.
+
+## Keputusan t7 (2026-11-15)
+
+**Konflik JS vs PRD (TC-6, TC-7) diputuskan: semua konten di HTML statis; tema lewat CSS murni.**
+- Dipakai sekarang: token `--paper/--sheet/--ink/--muted/--cobalt/--rule/--ease`, label `.lbl`/`.box`, grain kertas, Newsreader + Inter Tight self-host, `prefers-reduced-motion`. Semua di `src/styles/tokens.css`, tanpa JavaScript.
+- Grain dibuat sebagai berkas `public/grain.svg` (bukan data-URI) agar lolos CSP `default-src 'self'`. Astro dipaksa `inlineStylesheets: 'never'` agar tidak ada `<style>` inline.
+- **Belum dikerjakan (pekerjaan lanjutan):** rak 3D, kursor kustom, caption bermask, sheet detail, tab dekade. Rencana: satu skrip eksternal `'self'` (bukan inline), murni peningkatan progresif; katalog tanpa JS tetap grid kartu biasa. Ditunda karena PRD membatasi JS selain Umami (bagian 12) dan katalog baru ada di Fase 2 (t21). Perlu keputusan PRD sebelum dikerjakan.
+- Sheet gambar Higgsfield hanya contoh; tidak di-hotlink dan tidak diunduh.
+
+**Font (self-host, `public/fonts/`, lisensi SIL OFL 1.1, subset latin, woff2, diunduh 2026-11-15 dari fonts.gstatic.com):**
+| Berkas | Isi | Ukuran |
+|---|---|---|
+| `newsreader-latin.woff2` | Newsreader 400 (variabel opsz) | 55,9 KB |
+| `newsreader-italic-latin.woff2` | Newsreader italic 400 | 61,8 KB |
+| `inter-tight-latin.woff2` | Inter Tight variabel, dipakai 500 dan 600 | 43,8 KB |
+Noto Sans JP/Serif SC tidak dipakai (situs hanya `lang="id"`).
+
+**Penyimpangan dari referensi:**
+- `.lbl` 11px (referensi 10.5px): detector impeccable menolak teks fungsional di bawah 11px.
+- `.box` min-height 44px (referensi 21px): target sentuh ≥44px (EC-1.9).
+- Detector `cream-palette` menandai `--paper` #EDEBE6; warna itu diwajibkan referensi (GR-12), jadi disuppress di `.impeccable/config.json` untuk `dist/**` dengan alasan tertulis.

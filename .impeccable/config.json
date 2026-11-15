@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "cream-palette",
+        "value": "*",
+        "files": [
+          "dist/**"
+        ],
+        "createdAt": "2026-11-15T15:20:29.101Z",
+        "reason": "Warna --paper #EDEBE6 diwajibkan docs/design-reference.md (GR-12)"
+      }
+    ]
+  }
+}

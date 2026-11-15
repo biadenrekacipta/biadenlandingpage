@@ -1,0 +1,23 @@
+---
+import '../styles/tokens.css';
+import Head from '../components/Head.astro';
+import Footer from '../components/Footer.astro';
+interface Props {
+  title: string;
+  description: string;
+  noindex?: boolean;
+}
+const { title, description, noindex = false } = Astro.props;
+---
+<!doctype html>
+<html lang="id">
+  <head>
+    <Head title={title} description={description} noindex={noindex} />
+  </head>
+  <body>
+    <a class="skip lbl" href="#main">Lewati ke konten</a>
+    <slot name="header" />
+    <main id="main" tabindex="-1"><slot /></main>
+    <Footer />
+  </body>
+</html>

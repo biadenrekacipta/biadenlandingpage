@@ -1,0 +1,3 @@
+Newsreader (Production Type) dan Inter Tight (The Inter Project Authors): SIL Open Font License 1.1.
+Sumber: Google Fonts (subset latin, woff2), diunduh 2026-11-15 dari fonts.gstatic.com dan di-host sendiri.
+https://openfontlicense.org

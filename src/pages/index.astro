@@ -1,20 +1,23 @@
 ---
+import { getEntry } from 'astro:content';
+import Base from '../layouts/Base.astro';
+// Memaksa semua koleksi divalidasi saat build (t3).
 import { getCollection } from 'astro:content';
-// Memaksa semua koleksi divalidasi saat build (t3). Dipakai ulang oleh komponen di task berikutnya.
-const [site] = await getCollection('site');
 await Promise.all(
   ['legalitas', 'alur', 'syarat', 'buku', 'jurnal', 'testimoni', 'mitra', 'faq'].map((c) =>
     getCollection(c as 'faq'),
   ),
 );
+const site = (await getEntry('site', 'site'))!.data;
+// ponytail: kerangka section; isi diganti komponen di t9-t25. Judul di bawah hanya struktur, bukan klaim.
+const title = `${site.nama}: Penerbit Buku dan Jurnal Akademik`;
+const description = `Penerbit buku dan jurnal akademik ${site.nama}. Lihat profil, alur terbit, dan ajukan naskah Anda.`;
 ---
-<html lang="id">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{site?.data.nama}</title>
-  </head>
-  <body>
-    <h1>{site?.data.nama}</h1>
-  </body>
-</html>
+<Base title={title} description={description}>
+  <div class="wrap">
+    <h1>{site.nama}</h1>
+    <section id="profil"><h2>Profil</h2></section>
+    <section id="alur"><h2>Alur Terbit</h2></section>
+    <section id="ajukan"><h2>Ajukan Naskah</h2></section>
+  </div>
+</Base>

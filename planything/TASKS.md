@@ -1,0 +1,371 @@
+<!-- planything project:cc37d689-5d00-432e-81ce-036e542877c8 | managed file: keep task ids, only edit the [ ] markers and Note lines -->
+
+# Task: Landing Page Biadenrekacipta
+
+Penanda status: `[ ]` belum · `[~]` sedang dikerjakan · `[x]` selesai · `[!]` terblokir.
+
+Aturan untuk agent:
+1. Selesaikan dulu task yang sudah `[~]`. Baru setelah itu ambil task paling atas yang belum selesai dan semua "Butuh"-nya sudah `[x]`.
+2. Ganti penandanya jadi `[~]` saat mulai. Jalankan "Cek", lalu centang tiap poin "Selesai jika" (`[x]`) begitu terbukti.
+3. Task jadi `[x]` hanya kalau semua poinnya tercentang dan baris "Catatan" menyebut buktinya: perintah yang dijalankan dan hasilnya, atau path file hasil. Kalau belum, planything mengembalikannya ke `[~]` dan menulis alasannya di baris "planything:".
+4. "Keputusan terbuka": kalau belum dijawab, pakai usulannya dan tulis keputusanmu di baris "Catatan".
+5. Kalau terblokir, pakai `[!]` dan tulis alasannya di baris "Catatan".
+6. Jangan ubah id, urutan, atau menghapus task. Rencana lengkap ada di PRD.md di folder ini.
+7. Tool MCP planything (`get_next_task`, `update_task`) opsional. Kalau tidak tersedia, cukup edit file ini: planything memantaunya setiap detik.
+8. Guardrail `[GR-n]` di PRD.md berlaku untuk setiap task. Kalau sebuah task hanya bisa selesai dengan melanggarnya, tandai `[!]` dan jelaskan di "Catatan". Jangan cari jalan pintas.
+
+## Fase 1 · Fondasi
+- [x] t1 · Setup repo Astro, library Tech Stack, catat versi di README (M)
+  - Kerjakan: Init proyek Astro (template minimal, TypeScript strict) tanpa Tailwind dan tanpa component library. Install hanya library dari Tech Stack: `@astrojs/sitemap`, `@astrojs/check`, `typescript`, `sharp` (cek dulu bawaan Astro atau perlu diinstal), `@lhci/cli`. Atur `astro.config.mjs` dengan `site` dari env `SITE_URL` (TC-8) dan integrasi sitemap. Buat `.node-version` (Node LTS), `.env.example` berisi `SITE_URL`, `PUBLIC_WEB3FORMS_KEY`, `PUBLIC_UMAMI_ID`. Commit lockfile. Tulis `README.md` dengan tabel versi yang benar-benar terpasang (TC-2) dan script npm: `dev`, `build`, `check`, `test:content`, `test:dist`, `lhci`.
+  - Cek: Jalankan `npm ci && npm run check && npm run build`, bandingkan `npm ls --depth=0` dengan tabel versi README, lalu cek diff `package.json` hanya berisi library Tech Stack.
+  - Selesai jika:
+    - [x] 1. `package-lock.json` ter-commit dan `.node-version` ada
+    - [x] 2. Tabel versi di README sama dengan hasil `npm ls --depth=0`
+    - [x] 3. Tidak ada dependensi di luar daftar Tech Stack (GR-6)
+    - [x] 4. `npm run check` dan `npm run build` lulus pada proyek kosong
+  - Catatan: `npm ci && npm run check && npm run build` lulus (check: 0 errors; build: 1 page, sitemap-index.xml dibuat). `npm ls --depth=0` = astro 7.3.8, @astrojs/sitemap 3.7.5, sharp 0.35.5, @astrojs/check 0.9.12, typescript 6.0.3, @lhci/cli 0.15.1; sama dengan tabel README. `git ls-files` memuat package-lock.json dan .node-version (commit lokal 883c68a, tidak di-push). sharp adalah optionalDependency Astro, dipasang eksplisit. `npm audit --omit=dev --audit-level=high` exit 0 (temuan high hanya di rantai @lhci/cli, dev).
+- [x] t2 · Install design skills dan cek docs/design-reference.md (S)
+  - Butuh: t1
+  - Kerjakan: Jalankan `npx ui-ux-pro-max-cli init --ai claude`, `npx skills add Leonxlnx/taste-skill`, dan `npx impeccable install --providers=claude --scope=project` (hook detector jalan setelah tiap edit). Cek `docs/design-reference.md` ada di repo (GR-12). Kalau tidak ada, lapor status `blocked` dan jangan lanjut ke task UI. Tidak ada design kit (tokens.json/DESIGN-KIT.md); task UI mengikuti skill desain dan Alur Pengguna Utama. Catat tiga perintah ini di README.
+  - Cek: Buka folder skill dan konfigurasi hook project, jalankan `npx impeccable detect src` (harus jalan tanpa error), dan `test -f docs/design-reference.md`.
+  - Selesai jika:
+    - [x] 1. Folder skill ui-ux-pro-max dan taste-skill ada di proyek
+    - [x] 2. Hook impeccable terpasang di konfigurasi project
+    - [x] 3. `docs/design-reference.md` ada, atau status `blocked` dilaporkan tertulis
+    - [x] 4. README mencatat tiga perintah instalasi
+  - Catatan: Tiga perintah dijalankan, semua exit 0. `ls .claude/skills` = ui-ux-pro-max, design-taste-frontend (isi taste-skill; `npx skills add` memakai flag `-a claude-code -y` agar non-interaktif), impeccable, dll. `.claude/settings.local.json` memuat hook SessionStart/PostToolUse(Edit|Write)/Stop yang hanya menjalankan binary lokal `impeccable hook`. `npx impeccable detect src` exit 0 (peringatan: .astro hanya dicek regex). `test -f docs/design-reference.md` OK: file ditulis dari prompt user (disalin utuh) plus bagian "Adaptasi Biadenrekacipta" (3 jurnal Bitechnos, Bedsocart, Beconex; konflik dengan TC-7 dicatat untuk diputuskan di t7). README bagian "Skill desain (t2)" mencatat tiga perintah.
+- [x] t3 · Content collections zod, file JSON seed, helper filter (M)
+  - Butuh: t1
+  - Kerjakan: Buat `src/content.config.ts` dengan skema zod untuk 9 file di `src/content/` sesuai Model Data: `site.json` (nama, tagline ≤90, ringkasan, profil, lokasi, email, whatsapp, sameAs, slaBalasanHariKerja?, klaimAngka{label,nilai,sumber wajib min 1 — BR-3}, lastUpdated regex `YYYY-MM-DD` — BUG-1), `legalitas.json`, `alur.json` (durasi dan biaya min 1 — BR-11), `syarat.json`, `buku.json`, `jurnal.json` (status enum terbit/segera-terbit/diarsipkan, ringkasan ≤200, link https), `testimoni.json` (kutipan ≤300, izin, tanggalIzin), `mitra.json` (alt wajib), `faq.json` (jawaban ≤500 teks polos). Isi seed hanya placeholder bertanda `[verify]` (GR-11), jangan karang konten. Buat `src/lib/visible.ts` berisi filter murni: legalitas tampil (BR-1), testimoni tampil (BR-2), item katalog tampil (unggulan, status bukan diarsipkan, BR-10).
+  - Cek: Jalankan `npm run build` pada seed (lulus), lalu kosongkan `durasi` salah satu tahap dan ulangi `npm run build` (harus gagal dengan pesan skema); kembalikan perubahan.
+  - Selesai jika:
+    - [x] 1. Build gagal bila `durasi` atau `biaya` di `alur.json` kosong
+    - [x] 2. Build gagal bila `klaimAngka` ada tanpa `sumber`
+    - [x] 3. Build gagal bila `lastUpdated` bukan format `YYYY-MM-DD`
+    - [x] 4. `visible.ts` menyembunyikan legalitas `terverifikasi:false` dan testimoni tanpa `tanggalIzin`
+    - [x] 5. Seed tidak berisi klaim faktual karangan, hanya placeholder `[verify]`
+  - Catatan: `npm run build` pada seed lulus (peringatan koleksi buku/testimoni/mitra kosong = BR-6). Uji negatif (file dikembalikan sesudahnya, build lulus lagi): `durasi:""` gagal "InvalidContentEntryDataError alur → 1: durasi wajib (BR-11)"; `klaimAngka` tanpa sumber gagal "klaimAngka.0.sumber: Required"; `lastUpdated:"15-11-2026"` gagal "lastUpdated: format YYYY-MM-DD". `node --experimental-strip-types` pada `src/lib/visible.ts`: legalitasTampil 3 input → 1, testimoniTampil 3 → 1, katalogTampil 3 → 1. Seed: semua placeholder `[verify]`; satu-satunya data nyata adalah nama "Biadenrekacipta" dan tiga nama jurnal dari user (Bitechnos, Bedsocart, Beconex), `unggulan:false`. File: `src/content.config.ts`, `src/content/*.json`, `src/lib/visible.ts`. Catatan desain: tiap entri JSON punya `id` (syarat file loader Astro); `sampulAlt` ditambah karena PRD meminta sampul + alt. Jurnal tanpa `tahun` (tidak ada di Model Data), urut `urutan` saja.
+- [x] t4 · Setup node:test: content.test.mjs, dist.test.mjs, util tanggal (M)
+  - Butuh: t3
+  - Kerjakan: Buat `src/lib/tanggal.ts` (format `YYYY-MM-DD` ke '1 Januari 2025' dengan string split, tanpa `new Date` lokal — BUG-1, BR-13). Buat `tests/content.test.mjs` (node:test) yang membaca JSON dan cek BR-1, BR-2, BR-3, BR-4 (maks 12 buku, 6 jurnal), BR-10 (tahun terbit ≤ tahun berjalan), BR-11, dan bila `STRICT=1` gagal jika ada string `[verify]` (GR-11). Buat `tests/dist.test.mjs` dengan helper baca `dist/**/*.html` dan tes generik: setiap `href="#x"` punya `id="x"` (BUG-4), tidak ada `<script src>` eksternal selain Umami (SEC-4), semua `target=_blank` punya `rel="noopener noreferrer"` (SEC-10), grep `set:html` di `src/` kosong (SEC-3/GR-14). Tambah script `test:content` dan `test:dist`.
+  - Cek: Jalankan `npm run build && npm run test:content && npm run test:dist`, lalu `STRICT=1 npm run test:content` (harus gagal), dan `TZ=America/Los_Angeles node --test tests/content.test.mjs`.
+  - Selesai jika:
+    - [x] 1. `npm run test:content` lulus pada seed dan gagal bila `legalitas.json` tampil tanpa flag
+    - [x] 2. `STRICT=1 npm run test:content` gagal selama masih ada `[verify]`
+    - [x] 3. Tes tanggal: '2025-01-01' tampil '1 Januari 2025' dengan `TZ=America/Los_Angeles` maupun `TZ=Asia/Jakarta`
+    - [x] 4. `npm run test:dist` gagal bila ditambah `<script src="https://evil.example/x.js">` ke fixture HTML
+  - Catatan: `npm run build && npm run test:content && npm run test:dist` lulus (content: 9 pass, 1 skip STRICT; dist: 5 pass); `npm run check` 0 errors. `STRICT=1 npm run test:content` gagal: "[verify] masih ada di: site, legalitas, alur, syarat, jurnal, faq". `TZ=America/Los_Angeles` dan `TZ=Asia/Jakarta`: 9 pass, 0 fail (tes '2025-01-01' → '1 Januari 2025'). Mutasi: cek `terverifikasi` dihapus dari `visible.ts` → test:content 8 pass 1 fail (dikembalikan setelahnya, 9 pass). Fixture dengan `<script src="https://evil.example/x.js">` lewat `DIST_DIR=/tmp/fx node --test tests/dist.test.mjs` → 4 pass, 1 fail ("evil.example"). File: `src/lib/tanggal.ts`, `tests/content.test.mjs`, `tests/dist.test.mjs`. Catatan: script `test:content` memakai `node --experimental-strip-types --no-warnings` agar tes .mjs bisa mengimpor `src/lib/*.ts` di Node 22.12; `dist.test.mjs` membaca `DIST_DIR` (default `dist`) untuk fixture.
+- [!] t5 · CI GitHub Actions 6 tahap + Lighthouse CI config (M)
+  - Butuh: t4
+  - Kerjakan: Buat `.github/workflows/ci.yml` dengan tahap berurutan dan bernama persis SDLC: (1) `astro check`, (2) `node --test tests/content.test.mjs`, (3) `npm audit --audit-level=high`, (4) gitleaks, (5) CodeQL JS/TS, (6) `npm run build` lalu `node --test tests/dist.test.mjs` lalu `lhci autorun` mobile. Buat `lighthouserc.json` dengan `staticDistDir: dist` dan assertion awal Performance ≥0.9, SEO ≥0.95, Accessibility ≥0.95. Satu merah memblok merge; catat di README bahwa `main` dilindungi dan PR wajib hijau.
+  - Cek: Buka PR uji di GitHub, lihat tab Actions: 6 tahap tampil berurutan dan hijau; ulangi dengan satu test gagal dan pastikan job merah.
+  - Selesai jika:
+    - [x] 1. Workflow punya 6 tahap dengan nama dan urutan sesuai SDLC
+    - [x] 2. Tahap audit memakai `--audit-level=high`
+    - [x] 3. Tahap 6 menjalankan build, `dist.test.mjs`, lalu `lhci autorun`
+    - [ ] 4. PR uji dengan test content yang sengaja gagal diblok CI
+  - Catatan: [!] TERBLOKIR pada poin 4: PR uji dan tab Actions butuh push ke remote `origin` (https://github.com/biadenrekacipta/biadenlandingpage, terdaftar di `git remote -v`); push belum dilakukan karena butuh izin user, koreksi: catatan sebelumnya keliru menyebut remote tidak ada. Selesai: `.github/workflows/ci.yml` (6 job berurutan lewat `needs`, nama job "1. Lint + type check (astro check)" … "6. Build + tes dist + Lighthouse CI"), `lighthouserc.json` (staticDistDir dist; performance ≥0.9, seo ≥0.95, accessibility ≥0.95). Tahap 3 = `npm audit --omit=dev --audit-level=high` (tambahan `--omit=dev` karena temuan high hanya di rantai devDependency @lhci/cli; keputusan dicatat di README). Dicek lokal: nama job terbaca 6 baris berurutan; `npx lhci autorun` jalan end-to-end dan menggagalkan assertion `categories.seo` (0.9 < 0.95) pada halaman stub tanpa meta description, itu sengaja dan diperbaiki di t7. README bagian "CI dan branch" mencatat `main` dilindungi dan PR wajib hijau (pengaturan branch protection di GitHub belum dilakukan).
+- [ ] t6 · AGENTS.md, CLAUDE.md, dokumentasi deploy Cloudflare Pages (S)
+  - Butuh: t1, t5
+  - Kerjakan: Salin GR-5 sampai GR-15 apa adanya ke `AGENTS.md` dan `CLAUDE.md` (termasuk aturan `blocked` kalau keputusan tak ada di PRD, dan larangan karang konten). Lengkapi README: env var (`SITE_URL`, `PUBLIC_WEB3FORMS_KEY`, `PUBLIC_UMAMI_ID`), cara edit konten JSON lewat PR, aturan reviewer kedua untuk `legalitas.json`/`testimoni.json` (BR-9), checklist staf membuka link naskah (SEC-2), setup Cloudflare Pages (build `npm run build`, output `dist`, `NODE_VERSION`, `SITE_URL` per lingkungan, preview per PR), cara rollback (tombol Rollback atau `git revert`). Coba rollback sekali dan catat tanggalnya.
+  - Cek: `grep -c 'GR-' AGENTS.md CLAUDE.md` menunjukkan 11 guardrail di tiap file; buka README dan cek empat bagian di atas; buka dashboard Cloudflare Pages dan cek deployment produksi aktif.
+  - Selesai jika:
+    - [ ] 1. `AGENTS.md` dan `CLAUDE.md` memuat GR-5 sampai GR-15
+    - [ ] 2. README memuat checklist staf untuk link naskah
+    - [ ] 3. README menjelaskan env var, deploy, dan rollback
+    - [ ] 4. Rollback sudah dicoba sekali dan dicatat di README
+
+## Fase 1 · Hero & CTA
+- [x] t7 · Layout dasar, token CSS, komponen Head, footer, halaman 404 (L)
+  - Butuh: t2, t3, t4
+  - Kerjakan: Baca `docs/design-reference.md` lalu buat `src/styles/tokens.css` (custom properties warna, font, spasi; dilarang mengarang di luar referensi — GR-12), font self-hosted tanpa Google Fonts. Buat `src/layouts/Base.astro` (`lang="id"`, skip link, `prefers-reduced-motion`), `src/components/Head.astro` (title, description, canonical dari `SITE_URL`; build throw bila title >60 atau description >155 — FR-30, BUG-8), footer (kontak dari `site.json`, 'Terakhir diperbarui' dari `lastUpdated` via util tanggal — BR-17), `src/pages/index.astro` kerangka section, dan `src/pages/404.astro` dengan link ke beranda dan section utama (SEO-10). Tambah `public/_redirects`. Ikuti skill desain; tanpa emoji sebagai ikon (pakai SVG).
+  - Cek: `npm run build && npm run test:dist`, `grep -r 'fonts.googleapis' dist` kosong, ubah title jadi 61 karakter dan `npm run build` harus gagal, lalu `npx impeccable detect src/layouts src/components src/pages`.
+  - Selesai jika:
+    - [x] 1. Tidak ada request ke Google Fonts di `dist/` (font self-hosted)
+    - [x] 2. Build gagal bila title 61 karakter atau description 156 karakter
+    - [x] 3. `dist/404.html` memuat link ke `/` dan anchor section
+    - [x] 4. Footer menampilkan 'Terakhir diperbarui' sebagai tanggal kalender tanpa pergeseran
+    - [x] 5. `npx impeccable detect` pada file UI yang diubah tanpa temuan
+  - Catatan: `npm run check` 0 errors; `npm run build && npm run test:dist` lulus (5 pass). `grep -r fonts.googleapis dist | wc -l` = 0 (font di `public/fonts/`, 3 berkas woff2 OFL, 161 KB total, sumber fonts.gstatic.com 2026-11-15). Title 61 karakter dan description 156 karakter masing-masing membuat build gagal ("title 61 karakter (maks 60)", "description 156 karakter (maks 155)"); file dikembalikan, build lulus lagi. `dist/404.html` memuat href `/`, `/#profil`, `/#alur`, `/#ajukan`. Footer: `<time datetime="2026-11-15">15 November 2026</time>` lewat `formatTanggal`. `npx impeccable detect src/layouts src/components src/pages dist/index.html dist/404.html` exit 0 setelah `.lbl` dinaikkan ke 11px dan `cream-palette` disuppress di `.impeccable/config.json` (palet wajib GR-12). Keputusan desain (CSS-only, JS 3D/kursor ditunda, CSP tanpa inline, grain sebagai `public/grain.svg`, `inlineStylesheets: 'never'`) ada di bagian akhir `docs/design-reference.md`. File: `src/styles/tokens.css`, `src/layouts/Base.astro`, `src/components/Head.astro`, `src/components/Footer.astro`, `src/pages/index.astro`, `src/pages/404.astro`, `public/_redirects`, `public/grain.svg`, `public/fonts/*`.
+- [ ] t8 · _headers, robots.txt, sitemap dasar (M)
+  - Butuh: t4, t7
+  - Kerjakan: Buat `public/_headers`: CSP (`default-src 'self'`; `form-action https://api.web3forms.com`; tanpa inline script — TC-6), `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `frame-ancestors 'none'`, dan blok `X-Robots-Tag: noindex` untuk host `*.pages.dev` (FR-34, SEC-7, BUG-7). Buat `public/robots.txt` yang menunjuk `sitemap-index.xml` (SEO-3). Konfigurasi `@astrojs/sitemap` mengecualikan `/terima-kasih/` (FR-16). Tambah tes di `dist.test.mjs`: isi `_headers` memuat semua header, semua canonical memakai host `SITE_URL`, robots menunjuk sitemap.
+  - Cek: `npm run build && npm run test:dist`; setelah deploy preview jalankan `curl -I <url-preview>` dan pastikan CSP, nosniff, dan `X-Robots-Tag: noindex` muncul.
+  - Selesai jika:
+    - [ ] 1. `_headers` memuat CSP, nosniff, Referrer-Policy, dan `frame-ancestors 'none'`
+    - [ ] 2. `_headers` memuat `X-Robots-Tag: noindex` untuk `*.pages.dev`
+    - [ ] 3. `robots.txt` menunjuk ke sitemap
+    - [ ] 4. Sitemap tidak memuat `/terima-kasih/`
+    - [ ] 5. Semua canonical di `dist/` memakai host `SITE_URL`
+- [ ] t9 · Hero, dua CTA, badge legalitas (M)
+  - Butuh: t2, t7
+  - Kerjakan: Buat `src/components/Hero.astro`: satu `h1` dari `tagline`, satu kalimat `ringkasan` (jawaban faktual pembuka — GEO-3), CTA 'Ajukan Naskah' ke `#ajukan` dengan atribut `data-umami-event="cta-ajukan"` dan 'Lihat Katalog' ke `#katalog`. Bila tidak ada item katalog tampil (pakai `visible.ts`), CTA kedua jadi 'Lihat Alur Terbit' ke `#alur` (FR-1). Render maksimal 3 badge dari legalitas `tampilDiHero:true` dan `terverifikasi:true` (FR-3); tambah tes konten bahwa `tampilDiHero` maks 3. CTA utama harus terlihat tanpa scroll di 360x640 (FR-4).
+  - Cek: `npm run build && npm run test:dist && npm run test:content`; buka `npm run dev` di DevTools 360x640 dan cek CTA di atas lipatan; jalankan `npx impeccable detect src/components/Hero.astro`.
+  - Selesai jika:
+    - [ ] 1. `dist/index.html` punya tepat satu `h1`
+    - [ ] 2. Dengan `buku.json` dan `jurnal.json` kosong, CTA kedua mengarah ke `#alur`
+    - [ ] 3. Badge hero maksimal 3 dan hanya dari item terverifikasi
+    - [ ] 4. CTA 'Ajukan Naskah' terlihat tanpa scroll di viewport 360x640
+    - [ ] 5. `npx impeccable detect src/components/Hero.astro` tanpa temuan
+- [ ] t10 · Nav header tanpa JS dari section yang tampil (M)
+  - Butuh: t2, t9
+  - Kerjakan: Buat `src/lib/sections.ts` yang mendaftar section yang benar-benar dirender (id + label) dan `src/components/Nav.astro` yang membangun anchor dari daftar itu (FR-2, BR-6). Menu mobile pakai `<details>` tanpa JavaScript (TC-7). Set `scroll-margin-top` sebesar tinggi header pada semua section target (BUG-3). Target sentuh ≥44 px, fokus terlihat. Tes dist: setiap `href="#x"` di nav punya `id="x"`, dan build dengan `testimoni.json` kosong tidak punya link `#testimoni` (BUG-4).
+  - Cek: `npm run build && npm run test:dist`; di DevTools 360 px klik tiap link nav dan cek judul section tidak tertutup; `npx impeccable detect src/components/Nav.astro`.
+  - Selesai jika:
+    - [ ] 1. Nav hanya berisi anchor ke section yang ada di HTML
+    - [ ] 2. Menu mobile memakai `<details>` dan tidak ada script
+    - [ ] 3. Tes dist: setiap `href="#x"` punya `id="x"` (BUG-4)
+    - [ ] 4. Anchor tidak tertutup header sticky di 360 px (BUG-3)
+    - [ ] 5. `npx impeccable detect` pada file Nav tanpa temuan
+
+## Fase 1 · Profil Penerbit & Legalitas
+- [ ] t11 · Section profil, kontak, angka klaim (S)
+  - Butuh: t2, t10
+  - Kerjakan: Buat `src/components/Profil.astro` (`id="profil"`) yang dibuka paragraf 2 kalimat dari `site.profil` (siapa, menerbitkan apa, lokasi — FR-5, GEO-3). Tampilkan kontak (email, WhatsApp, alamat) dari satu sumber `site.json`, dipakai ulang di footer (FR-7, GEO-5). Tampilkan `klaimAngka` hanya bila `sumber` terisi dan tampilkan sumbernya (FR-8, BR-3, GEO-7). Daftarkan section di `sections.ts`.
+  - Cek: `npm run build && npm run test:content && npm run test:dist`; hapus `sumber` dari satu klaim dan `npm run build` harus gagal; `npx impeccable detect src/components/Profil.astro`.
+  - Selesai jika:
+    - [ ] 1. Paragraf pembuka profil sama persis dengan `site.profil`
+    - [ ] 2. Kontak di profil dan footer identik dan berasal dari `site.json`
+    - [ ] 3. Angka klaim tampil bersama sumbernya
+    - [ ] 4. Build gagal bila `klaimAngka` tanpa `sumber`
+    - [ ] 5. `npx impeccable detect` pada file Profil tanpa temuan
+- [ ] t12 · Daftar legalitas terverifikasi (S)
+  - Butuh: t2, t11
+  - Kerjakan: Tambah blok legalitas di `Profil.astro` memakai filter `visible.ts` (BR-1): tampil hanya `terverifikasi:true` dan `nilai` tidak kosong, dengan label, nilai, dan link bukti opsional (`rel="noopener noreferrer"`, SEC-10) (FR-6). Bila 0 item lolos, blok disembunyikan dengan peringatan build (BR-6). Tambah tes konten untuk SEC-9: fixture item `terverifikasi:false` tidak muncul di `dist/`. Catat di README bahwa perubahan `legalitas.json` butuh reviewer kedua (BR-9).
+  - Cek: `npm run build && npm run test:content && npm run test:dist`; set satu item `terverifikasi:false` lalu `grep` nilainya di `dist/index.html` harus kosong.
+  - Selesai jika:
+    - [ ] 1. Item `terverifikasi:false` atau `nilai` kosong tidak ada di `dist/index.html`
+    - [ ] 2. Link bukti memakai `rel="noopener noreferrer"`
+    - [ ] 3. Dengan legalitas kosong, blok hilang dan build hanya memberi peringatan
+    - [ ] 4. `content.test.mjs` memuat tes SEC-9 untuk legalitas dan lulus
+
+## Fase 1 · Alur & Syarat Penerbitan
+- [ ] t13 · Section alur terbit dengan durasi dan biaya (M)
+  - Butuh: t2, t10
+  - Kerjakan: Buat `src/components/Alur.astro` (`id="alur"`) memakai `<ol>` dari `alur.json` urut `nomor`: judul, deskripsi, penanggung jawab, durasi, biaya, output (FR-9, BR-11). Buka dengan kalimat jawaban otomatis 'Terbit lewat N tahap; durasi dan biaya tiap tahap tertulis di bawah' (GEO-3). Skema zod sudah memblok durasi/biaya kosong; tambah tes di `content.test.mjs` bahwa 100% tahap punya keduanya. Tanggal tidak dipakai di section ini. Daftarkan di `sections.ts`.
+  - Cek: `npm run build && npm run test:content && npm run test:dist`; kosongkan `biaya` satu tahap dan `npm run build` harus gagal; jalankan `npx impeccable detect src/components/Alur.astro`.
+  - Selesai jika:
+    - [ ] 1. Jumlah `<li>` tahap di `dist/` sama dengan jumlah item `alur.json`
+    - [ ] 2. Setiap tahap menampilkan durasi dan biaya
+    - [ ] 3. Kalimat pembuka menyebut jumlah tahap yang benar
+    - [ ] 4. Build gagal bila satu tahap tanpa `biaya`
+    - [ ] 5. `npx impeccable detect src/components/Alur.astro` tanpa temuan
+- [ ] t14 · Syarat naskah, CTA penutup, SLA balasan (S)
+  - Butuh: t2, t13
+  - Kerjakan: Di `Alur.astro` atau komponen `Syarat.astro` tambah dua grup syarat (buku, jurnal) dari `syarat.json` sebagai `<h3>` + `<ul>` tanpa JS (FR-10). Akhiri section dengan CTA ke `#ajukan` (FR-11). Tampilkan 'dibalas dalam N hari kerja' hanya bila `slaBalasanHariKerja` terisi; bila tidak, teks tidak dirender sama sekali (FR-12, BR-12). Tambah tes dist dengan dua kondisi SLA (terisi, null).
+  - Cek: `npm run build && npm run test:dist`; ubah `slaBalasanHariKerja` antara null dan 3, build ulang, `grep 'hari kerja' dist/index.html`; `npx impeccable detect src/components`.
+  - Selesai jika:
+    - [ ] 1. Dua grup syarat tampil sebagai daftar tanpa script
+    - [ ] 2. CTA penutup mengarah ke `#ajukan`
+    - [ ] 3. Dengan `slaBalasanHariKerja` null, tidak ada teks 'hari kerja' di `dist/`
+    - [ ] 4. Dengan `slaBalasanHariKerja: 3`, teks 'dibalas dalam 3 hari kerja' tampil
+    - [ ] 5. `npx impeccable detect` pada file Syarat tanpa temuan
+
+## Fase 1 · Form Pengajuan Naskah & Kontak
+- [ ] t15 · Markup form pengajuan dengan validasi HTML5 (M)
+  - Butuh: t2, t14
+  - Kerjakan: Buat `src/components/FormAjukan.astro` (`id="ajukan"`) dengan field BR-7: `nama` (2–100), `email`, `peran` (select: Mahasiswa, Dosen, Peneliti, Penulis umum, Lainnya), `jenis` (select: Ajukan naskah buku, Ajukan artikel jurnal, Pertanyaan umum), `judul_atau_topik` (3–200), `pesan` (20–1000), `persetujuan` checkbox required menaut ke `/kebijakan-privasi/`, opsional `institusi` (≤150) dan `link_naskah` (`type=url`, `pattern="https://.*"`, `maxlength=500` — SEC-2). Label terlihat, tanpa JavaScript. Di sebelah form tampilkan link email dan WhatsApp dari `site.json` (FR-18). Tambah tes dist untuk atribut tiap field dan bahwa pattern menolak `javascript:` dan `http://` tetapi menerima `https://x.id/a`.
+  - Cek: `npm run build && npm run test:dist` (tes atribut dan pattern lulus); uji manual di browser: submit kosong dan `link_naskah` `http://` ditolak browser; `npx impeccable detect src/components/FormAjukan.astro`.
+  - Selesai jika:
+    - [ ] 1. Setiap field BR-7 punya atribut required/minlength/maxlength yang benar
+    - [ ] 2. Pattern `link_naskah` menolak `javascript:alert(1)` dan `http://x.id`
+    - [ ] 3. Checkbox persetujuan required dan menaut ke `/kebijakan-privasi/`
+    - [ ] 4. Link email dan WhatsApp tampil di samping form
+    - [ ] 5. `npx impeccable detect src/components/FormAjukan.astro` tanpa temuan
+- [ ] t16 · Sambungkan form ke Web3Forms (redirect, honeypot, CSP) (M)
+  - Butuh: t8, t15
+  - Kerjakan: Set `action="https://api.web3forms.com/submit"` `method="POST"` dan hidden field `access_key` (dari `PUBLIC_WEB3FORMS_KEY`), `subject`, `from_name`, `redirect` = `${SITE_URL}/terima-kasih/` (BUG-2), dan honeypot `botcheck` yang disembunyikan dari pengguna (`aria-hidden`, `tabindex=-1`, `autocomplete=off`) (FR-14, SEC-1). Pastikan CSP `form-action` hanya ke Web3Forms (SEC-6). Uji manual di staging dan produksi.
+  - Keputusan terbuka:
+    - Access key untuk preview *.pages.dev: pakai key yang sama atau terpisah? (usul: Key terpisah untuk preview lewat env Cloudflare Pages tingkat preview; key produksi dibatasi ke domain produksi (SEC-5).)
+  - Cek: `npm run build && npm run test:dist` untuk cek hidden field dan `_headers`; kirim satu submission uji di preview, cek email staf masuk dan URL akhir; kirim dengan `botcheck` terisi dan pastikan tidak ada email.
+  - Selesai jika:
+    - [ ] 1. Form POST ke endpoint Web3Forms dengan semua hidden field yang diminta FR-14
+    - [ ] 2. Nilai `redirect` memakai `SITE_URL` lingkungan masing-masing
+    - [ ] 3. Submit dengan `botcheck` terisi ditolak layanan
+    - [ ] 4. Submission uji di staging mendarat di `/terima-kasih/` staging dan email masuk ke staf
+    - [ ] 5. CSP `form-action` hanya `https://api.web3forms.com`
+- [ ] t17 · Halaman /terima-kasih/ noindex (S)
+  - Butuh: t2, t14, t16
+  - Kerjakan: Buat `src/pages/terima-kasih.astro`: meta `robots noindex`, tidak masuk sitemap (FR-16). Isi menjelaskan langkah berikutnya dari tahap nomor 2 di `alur.json` dan SLA bila `slaBalasanHariKerja` terisi (FR-15, BR-12). Tambah link kembali ke beranda. Tes dist: meta noindex ada dan URL tidak ada di sitemap.
+  - Cek: `npm run build && npm run test:dist`; `grep -r 'terima-kasih' dist/sitemap*` kosong; `npx impeccable detect src/pages/terima-kasih.astro`.
+  - Selesai jika:
+    - [ ] 1. `dist/terima-kasih/index.html` memuat `<meta name="robots" content="noindex">`
+    - [ ] 2. `/terima-kasih/` tidak ada di `sitemap-*.xml`
+    - [ ] 3. Teks langkah berikutnya diambil dari tahap 2 `alur.json`
+    - [ ] 4. `npx impeccable detect src/pages/terima-kasih.astro` tanpa temuan
+- [ ] t18 · Halaman /kebijakan-privasi/ (S)
+  - Butuh: t2, t7
+  - Kerjakan: Buat `src/pages/kebijakan-privasi.astro` dengan satu `h1`: data yang dikumpulkan form (nama, email, institusi, link naskah, pesan), tujuan, pihak ketiga (Web3Forms, Umami tanpa cookie dan tanpa PII), retensi 12 bulan (BR-16), kontak dari `site.json`, tanggal pembaruan. Link dari footer dan dari checkbox form. Title ≤60 dan description ≤155 lewat Head. Teks yang butuh tinjauan hukum UU PDP ditandai `[verify]` (GR-11).
+  - Keputusan terbuka:
+    - Siapa nama pengendali data dan dasar hukum pengolahan di kebijakan privasi? (usul: Nama penerbit dari `site.json` sebagai pengendali, dasar persetujuan (checkbox); semua ditandai `[verify]` sampai ditinjau pihak hukum.)
+  - Cek: `npm run build && npm run test:dist`; `grep 'kebijakan-privasi' dist/sitemap-0.xml`; `npx impeccable detect src/pages/kebijakan-privasi.astro`.
+  - Selesai jika:
+    - [ ] 1. Halaman punya satu `h1`, title ≤60, description ≤155
+    - [ ] 2. Teks menyebut retensi 12 bulan dan pihak ketiga Web3Forms dan Umami
+    - [ ] 3. Footer dan form menaut ke `/kebijakan-privasi/`
+    - [ ] 4. Halaman masuk sitemap
+    - [ ] 5. `npx impeccable detect src/pages/kebijakan-privasi.astro` tanpa temuan
+- [ ] t19 · Gate Fase 1: cek exit criteria (S)
+  - Butuh: t6, t12, t17, t18
+  - Kerjakan: Periksa setiap exit criteria Fase 1 di Rencana Rilis. Jalankan tes, lengkapi yang belum terpenuhi, lalu catat hasilnya. Task fase berikutnya menunggu gate ini.
+  - Cek: Jalankan seluruh tes, audit dependensi, dan secret scan; tulis hasilnya per exit criteria di Catatan
+  - Selesai jika:
+    - [ ] 1. [EC-1.1] Hero, profil, legalitas, alur, syarat, dan form tampil di URL produksi.
+    - [ ] 2. [EC-1.2] Submission uji sampai ke email staf dan mendarat di `/terima-kasih/` ([BUG-2], [SEC-1], [SEC-2]).
+    - [ ] 3. [EC-1.3] [KILL-1] dicek: legalitas terverifikasi dan alur dengan durasi + biaya tersedia dari penerbit.
+    - [ ] 4. [EC-1.4] CI hijau di semua 6 tahap; rollback dicoba sekali.
+    - [ ] 5. [EC-1.5] README berisi versi terpasang, env var (`SITE_URL`, access key), cara edit konten, dan checklist staf untuk link naskah.
+    - [ ] 6. [EC-1.6] `AGENTS.md`/`CLAUDE.md` berisi guardrail agent.
+    - [ ] 7. [EC-1.7] Tes untuk [SEC-3], [SEC-4], [SEC-5], [SEC-7], [SEC-8], [SEC-10], [BUG-1], [BUG-3], [BUG-4], [BUG-7], [BUG-8] lulus.
+    - [ ] 8. [EC-1.8] [SEO-1], [SEO-3], [SEO-4], [SEO-6], [SEO-7], [SEO-10] terpenuhi untuk halaman yang sudah ada.
+    - [ ] 9. [EC-1.9] UI pre-delivery checklist lulus: kontras ≥ 4,5:1; target sentuh ≥ 44 px; tidak ada scroll horizontal di 360 px; fokus terlihat; `prefers-reduced-motion` dihormati; tidak ada emoji sebagai ikon (pakai SVG); diuji di 360/768/1280 px.
+    - [ ] 10. [EC-1.10] Backup: repo di remote GitHub; deployment terdokumentasi.
+    - [ ] 11. Audit dependensi dan secret scan tidak menemukan temuan high/critical, atau setiap temuan dicatat sebagai [SEC-n] beserta keputusannya
+    - [ ] 12. Go/No-Go: kriteria [KILL-n] yang jatuh tempo sudah dicek, dan keputusan lanjut atau berhenti ditulis di Catatan
+
+## Fase 2 · Katalog Buku & Jurnal Unggulan
+- [ ] t20 · Logika katalog: filter, urutan, batas maksimum (S)
+  - Butuh: t19, t3, t4
+  - Kerjakan: Perluas `src/lib/visible.ts`: fungsi `katalogBuku()` dan `katalogJurnal()` mengembalikan item `unggulan:true` dan status ≠ `diarsipkan`, urut `urutan` naik lalu `tahun` turun (BR-5). Throw error build bila >12 buku atau >6 jurnal (BR-4). Bila 0 item, kembalikan kosong dan beri peringatan build (BR-6). Tahun status `terbit` tidak boleh > tahun berjalan, `segera-terbit` boleh (BR-10). Tambah tes di `content.test.mjs`.
+  - Cek: `npm run test:content` lulus; tambah 13 buku fixture dan `npm run build` harus gagal; kembalikan perubahan.
+  - Selesai jika:
+    - [ ] 1. Urutan: `urutan` naik, lalu `tahun` turun, terbukti di tes
+    - [ ] 2. Build gagal dengan 13 buku unggulan
+    - [ ] 3. Item `diarsipkan` tidak ada di hasil
+    - [ ] 4. Item `terbit` dengan tahun depan gagal validasi, `segera-terbit` tahun depan lulus
+- [ ] t21 · UI katalog buku dan jurnal (M)
+  - Butuh: t2, t10, t20
+  - Kerjakan: Buat `src/components/Katalog.astro` (`id="katalog"`) dibuka kalimat jawaban singkat, grid buku dan daftar jurnal. Kartu: sampul (width/height diset, `alt` bermakna), judul, penulis atau editor, tahun, ISBN/ISSN, ringkasan ≤200, link eksternal `rel="noopener noreferrer"` (FR-19–21, SEC-10, BUG-5). Lencana 'Segera terbit' untuk `status: segera-terbit` (FR-22). Section dan link nav hilang bila kosong (BR-6, BUG-4). Daftarkan di `sections.ts`.
+  - Cek: `npm run build && npm run test:dist`; kosongkan `buku.json`/`jurnal.json`, build ulang, `grep 'id="katalog"' dist/index.html` kosong; `npx impeccable detect src/components/Katalog.astro`.
+  - Selesai jika:
+    - [ ] 1. Setiap `<img>` sampul punya width, height, dan alt
+    - [ ] 2. Link eksternal punya `rel="noopener noreferrer"`
+    - [ ] 3. Item `segera-terbit` menampilkan lencana 'Segera terbit'
+    - [ ] 4. Dengan katalog kosong, `#katalog` dan link navnya tidak ada di `dist/`
+    - [ ] 5. `npx impeccable detect src/components/Katalog.astro` tanpa temuan
+- [ ] t22 · JSON-LD Book dan Periodical dari data katalog (S)
+  - Butuh: t21
+  - Kerjakan: Buat `src/components/JsonLd.astro` (serialisasi `JSON.stringify` ke `<script type="application/ld+json">`, tanpa `set:html` untuk konten bebas — gunakan escape `<` jadi `\u003c`). Hasilkan `Book` per buku dan `Periodical` per jurnal dari daftar yang sama dengan kartu tampil (FR-23). Tambah tes dist: jumlah node Book/Periodical sama dengan jumlah kartu.
+  - Cek: `npm run build && npm run test:dist`; salin JSON-LD ke Schema Markup Validator dan pastikan bebas error.
+  - Selesai jika:
+    - [ ] 1. Jumlah JSON-LD `Book` sama dengan jumlah kartu buku di `dist/`
+    - [ ] 2. Jumlah `Periodical` sama dengan jumlah kartu jurnal
+    - [ ] 3. JSON-LD valid JSON dan tidak mengandung `</script>` mentah dari konten
+    - [ ] 4. Item `diarsipkan` tidak punya JSON-LD
+
+## Fase 2 · Testimoni & Logo Penulis/Institusi
+- [ ] t23 · Section testimoni dengan izin (M)
+  - Butuh: t19, t2, t4, t10
+  - Kerjakan: Buat `src/components/Testimoni.astro` (`id="testimoni"`): `<blockquote>` kutipan verbatim ≤300 karakter, nama, peran, institusi, foto opsional dengan alt. Tampil hanya `izin:true` dan `tanggalIzin` terisi (FR-24, BR-2). Agent dilarang mengubah isi kutipan (GR-11). Tambah tes: SEC-9 (item tanpa flag tidak ada di `dist/`) dan SEC-3 (fixture berisi `<script>` muncul sebagai teks ter-escape). Section dan link nav hilang bila kosong (FR-26).
+  - Cek: `npm run build && npm run test:content && npm run test:dist`; `npx impeccable detect src/components/Testimoni.astro`.
+  - Selesai jika:
+    - [ ] 1. Testimoni dengan `izin:false` atau tanpa `tanggalIzin` tidak ada di `dist/`
+    - [ ] 2. Fixture `<script>alert(1)</script>` tampil sebagai teks ter-escape, bukan elemen script
+    - [ ] 3. Kutipan >300 karakter gagal validasi build
+    - [ ] 4. Dengan testimoni kosong, `#testimoni` dan link navnya tidak ada
+    - [ ] 5. `npx impeccable detect src/components/Testimoni.astro` tanpa temuan
+- [ ] t24 · Strip logo mitra/institusi (S)
+  - Butuh: t2, t23
+  - Kerjakan: Buat `src/components/Mitra.astro` (strip logo, bisa di dalam section testimoni): `<img>` dari `mitra.json` dengan `alt` wajib (skema zod), width/height diset, link opsional dengan `rel="noopener noreferrer"` (FR-25). Bila `mitra.json` kosong, strip tidak dirender; bila testimoni dan mitra sama-sama kosong, section dan nav-nya hilang (FR-26, BR-6, BUG-4).
+  - Cek: `npm run build && npm run test:dist`; kosongkan kedua file, build ulang, dan `grep 'testimoni' dist/index.html` kosong; `npx impeccable detect src/components/Mitra.astro`.
+  - Selesai jika:
+    - [ ] 1. Setiap logo punya `alt` tidak kosong, width, dan height
+    - [ ] 2. Build gagal bila item mitra tanpa `alt`
+    - [ ] 3. Link logo eksternal memakai `rel="noopener noreferrer"`
+    - [ ] 4. Dengan testimoni dan mitra kosong, tidak ada `href="#testimoni"` dan tes BUG-4 lulus
+    - [ ] 5. `npx impeccable detect src/components/Mitra.astro` tanpa temuan
+
+## Fase 2 · FAQ
+- [ ] t25 · Section FAQ details/summary (S)
+  - Butuh: t19, t2, t10
+  - Kerjakan: Buat `src/components/Faq.astro` (`id="faq"`) memakai `<details>/<summary>` tanpa JS dari `faq.json`, jawaban teks polos (FR-27, SEC-3). Beri peringatan build (bukan error) bila item <5 (FR-28). Seed topik awal: alur, syarat, durasi, biaya, ISBN, proses review jurnal — isi jawaban placeholder `[verify]`, jangan karang (GR-11). Sembunyikan section bila kosong (BR-6). Tes SEC-3: fixture jawaban berisi HTML tampil ter-escape.
+  - Cek: `npm run build` (cek peringatan di log) lalu `npm run test:dist`; `grep -c '<details' dist/index.html` sama dengan jumlah item `faq.json`; `npx impeccable detect src/components/Faq.astro`.
+  - Selesai jika:
+    - [ ] 1. Setiap item FAQ dirender sebagai `<details>` dengan `<summary>`
+    - [ ] 2. Build mencetak peringatan bila FAQ <5 item, tanpa gagal
+    - [ ] 3. Jawaban berisi `<b>x</b>` tampil sebagai teks ter-escape
+    - [ ] 4. Tidak ada JavaScript untuk FAQ
+    - [ ] 5. `npx impeccable detect src/components/Faq.astro` tanpa temuan
+- [ ] t26 · JSON-LD FAQPage dari data yang sama (S)
+  - Butuh: t22, t25
+  - Kerjakan: Hasilkan JSON-LD `FAQPage` lewat `JsonLd.astro` dari array FAQ yang sama dengan yang dirender `Faq.astro` (FR-29, GEO-4). Tambah tes dist: jumlah `Question` di FAQPage sama dengan jumlah `<details>` (BUG-6). Tidak ada FAQPage bila FAQ kosong.
+  - Cek: `npm run build && npm run test:dist` lulus; tempel JSON-LD ke Rich Results Test atau Schema Markup Validator dan pastikan tanpa error.
+  - Selesai jika:
+    - [ ] 1. Jumlah `Question` di JSON-LD sama dengan jumlah `<details>` di `dist/`
+    - [ ] 2. Teks pertanyaan JSON-LD identik dengan `<summary>`
+    - [ ] 3. Tidak ada `FAQPage` saat FAQ kosong
+
+## Fase 2 · SEO, GEO & Analytics
+- [ ] t27 · Komponen Head penuh: OG, Twitter card, gambar OG (S)
+  - Butuh: t19, t7
+  - Kerjakan: Lengkapi `Head.astro`: Open Graph dan Twitter card, canonical dari `SITE_URL`, gambar default 1200x630 di `public/og.png` (dipakai juga oleh `/kebijakan-privasi/`) (FR-30, SEO-1, SEO-2, SEO-4). Pastikan tiap halaman indeks punya title unik. Pertahankan throw build bila title >60 atau description >155. Tambah tes dist: OG/Twitter tags ada, `og:image` menunjuk file 1200x630, canonical memakai host `SITE_URL` (BUG-7, BUG-8).
+  - Keputusan terbuka:
+    - Bagaimana gambar OG default dibuat? (usul: Script sharp sekali jalan dari template SVG (nama + tagline, token desain), hasil PNG di-commit; tanpa foto karangan.)
+  - Cek: `npm run build && npm run test:dist`; `file public/og.png` menunjukkan 1200 x 630; `curl -s <url> | grep -E 'og:|twitter:|canonical'`.
+  - Selesai jika:
+    - [ ] 1. Setiap halaman indeks punya `og:title`, `og:description`, `og:image`, `twitter:card`
+    - [ ] 2. `public/og.png` berukuran 1200x630
+    - [ ] 3. Semua canonical di `dist/` memakai host `SITE_URL` (BUG-7)
+    - [ ] 4. Title tiap halaman unik, ≤60, dan description ≤155 (SEO-1)
+- [ ] t28 · JSON-LD Organization, WebSite, BreadcrumbList (S)
+  - Butuh: t18, t22, t26, t27
+  - Kerjakan: Di `/` sisipkan `Organization` + `WebSite` dari `site.json` (nama, deskripsi, lokasi, email, `sameAs`) (FR-32, SEO-5). Di `/kebijakan-privasi/` sisipkan `BreadcrumbList`; jangan pakai BreadcrumbList di `/`. Tambah tes dist GEO-5: nama, email, lokasi di hero, footer, dan JSON-LD identik dengan `site.json`. Semua data dari satu sumber.
+  - Cek: `npm run build && npm run test:dist`; validasi JSON-LD di Rich Results Test dan Schema Markup Validator tanpa error.
+  - Selesai jika:
+    - [ ] 1. `/` memuat JSON-LD `Organization` dan `WebSite`, tanpa `BreadcrumbList`
+    - [ ] 2. `/kebijakan-privasi/` memuat `BreadcrumbList`
+    - [ ] 3. Nama, email, dan lokasi di hero, footer, dan JSON-LD sama dengan `site.json`
+    - [ ] 4. `sameAs` berisi URL dari `site.json`
+- [ ] t29 · llms.txt dan aturan crawler AI di robots.txt (S)
+  - Butuh: t8, t12, t13, t21
+  - Kerjakan: Buat `src/pages/llms.txt.ts` (endpoint statis saat build) berisi Markdown: nama, ringkasan, profil, kontak, link anchor section yang tampil, legalitas terverifikasi, ringkasan alur, daftar katalog — semua dari data konten (FR-31, GEO-1, GEO-5, GEO-7). Perluas `public/robots.txt` dengan blok eksplisit `Allow: /` untuk GPTBot, OAI-SearchBot, ClaudeBot, PerplexityBot, Google-Extended dan baris sitemap (GEO-2, SEO-3). Tes dist: llms.txt memuat nama dan email dari `site.json`; robots memuat kelima user-agent.
+  - Cek: `npm run build && npm run test:dist`; `curl <url>/llms.txt` dan `curl <url>/robots.txt` setelah deploy preview.
+  - Selesai jika:
+    - [ ] 1. `dist/llms.txt` ada dan memuat nama, email, dan lokasi dari `site.json`
+    - [ ] 2. `dist/llms.txt` tidak memuat legalitas `terverifikasi:false`
+    - [ ] 3. `robots.txt` memuat kelima user-agent AI dan baris `Sitemap:`
+    - [ ] 4. `sitemap-index.xml` memuat `/` dan `/kebijakan-privasi/`
+- [ ] t30 · Analytics Umami tanpa cookie + event CTA + CSP (S)
+  - Butuh: t19, t8, t9
+  - Kerjakan: Di `Base.astro` muat script Umami (`defer`, `data-website-id` dari `PUBLIC_UMAMI_ID`) hanya bila env terisi (FR-33). Pastikan CTA 'Ajukan Naskah' punya `data-umami-event="cta-ajukan"`. Perbarui `_headers`: `script-src 'self' https://cloud.umami.is`, `connect-src` ke `https://api-gateway.umami.dev`, tanpa inline script (TC-6). Update tes SEC-4: satu-satunya `<script src>` eksternal adalah host Umami (GR-15). Pastikan tidak ada PII dikirim ke analytics (SEC-6).
+  - Cek: `PUBLIC_UMAMI_ID=test npm run build && npm run test:dist`; setelah deploy cek dashboard Umami mencatat pageview dan event `cta-ajukan`, dan `curl -I` menampilkan CSP.
+  - Selesai jika:
+    - [ ] 1. `dist/` memuat tepat satu `<script defer src="https://cloud.umami.is/...">` bila env terisi
+    - [ ] 2. Tanpa `PUBLIC_UMAMI_ID`, script tidak dirender
+    - [ ] 3. CTA 'Ajukan Naskah' punya `data-umami-event="cta-ajukan"`
+    - [ ] 4. CSP mengizinkan hanya `self` dan host Umami untuk script
+    - [ ] 5. Tes dist gagal bila ada `<script src>` eksternal selain Umami
+- [ ] t31 · Pipeline gambar WebP/AVIF, dimensi, lazy loading (M)
+  - Butuh: t21, t23, t24
+  - Kerjakan: Pakai `astro:assets` (`<Image>`/`getImage`, sharp) untuk sampul, foto testimoni, dan logo: format WebP/AVIF, ukuran sesuai tampil, width/height diset, `loading="lazy"` untuk gambar di bawah fold, gambar LCP `eager` (FR-35, SEO-9, BUG-5). Tambah tes: sumber gambar ≤1 MB dan hasil optimasi di `dist/` ≤200 KB (TC-9), semua `<img>` punya width, height, dan alt.
+  - Cek: `npm run build && npm run test:dist` (tes ukuran dan atribut lulus); Lighthouse CLS <0,1 lewat `npm run lhci`.
+  - Selesai jika:
+    - [ ] 1. Semua `<img>` di `dist/` punya width, height, dan alt (BUG-5)
+    - [ ] 2. Gambar di bawah fold punya `loading="lazy"`
+    - [ ] 3. Hasil optimasi tiap gambar di `dist/` ≤200 KB dan sumber ≤1 MB
+    - [ ] 4. Format keluaran WebP atau AVIF
+- [ ] t32 · Gerbang Lighthouse, tes SEO/GEO, checklist rilis (M)
+  - Butuh: t27, t28, t29, t30, t31
+  - Kerjakan: Perketat `lighthouserc.json` untuk `/` dan `/kebijakan-privasi/` mobile: Performance ≥0,9 (KILL-4), SEO ≥0,95, Accessibility ≥0,95, CLS <0,1, LCP <2500 ms. Tambah tes dist: satu `h1` per halaman dan urutan heading benar, tidak ada teks link 'klik di sini' (SEO-6), teks hero/alur/katalog ada di HTML tanpa JS (SEO-7), paragraf pembuka tiap section kunci ada (GEO-3), footer memuat 'Terakhir diperbarui' (GEO-6), item katalog menampilkan penulis/editor. Buat `docs/release-checklist.md`: verifikasi Google Search Console + submit sitemap (SEO-12), batas domain access key Web3Forms (SEC-5), tes 5 detik dengan 5 orang, tes submission bulanan.
+  - Cek: `npm run build && npm run test:dist && npm run lhci` (semua lulus dengan skor di atas ambang); buka `docs/release-checklist.md` dan cek empat butir.
+  - Selesai jika:
+    - [ ] 1. `npm run lhci` gagal bila Performance mobile <0,9
+    - [ ] 2. Tes dist memeriksa satu `h1`, urutan heading, dan teks link deskriptif
+    - [ ] 3. Tes dist memastikan teks hero, alur, dan katalog ada di HTML hasil build
+    - [ ] 4. `docs/release-checklist.md` memuat SEO-12, SEC-5, tes 5 detik, dan tes submission bulanan
+- [ ] t33 · Gate Fase 2: cek exit criteria (S)
+  - Butuh: t32
+  - Kerjakan: Periksa setiap exit criteria Fase 2 di Rencana Rilis. Jalankan tes, lengkapi yang belum terpenuhi, lalu catat hasilnya. Task fase berikutnya menunggu gate ini.
+  - Cek: Jalankan seluruh tes, audit dependensi, dan secret scan; tulis hasilnya per exit criteria di Catatan
+  - Selesai jika:
+    - [ ] 1. [EC-2.1] Katalog, testimoni + logo, dan FAQ tampil dengan data nyata dari penerbit. Section tanpa data tersembunyi ([BR-6]).
+    - [ ] 2. [EC-2.2] Umami mencatat pageview dan event `cta-ajukan`; kunjungan `/terima-kasih/` terhitung.
+    - [ ] 3. [EC-2.3] Semua [SEO-1] sampai [SEO-12] terpenuhi (SEO-11 ditandai tidak berlaku).
+    - [ ] 4. [EC-2.4] Semua [GEO-1] sampai [GEO-7] terpenuhi.
+    - [ ] 5. [EC-2.5] Tes untuk [SEC-9], [BUG-5], [BUG-6] lulus.
+    - [ ] 6. [EC-2.6] [KILL-4] dicek: Lighthouse mobile Performance ≥ 90.
+    - [ ] 7. [EC-2.7] Lighthouse: SEO ≥ 95, Accessibility ≥ 95; CWV sesuai target.
+    - [ ] 8. [EC-2.8] UI pre-delivery checklist ([EC-1.9]) lulus ulang untuk bagian baru.
+    - [ ] 9. [EC-2.9] Tes 5 detik dengan 5 orang dijalankan, hasil dicatat.
+    - [ ] 10. Audit dependensi dan secret scan tidak menemukan temuan high/critical, atau setiap temuan dicatat sebagai [SEC-n] beserta keputusannya
+    - [ ] 11. Go/No-Go: kriteria [KILL-n] yang jatuh tempo sudah dicek, dan keputusan lanjut atau berhenti ditulis di Catatan

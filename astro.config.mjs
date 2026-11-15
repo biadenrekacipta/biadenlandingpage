@@ -7,5 +7,7 @@ const site = process.env.SITE_URL || 'http://localhost:4321';
 export default defineConfig({
   site,
   trailingSlash: 'always',
+  // CSP tanpa inline (TC-6): paksa CSS jadi file terpisah.
+  build: { inlineStylesheets: 'never' },
   integrations: [sitemap({ filter: (page) => !page.includes('/terima-kasih/') })],
 });

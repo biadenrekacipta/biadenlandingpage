@@ -1,0 +1,9 @@
+/*
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; form-action https://api.web3forms.com; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+
+# FR-34, BUG-7: preview *.pages.dev tidak boleh diindeks
+https://*.pages.dev/*
+  X-Robots-Tag: noindex

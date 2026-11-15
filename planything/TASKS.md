@@ -87,16 +87,17 @@ Aturan untuk agent:
     - [x] 4. Footer menampilkan 'Terakhir diperbarui' sebagai tanggal kalender tanpa pergeseran
     - [x] 5. `npx impeccable detect` pada file UI yang diubah tanpa temuan
   - Catatan: `npm run check` 0 errors; `npm run build && npm run test:dist` lulus (5 pass). `grep -r fonts.googleapis dist | wc -l` = 0 (font di `public/fonts/`, 3 berkas woff2 OFL, 161 KB total, sumber fonts.gstatic.com 2026-11-15). Title 61 karakter dan description 156 karakter masing-masing membuat build gagal ("title 61 karakter (maks 60)", "description 156 karakter (maks 155)"); file dikembalikan, build lulus lagi. `dist/404.html` memuat href `/`, `/#profil`, `/#alur`, `/#ajukan`. Footer: `<time datetime="2026-11-15">15 November 2026</time>` lewat `formatTanggal`. `npx impeccable detect src/layouts src/components src/pages dist/index.html dist/404.html` exit 0 setelah `.lbl` dinaikkan ke 11px dan `cream-palette` disuppress di `.impeccable/config.json` (palet wajib GR-12). Keputusan desain (CSS-only, JS 3D/kursor ditunda, CSP tanpa inline, grain sebagai `public/grain.svg`, `inlineStylesheets: 'never'`) ada di bagian akhir `docs/design-reference.md`. File: `src/styles/tokens.css`, `src/layouts/Base.astro`, `src/components/Head.astro`, `src/components/Footer.astro`, `src/pages/index.astro`, `src/pages/404.astro`, `public/_redirects`, `public/grain.svg`, `public/fonts/*`.
-- [ ] t8 · _headers, robots.txt, sitemap dasar (M)
+- [x] t8 · _headers, robots.txt, sitemap dasar (M)
   - Butuh: t4, t7
   - Kerjakan: Buat `public/_headers`: CSP (`default-src 'self'`; `form-action https://api.web3forms.com`; tanpa inline script — TC-6), `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `frame-ancestors 'none'`, dan blok `X-Robots-Tag: noindex` untuk host `*.pages.dev` (FR-34, SEC-7, BUG-7). Buat `public/robots.txt` yang menunjuk `sitemap-index.xml` (SEO-3). Konfigurasi `@astrojs/sitemap` mengecualikan `/terima-kasih/` (FR-16). Tambah tes di `dist.test.mjs`: isi `_headers` memuat semua header, semua canonical memakai host `SITE_URL`, robots menunjuk sitemap.
   - Cek: `npm run build && npm run test:dist`; setelah deploy preview jalankan `curl -I <url-preview>` dan pastikan CSP, nosniff, dan `X-Robots-Tag: noindex` muncul.
   - Selesai jika:
-    - [ ] 1. `_headers` memuat CSP, nosniff, Referrer-Policy, dan `frame-ancestors 'none'`
-    - [ ] 2. `_headers` memuat `X-Robots-Tag: noindex` untuk `*.pages.dev`
-    - [ ] 3. `robots.txt` menunjuk ke sitemap
-    - [ ] 4. Sitemap tidak memuat `/terima-kasih/`
-    - [ ] 5. Semua canonical di `dist/` memakai host `SITE_URL`
+    - [x] 1. `_headers` memuat CSP, nosniff, Referrer-Policy, dan `frame-ancestors 'none'`
+    - [x] 2. `_headers` memuat `X-Robots-Tag: noindex` untuk `*.pages.dev`
+    - [x] 3. `robots.txt` menunjuk ke sitemap
+    - [x] 4. Sitemap tidak memuat `/terima-kasih/`
+    - [x] 5. Semua canonical di `dist/` memakai host `SITE_URL`
+  - Catatan: `npm run build && npm run test:dist` = 10 pass 0 fail; `npm run check` 0 errors. Tes baru di `tests/dist.test.mjs`: isi `_headers` (CSP default-src/form-action/frame-ancestors, nosniff, Referrer-Policy, noindex `https://*.pages.dev/*`), tanpa script/style inline (TC-6), canonical memakai host `SITE_URL`, robots menunjuk `sitemap-index.xml`, sitemap tanpa `terima-kasih`. Mutasi: `frame-ancestors` dihapus dari `_headers` → 9 pass 1 fail; `SITE_URL=https://a.example` dengan dist lama → 2 fail (canonical, robots), dengan build ulang → 10 pass dan `a.example` ada di `sitemap-0.xml` dan `robots.txt`. Semua dikembalikan. Keputusan: robots.txt dibuat sebagai endpoint `src/pages/robots.txt.ts` (bukan `public/robots.txt`) agar URL sitemap mengikuti `SITE_URL` (BUG-7); t29 menambah blok crawler AI di endpoint itu. `X-Frame-Options: DENY` ditambah sebagai cadangan frame-ancestors. BELUM TERBUKTI: `curl -I <url-preview>` (CSP, nosniff, `X-Robots-Tag: noindex` di host pages.dev) karena belum ada deploy; aturan host `https://*.pages.dev/*` mengikuti sintaks `_headers` Cloudflare Pages tapi belum diuji di Cloudflare. Lakukan di t16/t19 setelah deploy preview.
 - [ ] t9 · Hero, dua CTA, badge legalitas (M)
   - Butuh: t2, t7
   - Kerjakan: Buat `src/components/Hero.astro`: satu `h1` dari `tagline`, satu kalimat `ringkasan` (jawaban faktual pembuka — GEO-3), CTA 'Ajukan Naskah' ke `#ajukan` dengan atribut `data-umami-event="cta-ajukan"` dan 'Lihat Katalog' ke `#katalog`. Bila tidak ada item katalog tampil (pakai `visible.ts`), CTA kedua jadi 'Lihat Alur Terbit' ke `#alur` (FR-1). Render maksimal 3 badge dari legalitas `tampilDiHero:true` dan `terverifikasi:true` (FR-3); tambah tes konten bahwa `tampilDiHero` maks 3. CTA utama harus terlihat tanpa scroll di 360x640 (FR-4).

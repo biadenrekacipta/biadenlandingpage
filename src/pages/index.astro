@@ -7,7 +7,7 @@ import Alur from '../components/Alur.astro';
 import FormAjukan from '../components/FormAjukan.astro';
 import Nav from '../components/Nav.astro';
 import { sectionTampil } from '../lib/sections';
-import { katalogTampil } from '../lib/visible';
+import { katalogBuku, katalogJurnal } from '../lib/visible';
 // Memaksa semua koleksi divalidasi saat build (t3).
 await Promise.all(
   ['legalitas', 'alur', 'syarat', 'buku', 'jurnal', 'testimoni', 'mitra', 'faq'].map((c) =>
@@ -17,8 +17,8 @@ await Promise.all(
 const site = (await getEntry('site', 'site'))!.data;
 // Katalog: anchor #katalog hanya ada bila ada item tampil (BR-6, BUG-4). Diganti Katalog.astro di t21.
 const adaKatalog =
-  katalogTampil((await getCollection('buku')).map((e) => e.data)).length +
-    katalogTampil((await getCollection('jurnal')).map((e) => e.data)).length >
+  katalogBuku((await getCollection('buku')).map((e) => e.data)).length +
+    katalogJurnal((await getCollection('jurnal')).map((e) => e.data)).length >
   0;
 // Daftar section = sumber tunggal untuk nav dan markup (t10). Section lain didaftarkan saat komponennya dibuat.
 const ada = sectionTampil({ profil: true, alur: true, katalog: adaKatalog, ajukan: true });

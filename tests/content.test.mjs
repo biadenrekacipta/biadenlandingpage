@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { legalitasTampil, testimoniTampil, katalogTampil } from '../src/lib/visible.ts';
+import { legalitasTampil, testimoniTampil, katalogTampil, katalogBuku, katalogJurnal } from '../src/lib/visible.ts';
 import { formatTanggal } from '../src/lib/tanggal.ts';
 
 const load = (f) => JSON.parse(readFileSync(new URL(`../src/content/${f}.json`, import.meta.url), 'utf8'));
@@ -91,4 +91,37 @@ test('BR-11 / kelengkapan transparansi: 100% tahap alur punya durasi dan biaya',
   assert.ok(alur.length > 0);
   const lengkap = alur.filter((a) => a.durasi.trim() !== '' && a.biaya.trim() !== '');
   assert.equal(lengkap.length / alur.length, 1);
+});
+
+const item = (id, o = {}) => ({ id, unggulan: true, status: 'terbit', urutan: 1, tahun: 2020, ...o });
+
+test('BR-5: urutan naik, lalu tahun turun', () => {
+  const hasil = katalogBuku([
+    item('c', { urutan: 2, tahun: 2024 }),
+    item('a', { urutan: 1, tahun: 2019 }),
+    item('b', { urutan: 1, tahun: 2023 }),
+  ]);
+  assert.deepEqual(hasil.map((i) => i.id), ['b', 'a', 'c']);
+});
+
+test('BR-10: item diarsipkan atau tidak unggulan tidak ada di hasil katalog', () => {
+  const hasil = katalogJurnal([item('x', { status: 'diarsipkan' }), item('y', { unggulan: false }), item('z')]);
+  assert.deepEqual(hasil.map((i) => i.id), ['z']);
+});
+
+test('BR-4: lebih dari 12 buku atau 6 jurnal unggulan melempar error', () => {
+  const n = (k) => Array.from({ length: k }, (_, i) => item(`i${i}`, { urutan: i }));
+  assert.equal(katalogBuku(n(12)).length, 12);
+  assert.throws(() => katalogBuku(n(13)), /BR-4/);
+  assert.equal(katalogJurnal(n(6)).length, 6);
+  assert.throws(() => katalogJurnal(n(7)), /BR-4/);
+});
+
+test('BR-6: katalog kosong mengembalikan array kosong', () => {
+  assert.deepEqual(katalogBuku([]), []);
+});
+
+test('BR-10: skema menolak buku terbit bertahun depan, menerima segera-terbit', () => {
+  const src = readFileSync(new URL('../src/content.config.ts', import.meta.url), 'utf8');
+  assert.match(src, /status !== 'terbit' \|\| b\.tahun <= new Date\(\)\.getFullYear\(\)/);
 });

@@ -74,7 +74,12 @@ const buku = defineCollection({
     status,
     unggulan: z.boolean(),
     urutan: z.number().int(),
-  }),
+  })
+    // BR-10: `terbit` tidak boleh bertahun depan; `segera-terbit` boleh.
+    .refine((b) => b.status !== 'terbit' || b.tahun <= new Date().getFullYear(), {
+      message: 'tahun buku terbit melebihi tahun berjalan (BR-10)',
+      path: ['tahun'],
+    }),
 });
 
 const jurnal = defineCollection({

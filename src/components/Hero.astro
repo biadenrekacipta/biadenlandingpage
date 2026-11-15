@@ -1,0 +1,61 @@
+---
+import { getEntry, getCollection } from 'astro:content';
+import { legalitasTampil, katalogTampil } from '../lib/visible';
+// FR-1, FR-3, FR-4: satu h1 dari tagline, ringkasan, dua CTA, maks 3 badge legalitas terverifikasi.
+const site = (await getEntry('site', 'site'))!.data;
+const legalitas = (await getCollection('legalitas')).map((e) => e.data);
+const adaKatalog =
+  katalogTampil((await getCollection('buku')).map((e) => e.data)).length +
+    katalogTampil((await getCollection('jurnal')).map((e) => e.data)).length >
+  0;
+const badges = legalitasTampil(legalitas)
+  .filter((l) => l.tampilDiHero)
+  .slice(0, 3);
+const cta2 = adaKatalog ? { href: '#katalog', label: 'Lihat Katalog' } : { href: '#alur', label: 'Lihat Alur Terbit' };
+---
+<section class="hero" aria-labelledby="hero-title">
+  <h1 id="hero-title">{site.tagline}</h1>
+  <p class="hero-sum">{site.ringkasan}</p>
+  <div class="hero-cta">
+    <a class="btn btn-main lbl" href="#ajukan" data-umami-event="cta-ajukan">Ajukan Naskah</a>
+    <a class="btn btn-alt lbl" href={cta2.href}>{cta2.label}</a>
+  </div>
+  {badges.length > 0 && (
+    <ul class="badges" aria-label="Legalitas terverifikasi">
+      {badges.map((b) => (
+        <li class="badge box lbl">{b.label}: {b.nilai}</li>
+      ))}
+    </ul>
+  )}
+</section>
+<style>
+  .hero { padding-block: var(--space-4) var(--space-3); display: grid; gap: var(--space-2); justify-items: start; }
+  h1 {
+    margin: 0;
+    max-width: 18ch;
+    font-weight: 400;
+    font-size: clamp(32px, 6.4vw, 84px);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+  }
+  .hero-sum { margin: 0; max-width: 42ch; font-size: 17px; line-height: 1.5; }
+  .hero-cta { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-2); margin-top: var(--space-1); }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 20px;
+    text-decoration: none;
+    border: 1px solid var(--cobalt);
+    transition: background-color 0.45s var(--ease), color 0.45s var(--ease);
+  }
+  .btn-main { background: var(--cobalt); color: #fff; }
+  .btn-alt { color: var(--cobalt); }
+  .btn-main:hover { background: var(--ink); border-color: var(--ink); }
+  .btn-alt:hover { background: var(--cobalt); color: #fff; }
+  .badges { display: flex; flex-wrap: wrap; gap: var(--space-1); list-style: none; margin: var(--space-1) 0 0; padding: 0; }
+  .badge { min-height: 32px; } /* badge informasional, bukan kontrol sentuh */
+  @media (min-width: 768px) {
+    .hero { padding-block: var(--space-5) var(--space-4); gap: var(--space-3); }
+  }
+</style>

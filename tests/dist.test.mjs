@@ -94,3 +94,10 @@ test('SEO-3: robots.txt menunjuk sitemap-index.xml di host SITE_URL', () => {
 test('FR-16: sitemap tidak memuat /terima-kasih/', () => {
   for (const f of walk(dist, '.xml')) assert.ok(!readFileSync(f, 'utf8').includes('terima-kasih'), f);
 });
+
+test('FR-1 / SEO-6: beranda punya tepat satu h1, CTA utama, dan badge hero maks 3', () => {
+  const html = readFileSync(join(dist, 'index.html'), 'utf8');
+  assert.equal((html.match(/<h1\b/g) || []).length, 1);
+  assert.match(html, /<a [^>]*href="#ajukan"[^>]*data-umami-event="cta-ajukan"[^>]*>Ajukan Naskah<\/a>/);
+  assert.ok((html.match(/class="badge /g) || []).length <= 3);
+});

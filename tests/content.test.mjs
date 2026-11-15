@@ -73,3 +73,7 @@ test('GR-11: STRICT=1 menolak placeholder [verify]', { skip: process.env.STRICT 
     .map(([f]) => f);
   assert.deepEqual(semua, [], `[verify] masih ada di: ${semua.join(', ')}`);
 });
+
+test('FR-3: item legalitas dengan tampilDiHero:true maksimal 3', () => {
+  assert.ok(legalitas.filter((i) => i.tampilDiHero).length <= 3);
+});

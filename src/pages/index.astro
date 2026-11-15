@@ -1,23 +1,30 @@
 ---
-import { getEntry } from 'astro:content';
+import { getEntry, getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import Hero from '../components/Hero.astro';
+import { katalogTampil } from '../lib/visible';
 // Memaksa semua koleksi divalidasi saat build (t3).
-import { getCollection } from 'astro:content';
 await Promise.all(
   ['legalitas', 'alur', 'syarat', 'buku', 'jurnal', 'testimoni', 'mitra', 'faq'].map((c) =>
     getCollection(c as 'faq'),
   ),
 );
 const site = (await getEntry('site', 'site'))!.data;
+// Katalog: anchor #katalog hanya ada bila ada item tampil (BR-6, BUG-4). Diganti Katalog.astro di t21.
+const adaKatalog =
+  katalogTampil((await getCollection('buku')).map((e) => e.data)).length +
+    katalogTampil((await getCollection('jurnal')).map((e) => e.data)).length >
+  0;
 // ponytail: kerangka section; isi diganti komponen di t9-t25. Judul di bawah hanya struktur, bukan klaim.
 const title = `${site.nama}: Penerbit Buku dan Jurnal Akademik`;
 const description = `Penerbit buku dan jurnal akademik ${site.nama}. Lihat profil, alur terbit, dan ajukan naskah Anda.`;
 ---
 <Base title={title} description={description}>
   <div class="wrap">
-    <h1>{site.nama}</h1>
+    <Hero />
     <section id="profil"><h2>Profil</h2></section>
     <section id="alur"><h2>Alur Terbit</h2></section>
+    {adaKatalog && <section id="katalog"><h2>Katalog</h2></section>}
     <section id="ajukan"><h2>Ajukan Naskah</h2></section>
   </div>
 </Base>

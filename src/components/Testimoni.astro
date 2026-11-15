@@ -1,14 +1,17 @@
 ---
 import { getCollection } from 'astro:content';
 import { testimoniTampil } from '../lib/visible';
+import Mitra from './Mitra.astro';
 // FR-24, BR-2, FR-26: hanya izin:true dengan tanggalIzin terisi. Kutipan verbatim, di-escape otomatis oleh Astro (SEC-3).
 const daftar = testimoniTampil((await getCollection('testimoni')).map((e) => e.data));
-if (daftar.length === 0) console.warn('[BR-6] Testimoni: tidak ada item berizin, section disembunyikan');
+const adaMitra = (await getCollection('mitra')).length > 0;
+if (daftar.length === 0) console.warn('[BR-6] Testimoni: tidak ada item berizin' + (adaMitra ? '' : ', section disembunyikan'));
 ---
-{daftar.length > 0 && (
+{(daftar.length > 0 || adaMitra) && (
 <section id="testimoni" aria-labelledby="testimoni-title">
   <p class="lbl">Testimoni</p>
-  <h2 id="testimoni-title">Kata penulis kami</h2>
+  <h2 id="testimoni-title">{daftar.length > 0 ? 'Kata penulis kami' : 'Mitra dan institusi'}</h2>
+  {daftar.length > 0 && (
   <ul class="testi-list">
     {daftar.map((t) => (
       <li class="testi">
@@ -23,6 +26,8 @@ if (daftar.length === 0) console.warn('[BR-6] Testimoni: tidak ada item berizin,
       </li>
     ))}
   </ul>
+  )}
+  <Mitra />
 </section>
 )}
 <style>

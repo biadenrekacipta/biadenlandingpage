@@ -280,16 +280,17 @@ Aturan untuk agent:
     - [x] 4. Dengan testimoni kosong, `#testimoni` dan link navnya tidak ada
     - [x] 5. `npx impeccable detect src/components/Testimoni.astro` tanpa temuan
   - Catatan: Dijalankan dengan data placeholder atas keputusan user, meski gate t19 belum lulus (KILL-1 belum terpenuhi). `npm run check` 0 errors; `npm run build` lulus; `npm run test:content` 18 pass 0 fail; `npm run test:dist` 37 pass 0 fail 2 skip (tes kondisi-berisi/kosong yang tidak berlaku). `Testimoni.astro` (id testimoni; `<figure><blockquote><p>` kutipan verbatim, nama, peran, institusi, foto opsional beralt) memakai `testimoniTampil` (izin:true dan tanggalIzin terisi); `index.astro` menambah `testimoni` ke `sectionTampil` sehingga nav ikut; id `testimoni` sudah ada di `sections.ts`. Seed kosong: `grep -c 'id="testimoni"\|#testimoni' dist/index.html` = 0 dan build memberi peringatan BR-6. Fixture sementara pada `testimoni.json` (dikembalikan lewat `git checkout`, `git status src/content` bersih): 4 entri (satu kutipan `<script>alert(1)</script> & uji`, satu berfoto, satu `izin:false`, satu tanpa `tanggalIzin`) → dist: 2 blockquote; teks "RAHASIA" dari dua entri tak berizin 0 kali; kutipan script muncul sebagai `&lt;script&gt;alert(1)&lt;/script&gt; &amp; uji` dan `<script>alert` mentah = 0; `href="#testimoni"` ada di nav; tes dist kondisi-berisi lulus. Kutipan 301 karakter → `npm run build` gagal "kutipan: Too big: expected string to have <=300 characters". `npx impeccable detect src/components/Testimoni.astro` dan `dist/index.html` (build fixture) tanpa temuan. Tes baru: dist (kondisional kosong/berisi, SEC-9, SEC-3, FR-26) dan content (SEC-9 fixture testimoni). Tidak ada kutipan karangan di src/content. Foto belum diuji visual (belum ada berkas foto nyata).
-- [ ] t24 · Strip logo mitra/institusi (S)
+- [x] t24 · Strip logo mitra/institusi (S)
   - Butuh: t2, t23
   - Kerjakan: Buat `src/components/Mitra.astro` (strip logo, bisa di dalam section testimoni): `<img>` dari `mitra.json` dengan `alt` wajib (skema zod), width/height diset, link opsional dengan `rel="noopener noreferrer"` (FR-25). Bila `mitra.json` kosong, strip tidak dirender; bila testimoni dan mitra sama-sama kosong, section dan nav-nya hilang (FR-26, BR-6, BUG-4).
   - Cek: `npm run build && npm run test:dist`; kosongkan kedua file, build ulang, dan `grep 'testimoni' dist/index.html` kosong; `npx impeccable detect src/components/Mitra.astro`.
   - Selesai jika:
-    - [ ] 1. Setiap logo punya `alt` tidak kosong, width, dan height
-    - [ ] 2. Build gagal bila item mitra tanpa `alt`
-    - [ ] 3. Link logo eksternal memakai `rel="noopener noreferrer"`
-    - [ ] 4. Dengan testimoni dan mitra kosong, tidak ada `href="#testimoni"` dan tes BUG-4 lulus
-    - [ ] 5. `npx impeccable detect src/components/Mitra.astro` tanpa temuan
+    - [x] 1. Setiap logo punya `alt` tidak kosong, width, dan height
+    - [x] 2. Build gagal bila item mitra tanpa `alt`
+    - [x] 3. Link logo eksternal memakai `rel="noopener noreferrer"`
+    - [x] 4. Dengan testimoni dan mitra kosong, tidak ada `href="#testimoni"` dan tes BUG-4 lulus
+    - [x] 5. `npx impeccable detect src/components/Mitra.astro` tanpa temuan
+  - Catatan: Dijalankan dengan data placeholder atas keputusan user (gate t19 belum lulus). `npm run check` 0 errors; `npm run build` lulus; `npm run test:content` 18 pass; `npm run test:dist` 38 pass 0 fail 3 skip (kondisi tidak berlaku). `Mitra.astro` (ul.mitra, img width=160 height=64 + alt dari mitra.json, link opsional `target=_blank rel="noopener noreferrer"`) dirender di dalam `Testimoni.astro` (#testimoni); section tampil bila ada testimoni berizin ATAU mitra, judul jadi 'Mitra dan institusi' bila hanya mitra; `index.astro` memakai syarat yang sama untuk nav. Fixture sementara mitra.json (2 entri, satu dengan url) dikembalikan lewat `git checkout` (`git status src/content` bersih): dist memuat 2 img beralt+width+height, link ber-rel, `id="testimoni"` dan `href="#testimoni"`; test:dist 37 pass. `alt:""` → build gagal `mitra → m1 ... alt: alt wajib`. Seed kosong: `grep -c testimoni dist/index.html` = 0, tes FR-26/FR-25 kosong lulus. Tes baru di dist.test.mjs (FR-25 kosong/berisi; tes FR-26 kini juga menuntut mitra kosong). `npx impeccable detect src/components/Mitra.astro src/components/Testimoni.astro dist/index.html` exit 0 tanpa temuan (engine regex untuk .astro). `ponytail:` di Mitra.astro: dimensi tetap 160x64 karena skema tanpa dimensi asli; upgrade astro:assets di t31. Logo belum ada berkas nyata, jadi tampilan tidak diuji visual.
 
 ## Fase 2 · FAQ
 - [ ] t25 · Section FAQ details/summary (S)

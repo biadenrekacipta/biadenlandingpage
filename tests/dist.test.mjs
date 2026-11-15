@@ -389,7 +389,9 @@ test('FR-23 / SEC-3: JSON-LD Book/Periodical sama dengan jumlah kartu, valid JSO
 const testiAll = loadJson('testimoni');
 const testiOk = testiAll.filter((t) => t.izin === true && !!t.tanggalIzin);
 
-test('FR-26 / BUG-4: testimoni kosong → tanpa #testimoni dan tanpa link nav', { skip: testiOk.length > 0 }, () => {
+const mitraAll = loadJson('mitra');
+
+test('FR-26 / BUG-4: testimoni dan mitra kosong → tanpa #testimoni dan tanpa link nav', { skip: testiOk.length > 0 || mitraAll.length > 0 }, () => {
   const html = indexHtml();
   assert.ok(!html.includes('id="testimoni"'));
   assert.ok(!html.includes('href="#testimoni"'));
@@ -405,4 +407,26 @@ test('FR-24 / SEC-9 / SEC-3: hanya testimoni berizin tampil, kutipan ter-escape,
   assert.ok(!/<script(?![^>]*ld\+json)[^>]*>\s*alert/.test(html));
   for (const m of sec.matchAll(/<img[^>]*>/g)) assert.match(m[0], /\salt="[^"]+"/);
   assert.match(html, /href="#testimoni"/);
+});
+
+// FR-25 / SEC-10 / BUG-5: strip logo mitra. Kondisional terhadap mitra.json yang sedang dibangun.
+test('FR-25: mitra kosong → tanpa strip logo', { skip: mitraAll.length > 0 }, () => {
+  assert.ok(!indexHtml().includes('class="mitra"'));
+});
+
+test('FR-25 / SEC-10: logo mitra beralt, berukuran, link eksternal ber-rel', { skip: mitraAll.length === 0 }, () => {
+  const html = indexHtml();
+  const sec = html.match(/<section[^>]*id="testimoni"[\s\S]*?<\/section>/)?.[0];
+  assert.ok(sec, 'section #testimoni tidak ada');
+  assert.match(html, /href="#testimoni"/);
+  const strip = sec.match(/<ul[^>]*class="[^"]*mitra[^"]*"[\s\S]*?<\/ul>/)?.[0];
+  assert.ok(strip, 'strip mitra tidak ada');
+  const imgs = [...strip.matchAll(/<img[^>]*>/g)].map((m) => m[0]);
+  assert.equal(imgs.length, mitraAll.length);
+  for (const i of imgs) {
+    assert.match(i, /\salt="[^"]+"/);
+    assert.match(i, /\swidth="\d+"/);
+    assert.match(i, /\sheight="\d+"/);
+  }
+  for (const m of strip.matchAll(/<a[^>]*target="_blank"[^>]*>/g)) assert.match(m[0], /rel="noopener noreferrer"/);
 });

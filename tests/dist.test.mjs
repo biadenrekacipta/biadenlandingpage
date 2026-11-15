@@ -517,3 +517,45 @@ test('SEO-1 / BUG-8: title unik ≤60 dan description ≤155 di semua halaman', 
     titles.set(t, p);
   }
 });
+
+// FR-32 / SEO-5 / GEO-5: Organization + WebSite di `/`, BreadcrumbList hanya di /kebijakan-privasi/. Data dari site.json.
+const readDist = (rel) => readFileSync(join(dist, rel), 'utf8');
+const ldNodes = (html) => {
+  const out = [];
+  for (const m of html.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)) {
+    const d = JSON.parse(m[1]);
+    out.push(...(d['@graph'] || [d]));
+  }
+  return out;
+};
+const escHtml = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+test('FR-32: `/` memuat Organization dan WebSite, tanpa BreadcrumbList; privasi memuat BreadcrumbList', () => {
+  const home = ldNodes(readDist('index.html')).map((n) => n['@type']);
+  assert.equal(home.filter((t) => t === 'Organization').length, 1);
+  assert.equal(home.filter((t) => t === 'WebSite').length, 1);
+  assert.ok(!home.includes('BreadcrumbList'));
+  const kp = ldNodes(readDist('kebijakan-privasi/index.html'));
+  const bc = kp.filter((n) => n['@type'] === 'BreadcrumbList');
+  assert.equal(bc.length, 1);
+  assert.equal(bc[0].itemListElement.length, 2);
+  assert.ok(bc[0].itemListElement[1].item.endsWith('/kebijakan-privasi/'));
+  assert.ok(!kp.some((n) => n['@type'] === 'Organization'));
+});
+
+test('GEO-5 / FR-32: nama, email, lokasi, sameAs di hero/profil, footer, dan JSON-LD sama dengan site.json', () => {
+  const s = loadJson('site')[0];
+  const html = readDist('index.html');
+  const org = ldNodes(html).find((n) => n['@type'] === 'Organization');
+  assert.equal(org.name, s.nama);
+  assert.equal(org.email, s.email);
+  assert.equal(org.address, s.lokasi);
+  assert.deepEqual(org.sameAs ?? [], s.sameAs);
+  const web = ldNodes(html).find((n) => n['@type'] === 'WebSite');
+  assert.equal(web.name, s.nama);
+  const foot = html.slice(html.indexOf('<footer'));
+  for (const v of [s.nama, s.email, s.lokasi]) {
+    assert.ok(foot.includes(escHtml(v)), `footer tanpa "${v}"`);
+    assert.ok(html.slice(0, html.indexOf('<footer')).includes(escHtml(v)), `konten (profil/kontak) tanpa "${v}"`);
+  }
+});

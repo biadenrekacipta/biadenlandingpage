@@ -9,6 +9,7 @@ import Testimoni from '../components/Testimoni.astro';
 import Faq from '../components/Faq.astro';
 import FormAjukan from '../components/FormAjukan.astro';
 import Nav from '../components/Nav.astro';
+import JsonLd from '../components/JsonLd.astro';
 import { sectionTampil } from '../lib/sections';
 import { katalogBuku, katalogJurnal, testimoniTampil } from '../lib/visible';
 // Memaksa semua koleksi divalidasi saat build (t3).
@@ -32,11 +33,31 @@ const adaFaq = (await getCollection('faq')).length > 0;
 const ada = sectionTampil({ profil: true, alur: true, katalog: adaKatalog, testimoni: adaTestimoni, faq: adaFaq, ajukan: true });
 const tampil = (id: string) => ada.some((s) => s.id === id);
 // ponytail: kerangka section; isi diganti komponen di t9-t25. Judul di bawah hanya struktur, bukan klaim.
+// FR-32, SEO-5, GEO-5: Organization + WebSite dari site.json (sumber yang sama dengan hero, profil, footer). Tanpa BreadcrumbList di beranda.
+const origin = new URL('/', Astro.site).href;
+const orgId = `${origin}#organization`;
+const ld = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': orgId,
+      name: site.nama,
+      url: origin,
+      description: site.ringkasan,
+      email: site.email,
+      address: site.lokasi,
+      ...(site.sameAs.length ? { sameAs: site.sameAs } : {}),
+    },
+    { '@type': 'WebSite', '@id': `${origin}#website`, url: origin, name: site.nama, inLanguage: 'id', publisher: { '@id': orgId } },
+  ],
+};
 const title = `${site.nama}: Penerbit Buku dan Jurnal Akademik`;
 const description = `Penerbit buku dan jurnal akademik ${site.nama}. Lihat profil, alur terbit, dan ajukan naskah Anda.`;
 ---
 <Base title={title} description={description}>
   <Nav slot="header" nama={site.nama} sections={ada} />
+  <JsonLd data={ld} />
   <div class="wrap">
     <Hero />
     {tampil('profil') && <Profil />}

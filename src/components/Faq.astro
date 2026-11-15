@@ -1,0 +1,34 @@
+---
+import { getCollection } from 'astro:content';
+// FR-27, FR-28, SEC-3, BR-6: <details>/<summary> tanpa JS; jawaban teks polos, di-escape otomatis oleh Astro.
+const daftar = (await getCollection('faq')).map((e) => e.data);
+if (daftar.length === 0) console.warn('[BR-6] FAQ: kosong, section disembunyikan');
+else if (daftar.length < 5) console.warn(`[FR-28] FAQ: ${daftar.length} item (disarankan minimal 5)`);
+---
+{daftar.length > 0 && (
+<section id="faq" aria-labelledby="faq-title">
+  <p class="lbl">FAQ</p>
+  <h2 id="faq-title">Pertanyaan yang sering diajukan</h2>
+  <div class="faq-list">
+    {daftar.map((f) => (
+      <details>
+        <summary>{f.pertanyaan}</summary>
+        <p>{f.jawaban}</p>
+      </details>
+    ))}
+  </div>
+</section>
+)}
+<style>
+  section { padding: 48px 0; border-top: 1px solid var(--rule); display: grid; gap: var(--space-2); }
+  p { margin: 0; }
+  h2 { margin: 0; font-weight: 400; font-size: clamp(28px, 4.4vw, 56px); line-height: 1.05; letter-spacing: -0.02em; }
+  .faq-list { margin-top: var(--space-1); max-width: 70ch; }
+  details { border-top: 1px solid var(--rule); }
+  details:last-child { border-bottom: 1px solid var(--rule); }
+  summary { cursor: pointer; min-height: 44px; padding: 14px 0; font-size: 19px; line-height: 1.35; list-style-position: outside; }
+  details p { padding: 0 0 var(--space-2); color: var(--muted); font-size: 17px; line-height: 1.55; }
+  @media (min-width: 768px) {
+    section { padding: 96px 0; }
+  }
+</style>

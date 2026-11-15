@@ -6,6 +6,7 @@ import Profil from '../components/Profil.astro';
 import Alur from '../components/Alur.astro';
 import Katalog from '../components/Katalog.astro';
 import Testimoni from '../components/Testimoni.astro';
+import Faq from '../components/Faq.astro';
 import FormAjukan from '../components/FormAjukan.astro';
 import Nav from '../components/Nav.astro';
 import { sectionTampil } from '../lib/sections';
@@ -27,7 +28,8 @@ const adaTestimoni =
   testimoniTampil((await getCollection('testimoni')).map((e) => e.data)).length > 0 ||
   (await getCollection('mitra')).length > 0;
 // Daftar section = sumber tunggal untuk nav dan markup (t10). Section lain didaftarkan saat komponennya dibuat.
-const ada = sectionTampil({ profil: true, alur: true, katalog: adaKatalog, testimoni: adaTestimoni, ajukan: true });
+const adaFaq = (await getCollection('faq')).length > 0;
+const ada = sectionTampil({ profil: true, alur: true, katalog: adaKatalog, testimoni: adaTestimoni, faq: adaFaq, ajukan: true });
 const tampil = (id: string) => ada.some((s) => s.id === id);
 // ponytail: kerangka section; isi diganti komponen di t9-t25. Judul di bawah hanya struktur, bukan klaim.
 const title = `${site.nama}: Penerbit Buku dan Jurnal Akademik`;
@@ -41,6 +43,7 @@ const description = `Penerbit buku dan jurnal akademik ${site.nama}. Lihat profi
     {tampil('alur') && <Alur />}
     {tampil('katalog') && <Katalog />}
     {tampil('testimoni') && <Testimoni />}
+    {tampil('faq') && <Faq />}
     {tampil('ajukan') && <FormAjukan />}
   </div>
 </Base>

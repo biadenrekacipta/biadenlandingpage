@@ -293,16 +293,18 @@ Aturan untuk agent:
   - Catatan: Dijalankan dengan data placeholder atas keputusan user (gate t19 belum lulus). `npm run check` 0 errors; `npm run build` lulus; `npm run test:content` 18 pass; `npm run test:dist` 38 pass 0 fail 3 skip (kondisi tidak berlaku). `Mitra.astro` (ul.mitra, img width=160 height=64 + alt dari mitra.json, link opsional `target=_blank rel="noopener noreferrer"`) dirender di dalam `Testimoni.astro` (#testimoni); section tampil bila ada testimoni berizin ATAU mitra, judul jadi 'Mitra dan institusi' bila hanya mitra; `index.astro` memakai syarat yang sama untuk nav. Fixture sementara mitra.json (2 entri, satu dengan url) dikembalikan lewat `git checkout` (`git status src/content` bersih): dist memuat 2 img beralt+width+height, link ber-rel, `id="testimoni"` dan `href="#testimoni"`; test:dist 37 pass. `alt:""` → build gagal `mitra → m1 ... alt: alt wajib`. Seed kosong: `grep -c testimoni dist/index.html` = 0, tes FR-26/FR-25 kosong lulus. Tes baru di dist.test.mjs (FR-25 kosong/berisi; tes FR-26 kini juga menuntut mitra kosong). `npx impeccable detect src/components/Mitra.astro src/components/Testimoni.astro dist/index.html` exit 0 tanpa temuan (engine regex untuk .astro). `ponytail:` di Mitra.astro: dimensi tetap 160x64 karena skema tanpa dimensi asli; upgrade astro:assets di t31. Logo belum ada berkas nyata, jadi tampilan tidak diuji visual.
 
 ## Fase 2 · FAQ
-- [ ] t25 · Section FAQ details/summary (S)
+- [x] t25 · Section FAQ details/summary (S)
   - Butuh: t19, t2, t10
   - Kerjakan: Buat `src/components/Faq.astro` (`id="faq"`) memakai `<details>/<summary>` tanpa JS dari `faq.json`, jawaban teks polos (FR-27, SEC-3). Beri peringatan build (bukan error) bila item <5 (FR-28). Seed topik awal: alur, syarat, durasi, biaya, ISBN, proses review jurnal — isi jawaban placeholder `[verify]`, jangan karang (GR-11). Sembunyikan section bila kosong (BR-6). Tes SEC-3: fixture jawaban berisi HTML tampil ter-escape.
   - Cek: `npm run build` (cek peringatan di log) lalu `npm run test:dist`; `grep -c '<details' dist/index.html` sama dengan jumlah item `faq.json`; `npx impeccable detect src/components/Faq.astro`.
   - Selesai jika:
-    - [ ] 1. Setiap item FAQ dirender sebagai `<details>` dengan `<summary>`
-    - [ ] 2. Build mencetak peringatan bila FAQ <5 item, tanpa gagal
-    - [ ] 3. Jawaban berisi `<b>x</b>` tampil sebagai teks ter-escape
-    - [ ] 4. Tidak ada JavaScript untuk FAQ
-    - [ ] 5. `npx impeccable detect src/components/Faq.astro` tanpa temuan
+    - [x] 1. Setiap item FAQ dirender sebagai `<details>` dengan `<summary>`
+    - [x] 2. Build mencetak peringatan bila FAQ <5 item, tanpa gagal
+    - [x] 3. Jawaban berisi `<b>x</b>` tampil sebagai teks ter-escape
+    - [x] 4. Tidak ada JavaScript untuk FAQ
+    - [x] 5. `npx impeccable detect src/components/Faq.astro` tanpa temuan
+  - Catatan: Dijalankan dengan data placeholder atas keputusan user (gate t19 belum lulus). `npm run check` 0 errors; `npm run build` lulus; `npm run test:dist` 39 pass 0 fail 4 skip. `Faq.astro` (#faq): `<details><summary>` per item faq.json, jawaban `<p>` teks polos ter-escape, tanpa script; terdaftar di `sections.ts` sejak t10, `index.astro` kini memakai syarat `faq` dari koleksi. Seed (6 item topik alur, syarat, durasi, biaya, ISBN, review; jawaban `[verify]`, tidak dikarang): `grep -o '<details' dist/index.html | wc -l` = 6. Fixture sementara faq.json (4 item, satu jawaban `Jawaban <b>x</b> uji`; dikembalikan lewat `git checkout`, `git status src/content` bersih): build exit 0 dan mencetak `[FR-28] FAQ: 4 item (disarankan minimal 5)`; dist memuat `Jawaban &lt;b&gt;x&lt;/b&gt; uji`, `<b>x</b>` mentah 0; test:dist 39 pass. Tes baru di dist.test.mjs (kosong: tanpa #faq/nav; berisi: jumlah details=summary=item, teks ter-escape, tanpa script di section). `npx impeccable detect src/components/Faq.astro dist/index.html` exit 0 tanpa temuan (engine regex untuk .astro). Jawaban masih `[verify]` (GR-11); STRICT=1 tetap gagal sampai penerbit mengisi.
+
 - [ ] t26 · JSON-LD FAQPage dari data yang sama (S)
   - Butuh: t22, t25
   - Kerjakan: Hasilkan JSON-LD `FAQPage` lewat `JsonLd.astro` dari array FAQ yang sama dengan yang dirender `Faq.astro` (FR-29, GEO-4). Tambah tes dist: jumlah `Question` di FAQPage sama dengan jumlah `<details>` (BUG-6). Tidak ada FAQPage bila FAQ kosong.

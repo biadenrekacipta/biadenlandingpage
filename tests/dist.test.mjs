@@ -430,3 +430,25 @@ test('FR-25 / SEC-10: logo mitra beralt, berukuran, link eksternal ber-rel', { s
   }
   for (const m of strip.matchAll(/<a[^>]*target="_blank"[^>]*>/g)) assert.match(m[0], /rel="noopener noreferrer"/);
 });
+
+// FR-27 / FR-28 / SEC-3: FAQ. Kondisional terhadap faq.json yang sedang dibangun.
+const faqAll = loadJson('faq');
+const faqSec = () => indexHtml().match(/<section[^>]*id="faq"[\s\S]*?<\/section>/)?.[0];
+
+test('BR-6 / BUG-4: FAQ kosong → tanpa #faq dan tanpa link nav', { skip: faqAll.length > 0 }, () => {
+  assert.ok(!indexHtml().includes('id="faq"'));
+  assert.ok(!indexHtml().includes('href="#faq"'));
+});
+
+test('FR-27 / SEC-3: tiap item FAQ jadi <details><summary>, teks ter-escape, tanpa script', { skip: faqAll.length === 0 }, () => {
+  const sec = faqSec();
+  assert.ok(sec, 'section #faq tidak ada');
+  assert.match(indexHtml(), /href="#faq"/);
+  assert.equal((sec.match(/<details/g) || []).length, faqAll.length);
+  assert.equal((sec.match(/<summary/g) || []).length, faqAll.length);
+  for (const f of faqAll) {
+    assert.ok(sec.includes(esc(f.pertanyaan)), `pertanyaan hilang: ${f.pertanyaan}`);
+    assert.ok(sec.includes(esc(f.jawaban)), `jawaban hilang: ${f.id}`);
+  }
+  assert.ok(!/<script/.test(sec), 'script di dalam FAQ');
+});

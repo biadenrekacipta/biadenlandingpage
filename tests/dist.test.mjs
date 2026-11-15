@@ -120,3 +120,30 @@ test('BUG-3: semua section[id] mendapat scroll-margin-top setinggi header', () =
   const cssFile = walk(join(dist, '_astro'), '.css').map((f) => readFileSync(f, 'utf8')).join('\n');
   assert.match(cssFile, /section\[id\][^{]*\{[^}]*scroll-margin-top:\s*var\(--header-h\)/);
 });
+
+const loadJson = (f) => JSON.parse(readFileSync(join(root, 'src/content', `${f}.json`), 'utf8'));
+const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+test('FR-5: paragraf pembuka profil sama persis dengan site.profil', () => {
+  const html = readFileSync(join(dist, 'index.html'), 'utf8');
+  const profil = /<section id="profil"[\s\S]*?<\/section>/.exec(html)?.[0];
+  assert.ok(profil, 'section profil tidak ada');
+  const lead = /<p class="profil-lead"[^>]*>([\s\S]*?)<\/p>/.exec(profil)?.[1];
+  assert.equal(lead, esc(loadJson('site')[0].profil));
+});
+
+test('FR-7 / GEO-5: kontak di profil dan footer identik (satu sumber site.json)', () => {
+  const html = readFileSync(join(dist, 'index.html'), 'utf8');
+  const kontak = [...html.matchAll(/<address class="kontak[^"]*"[^>]*>([\s\S]*?)<\/address>/g)].map((m) => m[1]);
+  assert.equal(kontak.length, 2, 'harus ada di profil dan footer');
+  assert.equal(kontak[0], kontak[1]);
+  const s = loadJson('site')[0];
+  for (const v of [s.email, s.whatsapp, s.lokasi]) assert.ok(kontak[0].includes(esc(v)), v);
+});
+
+test('FR-8 / BR-3: setiap klaim angka tampil bersama sumbernya', () => {
+  const html = readFileSync(join(dist, 'index.html'), 'utf8');
+  const klaim = loadJson('site')[0].klaimAngka;
+  assert.equal((html.match(/class="klaim-item"/g) || []).length, klaim.length);
+  for (const k of klaim) assert.ok(html.includes(`Sumber: ${esc(k.sumber)}`), k.label);
+});

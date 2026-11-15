@@ -1,0 +1,44 @@
+---
+import { getEntry } from 'astro:content';
+import Kontak from './Kontak.astro';
+// FR-5, FR-7, FR-8: profil, kontak, dan angka klaim dari site.json.
+// BR-3: klaim hanya tampil bila sumber terisi (skema zod juga menggagalkan build tanpa sumber).
+const site = (await getEntry('site', 'site'))!.data;
+const klaim = site.klaimAngka.filter((k) => k.sumber.trim() !== '');
+---
+<section id="profil" aria-labelledby="profil-title">
+  <p class="lbl">Profil</p>
+  <h2 id="profil-title">Tentang {site.nama}</h2>
+  <p class="profil-lead">{site.profil}</p>
+  <div class="profil-kontak">
+    <p class="lbl">Kontak resmi</p>
+    <Kontak />
+  </div>
+  {klaim.length > 0 && (
+    <dl class="klaim">
+      {klaim.map((k) => (
+        <div class="klaim-item">
+          <dt class="lbl">{k.label}</dt>
+          <dd class="klaim-nilai">{k.nilai}</dd>
+          <dd class="klaim-sumber">Sumber: {k.sumber}</dd>
+        </div>
+      ))}
+    </dl>
+  )}
+</section>
+<style>
+  section { padding: 48px 0; border-top: 1px solid var(--rule); display: grid; gap: var(--space-2); }
+  p { margin: 0; }
+  h2 { margin: 0; font-weight: 400; font-size: clamp(28px, 4.4vw, 56px); line-height: 1.05; letter-spacing: -0.02em; }
+  .profil-lead { max-width: 60ch; font-size: 19px; line-height: 1.5; }
+  .profil-kontak { display: grid; gap: var(--space-1); }
+  .klaim { display: grid; gap: var(--space-2); margin: var(--space-1) 0 0; }
+  .klaim-item { border-top: 1px solid var(--rule); padding-top: var(--space-1); display: grid; gap: 4px; }
+  .klaim-item dd { margin: 0; }
+  .klaim-nilai { font-size: 32px; line-height: 1.1; }
+  .klaim-sumber { font-size: 15px; color: var(--muted); }
+  @media (min-width: 768px) {
+    section { padding: 96px 0; }
+    .klaim { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  }
+</style>

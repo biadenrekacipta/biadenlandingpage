@@ -1,0 +1,16 @@
+---
+import { getEntry } from 'astro:content';
+// FR-7, GEO-5: satu sumber kontak (site.json), dipakai di Profil, Footer, dan form (t15).
+const site = (await getEntry('site', 'site'))!.data;
+const isEmail = site.email.includes('@');
+const waDigits = site.whatsapp.replace(/[\s()+-]/g, '');
+const waLink = /^\d{8,15}$/.test(waDigits) ? `https://wa.me/${waDigits}` : null;
+---
+<address class="kontak">
+  {isEmail ? <a href={`mailto:${site.email}`}>{site.email}</a> : <span>{site.email}</span>}
+  {waLink ? <a href={waLink} rel="noopener noreferrer">{site.whatsapp}</a> : <span>{site.whatsapp}</span>}
+  <span>{site.lokasi}</span>
+</address>
+<style>
+  .kontak { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); font-style: normal; font-size: 15px; }
+</style>

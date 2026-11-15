@@ -121,16 +121,17 @@ Aturan untuk agent:
     - [x] 5. `npx impeccable detect` pada file Nav tanpa temuan
   - Catatan: `npm run check` 0 errors; `npm run build && npm run test:dist` = 13 pass 0 fail; `npm run test:content` 10 pass. `src/lib/sections.ts` (`sectionTampil`, fungsi murni) jadi sumber tunggal nav dan markup di `index.astro`; hanya section yang sudah dirender yang didaftarkan (profil, alur, katalog bila ada item, ajukan); testimoni dan FAQ didaftarkan saat komponennya dibuat (t23, t25), jadi tanpa testimoni tidak ada `#testimoni` di dist. Tes dist baru: nav ⊂ id section dan tiap section ada di nav, menu `<details class="nav-mobile">`, tanpa `<script>` di header, `section[id]` punya `scroll-margin-top: var(--header-h)`. Mutasi (dikembalikan): jurnal `unggulan:true` → `#katalog` muncul di nav dan section, test:dist 13 pass. Browser pane 360x640 (`astro preview`): header 64 px, tombol Menu 44 px, tiap link panel 44 px, scrollWidth 360; dengan spacer 2000 px (halaman kerangka terlalu pendek untuk scroll), klik tiap link menempatkan section di top=64 px, `scroll-margin-top` terhitung 64px = tinggi header. `npx impeccable detect src/components/Nav.astro src/pages/index.astro dist/index.html dist/404.html` tanpa temuan. Catatan: nav punya dua daftar link (inline desktop + `<details>` mobile; ditandai komentar `ponytail:`) karena satu `<details>` terbuka di desktop butuh `::details-content`. Fokus terlihat memakai `:focus-visible` global (outline cobalt); belum diuji keyboard manual.
 ## Fase 1 · Profil Penerbit & Legalitas
-- [ ] t11 · Section profil, kontak, angka klaim (S)
+- [x] t11 · Section profil, kontak, angka klaim (S)
   - Butuh: t2, t10
   - Kerjakan: Buat `src/components/Profil.astro` (`id="profil"`) yang dibuka paragraf 2 kalimat dari `site.profil` (siapa, menerbitkan apa, lokasi — FR-5, GEO-3). Tampilkan kontak (email, WhatsApp, alamat) dari satu sumber `site.json`, dipakai ulang di footer (FR-7, GEO-5). Tampilkan `klaimAngka` hanya bila `sumber` terisi dan tampilkan sumbernya (FR-8, BR-3, GEO-7). Daftarkan section di `sections.ts`.
   - Cek: `npm run build && npm run test:content && npm run test:dist`; hapus `sumber` dari satu klaim dan `npm run build` harus gagal; `npx impeccable detect src/components/Profil.astro`.
   - Selesai jika:
-    - [ ] 1. Paragraf pembuka profil sama persis dengan `site.profil`
-    - [ ] 2. Kontak di profil dan footer identik dan berasal dari `site.json`
-    - [ ] 3. Angka klaim tampil bersama sumbernya
-    - [ ] 4. Build gagal bila `klaimAngka` tanpa `sumber`
-    - [ ] 5. `npx impeccable detect` pada file Profil tanpa temuan
+    - [x] 1. Paragraf pembuka profil sama persis dengan `site.profil`
+    - [x] 2. Kontak di profil dan footer identik dan berasal dari `site.json`
+    - [x] 3. Angka klaim tampil bersama sumbernya
+    - [x] 4. Build gagal bila `klaimAngka` tanpa `sumber`
+    - [x] 5. `npx impeccable detect` pada file Profil tanpa temuan
+  - Catatan: npm run check 0 errors; npm run build lulus; test:dist 16 pass, test:content 10 pass. Tes dist baru: paragraf `profil-lead` sama persis dengan `site.profil`; blok `<address class="kontak">` di profil dan footer identik (sama komponen `Kontak.astro`, sumber site.json); tiap klaim tampil dengan "Sumber: ...". Uji dengan klaimAngka {label,nilai,sumber} → dist memuat "Sumber: Sumber uji", test:dist 16 pass; hapus `sumber` → build gagal "klaimAngka.0.sumber: Required"; site.json dikembalikan (git diff src/content kosong), build+test lulus lagi. `npx impeccable detect src/components/Profil.astro src/components/Kontak.astro src/components/Footer.astro dist/index.html` exit 0 tanpa temuan (padding section dibuat px eksplisit agar detector membaca inset). WhatsApp jadi link wa.me hanya bila nilai berupa angka 8-15 digit; placeholder [verify] tetap teks. Profil didaftarkan di sections.ts sejak t10 (id profil); index.astro kini memakai <Profil />. Seed profil/kontak masih placeholder [verify] (GR-11).
 - [ ] t12 · Daftar legalitas terverifikasi (S)
   - Butuh: t2, t11
   - Kerjakan: Tambah blok legalitas di `Profil.astro` memakai filter `visible.ts` (BR-1): tampil hanya `terverifikasi:true` dan `nilai` tidak kosong, dengan label, nilai, dan link bukti opsional (`rel="noopener noreferrer"`, SEC-10) (FR-6). Bila 0 item lolos, blok disembunyikan dengan peringatan build (BR-6). Tambah tes konten untuk SEC-9: fixture item `terverifikasi:false` tidak muncul di `dist/`. Catat di README bahwa perubahan `legalitas.json` butuh reviewer kedua (BR-9).

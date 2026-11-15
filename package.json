@@ -1,0 +1,24 @@
+{
+  "name": "biadenlandingpage",
+  "type": "module",
+  "private": true,
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "check": "astro check",
+    "test:content": "node --test tests/content.test.mjs",
+    "test:dist": "node --test tests/dist.test.mjs",
+    "lhci": "lhci autorun"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.5",
+    "astro": "^7.3.8",
+    "sharp": "^0.35.5"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "@lhci/cli": "^0.15.1",
+    "typescript": "^6.0.3"
+  }
+}

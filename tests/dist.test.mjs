@@ -191,3 +191,63 @@ test('FR-12 / BR-12: teks "hari kerja" ada hanya bila slaBalasanHariKerja terisi
   if (sla) assert.ok(html.includes(`dibalas dalam ${sla} hari kerja`));
   else assert.ok(!html.includes('hari kerja'), 'teks SLA tidak boleh dirender saat null');
 });
+
+// t15 / BR-7 / SEC-2: atribut tiap field form, pattern link_naskah, persetujuan, jalur kontak.
+const formHtml = () => {
+  const html = readFileSync(join(dist, 'index.html'), 'utf8');
+  const sec = /<section id="ajukan"[\s\S]*?<\/section>/.exec(html)?.[0];
+  assert.ok(sec, 'section ajukan tidak ada');
+  return sec;
+};
+const tagOf = (sec, name) => new RegExp(String.raw`<(input|select|textarea)\b[^>]*\bname="${name}"[^>]*>`).exec(sec)?.[0];
+const attr = (tag, a) => new RegExp(String.raw`\s${a}(?:="([^"]*)")?(?=[\s>/])`).exec(tag)?.[1] ?? (new RegExp(String.raw`\s${a}(?=[\s>/])`).test(tag) ? '' : undefined);
+
+test('FR-13 / BR-7: atribut required/minlength/maxlength tiap field', () => {
+  const sec = formHtml();
+  const spek = {
+    nama: { required: true, minlength: '2', maxlength: '100' },
+    email: { required: true, type: 'email' },
+    peran: { required: true },
+    jenis: { required: true },
+    judul_atau_topik: { required: true, minlength: '3', maxlength: '200' },
+    pesan: { required: true, minlength: '20', maxlength: '1000' },
+    institusi: { required: false, maxlength: '150' },
+    link_naskah: { required: false, maxlength: '500', type: 'url' },
+    persetujuan: { required: true, type: 'checkbox' },
+  };
+  for (const [name, s] of Object.entries(spek)) {
+    const tag = tagOf(sec, name);
+    assert.ok(tag, `field ${name} tidak ada`);
+    assert.equal(attr(tag, 'required') !== undefined, s.required, `${name} required`);
+    for (const k of ['minlength', 'maxlength', 'type']) if (s[k]) assert.equal(attr(tag, k), s[k], `${name} ${k}`);
+    assert.ok(new RegExp(String.raw`<label[^>]*\bfor="${name}"`).test(sec), `${name} tanpa label`);
+  }
+  for (const [name, opsi] of [['peran', ['Mahasiswa', 'Dosen', 'Peneliti', 'Penulis umum', 'Lainnya']], ['jenis', ['Ajukan naskah buku', 'Ajukan artikel jurnal', 'Pertanyaan umum']]]) {
+    const sel = new RegExp(String.raw`<select[^>]*name="${name}"[\s\S]*?</select>`).exec(sec)[0];
+    const vals = [...sel.matchAll(/<option value="([^"]+)"/g)].map((m) => m[1]);
+    assert.deepEqual(vals, opsi);
+  }
+  assert.ok(!/<script/.test(sec), 'form tanpa JavaScript');
+});
+
+test('SEC-2 / BR-8: pattern link_naskah menolak javascript: dan http://, menerima https://x.id/a', () => {
+  const tag = tagOf(formHtml(), 'link_naskah');
+  const pat = attr(tag, 'pattern');
+  assert.equal(pat, 'https://.*');
+  const re = new RegExp(String.raw`^(?:${pat})$`, 'v'); // pattern HTML dianchor penuh
+  assert.ok(!re.test('javascript:alert(1)'));
+  assert.ok(!re.test('http://x.id'));
+  assert.ok(re.test('https://x.id/a'));
+});
+
+test('FR-17 / SEC-6: persetujuan menaut ke /kebijakan-privasi/', () => {
+  const sec = formHtml();
+  assert.match(sec, /<label[^>]*for="persetujuan"[^>]*>[\s\S]*?<a href="\/kebijakan-privasi\/"/);
+});
+
+test('FR-18: link email dan WhatsApp tampil di samping form', () => {
+  const sec = formHtml();
+  const site = loadJson('site')[0];
+  assert.ok(/<aside\b/.test(sec) && sec.includes(site.email));
+  assert.ok(sec.includes(site.whatsapp));
+});

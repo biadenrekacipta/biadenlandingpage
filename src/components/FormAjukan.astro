@@ -1,0 +1,135 @@
+---
+import { getEntry } from 'astro:content';
+// FR-13, FR-17, FR-18, BR-7, BR-8: form tanpa JS, validasi HTML5 native.
+// FR-14, SEC-1, BUG-2: hidden field dan honeypot untuk Web3Forms; redirect dari SITE_URL.
+const site = (await getEntry('site', 'site'))!.data;
+const peran = ['Mahasiswa', 'Dosen', 'Peneliti', 'Penulis umum', 'Lainnya'];
+const jenis = ['Ajukan naskah buku', 'Ajukan artikel jurnal', 'Pertanyaan umum'];
+// ponytail: access key dibaca dari env publik; kosong saat dev/CI. Key produksi dibatasi domain di dashboard (SEC-5).
+const accessKey = import.meta.env.PUBLIC_WEB3FORMS_KEY ?? '';
+const siteUrl = (Astro.site?.href ?? 'http://localhost:4321/').replace(/\/$/, '');
+const redirect = `${siteUrl}/terima-kasih/`;
+const isEmail = site.email.includes('@');
+const waDigits = site.whatsapp.replace(/[\s()+-]/g, '');
+const waLink = /^\d{8,15}$/.test(waDigits) ? `https://wa.me/${waDigits}` : null;
+---
+<section id="ajukan" aria-labelledby="ajukan-title">
+  <p class="lbl">Ajukan Naskah</p>
+  <h2 id="ajukan-title">Kirim naskah atau pertanyaan Anda</h2>
+  <p class="ajukan-lead">Isi form berikut. Naskah dikirim lewat tautan https, bukan unggahan berkas.</p>
+  <div class="ajukan-grid">
+    <form class="ajukan-form" action="https://api.web3forms.com/submit" method="POST">
+      <input type="hidden" name="access_key" value={accessKey} />
+      <input type="hidden" name="subject" value={`Pengajuan baru dari situs ${site.nama}`} />
+      <input type="hidden" name="from_name" value={`Situs ${site.nama}`} />
+      <input type="hidden" name="redirect" value={redirect} />
+      <p class="hp" aria-hidden="true">
+        <label>Jangan diisi <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" /></label>
+      </p>
+
+      <div class="field">
+        <label for="nama">Nama</label>
+        <input id="nama" name="nama" type="text" required minlength="2" maxlength="100" autocomplete="name" />
+      </div>
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" required autocomplete="email" />
+      </div>
+      <div class="field">
+        <label for="peran">Peran</label>
+        <select id="peran" name="peran" required>
+          <option value="" selected disabled>Pilih peran</option>
+          {peran.map((p) => <option value={p}>{p}</option>)}
+        </select>
+      </div>
+      <div class="field">
+        <label for="jenis">Jenis pengajuan</label>
+        <select id="jenis" name="jenis" required>
+          <option value="" selected disabled>Pilih jenis</option>
+          {jenis.map((j) => <option value={j}>{j}</option>)}
+        </select>
+      </div>
+      <div class="field">
+        <label for="judul_atau_topik">Judul atau topik</label>
+        <input id="judul_atau_topik" name="judul_atau_topik" type="text" required minlength="3" maxlength="200" />
+      </div>
+      <div class="field">
+        <label for="institusi">Institusi <span class="opsi">(opsional)</span></label>
+        <input id="institusi" name="institusi" type="text" maxlength="150" autocomplete="organization" />
+      </div>
+      <div class="field">
+        <label for="link_naskah">Tautan naskah <span class="opsi">(opsional)</span></label>
+        <input id="link_naskah" name="link_naskah" type="url" pattern="https://.*" maxlength="500" inputmode="url" placeholder="https://" aria-describedby="link-bantuan" />
+        <p id="link-bantuan" class="bantuan">Hanya tautan https. Berkas tidak diunggah ke situs ini.</p>
+      </div>
+      <div class="field">
+        <label for="pesan">Pesan</label>
+        <textarea id="pesan" name="pesan" required minlength="20" maxlength="1000" rows="6"></textarea>
+      </div>
+      <div class="setuju">
+        <input id="persetujuan" name="persetujuan" type="checkbox" value="ya" required />
+        <label for="persetujuan">Saya setuju data saya diproses sesuai <a href="/kebijakan-privasi/">kebijakan privasi</a>.</label>
+      </div>
+      <button class="btn lbl" type="submit">Kirim pengajuan</button>
+    </form>
+    <aside class="jalur" aria-labelledby="jalur-title">
+      <h3 id="jalur-title">Jalur langsung</h3>
+      <p>Lebih suka menghubungi langsung? Pakai kontak berikut.</p>
+      <ul>
+        <li>Email: {isEmail ? <a href={`mailto:${site.email}`}>{site.email}</a> : <span>{site.email}</span>}</li>
+        <li>WhatsApp: {waLink ? <a href={waLink} rel="noopener noreferrer">{site.whatsapp}</a> : <span>{site.whatsapp}</span>}</li>
+      </ul>
+    </aside>
+  </div>
+</section>
+<style>
+  section { padding: 48px 0; border-top: 1px solid var(--rule); display: grid; gap: var(--space-2); }
+  p { margin: 0; }
+  h2 { margin: 0; font-weight: 400; font-size: clamp(28px, 4.4vw, 56px); line-height: 1.05; letter-spacing: -0.02em; }
+  .ajukan-lead { max-width: 60ch; font-size: 19px; line-height: 1.5; }
+  .ajukan-grid { display: grid; gap: var(--space-4); margin-top: var(--space-1); }
+  .ajukan-form { display: grid; gap: var(--space-2); max-width: 640px; }
+  .field { display: grid; gap: 6px; }
+  label { font-family: var(--sans); font-weight: 600; font-size: 14px; }
+  .opsi { font-weight: 500; color: var(--muted); }
+  input[type='text'], input[type='email'], input[type='url'], select, textarea {
+    font: inherit;
+    font-size: 17px;
+    min-height: 44px;
+    padding: 10px 12px;
+    background: var(--sheet);
+    color: var(--ink);
+    border: 1px solid var(--rule);
+    border-radius: 0;
+    width: 100%;
+  }
+  textarea { resize: vertical; }
+  .bantuan { font-size: 14px; color: var(--muted); }
+  .setuju { display: flex; gap: var(--space-1); align-items: flex-start; }
+  .setuju input { width: 24px; height: 24px; margin: 8px 4px 0 0; flex: none; accent-color: var(--cobalt); }
+  .setuju label { font-family: var(--serif); font-weight: 400; font-size: 17px; padding-block: 8px; }
+  /* Honeypot disembunyikan dari pengguna dan pembaca layar; bot tetap mengisinya (SEC-1). */
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+  .btn {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 20px;
+    background: var(--cobalt);
+    color: #fff;
+    border: 1px solid var(--cobalt);
+    border-radius: 0;
+    cursor: pointer;
+    transition: background-color 0.45s var(--ease);
+  }
+  .btn:hover { background: var(--ink); border-color: var(--ink); }
+  .jalur { border-top: 1px solid var(--rule); padding-top: var(--space-2); display: grid; gap: var(--space-1); align-content: start; }
+  .jalur h3 { margin: 0; font-weight: 400; font-size: 26px; line-height: 1.15; }
+  .jalur ul { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--space-1); }
+  .jalur a { display: inline-block; min-height: 44px; line-height: 44px; }
+  @media (min-width: 768px) {
+    section { padding: 96px 0; }
+    .ajukan-grid { grid-template-columns: 2fr 1fr; gap: var(--space-5); }
+  }
+</style>

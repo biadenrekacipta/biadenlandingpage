@@ -65,15 +65,16 @@ Aturan untuk agent:
     - [x] 3. Tahap 6 menjalankan build, `dist.test.mjs`, lalu `lhci autorun`
     - [ ] 4. PR uji dengan test content yang sengaja gagal diblok CI
   - Catatan: [!] TERBLOKIR pada poin 4: PR uji dan tab Actions butuh push ke remote `origin` (https://github.com/biadenrekacipta/biadenlandingpage, terdaftar di `git remote -v`); push belum dilakukan karena butuh izin user, koreksi: catatan sebelumnya keliru menyebut remote tidak ada. Selesai: `.github/workflows/ci.yml` (6 job berurutan lewat `needs`, nama job "1. Lint + type check (astro check)" … "6. Build + tes dist + Lighthouse CI"), `lighthouserc.json` (staticDistDir dist; performance ≥0.9, seo ≥0.95, accessibility ≥0.95). Tahap 3 = `npm audit --omit=dev --audit-level=high` (tambahan `--omit=dev` karena temuan high hanya di rantai devDependency @lhci/cli; keputusan dicatat di README). Dicek lokal: nama job terbaca 6 baris berurutan; `npx lhci autorun` jalan end-to-end dan menggagalkan assertion `categories.seo` (0.9 < 0.95) pada halaman stub tanpa meta description, itu sengaja dan diperbaiki di t7. README bagian "CI dan branch" mencatat `main` dilindungi dan PR wajib hijau (pengaturan branch protection di GitHub belum dilakukan).
-- [ ] t6 · AGENTS.md, CLAUDE.md, dokumentasi deploy Cloudflare Pages (S)
+- [!] t6 · AGENTS.md, CLAUDE.md, dokumentasi deploy Cloudflare Pages (S)
   - Butuh: t1, t5
   - Kerjakan: Salin GR-5 sampai GR-15 apa adanya ke `AGENTS.md` dan `CLAUDE.md` (termasuk aturan `blocked` kalau keputusan tak ada di PRD, dan larangan karang konten). Lengkapi README: env var (`SITE_URL`, `PUBLIC_WEB3FORMS_KEY`, `PUBLIC_UMAMI_ID`), cara edit konten JSON lewat PR, aturan reviewer kedua untuk `legalitas.json`/`testimoni.json` (BR-9), checklist staf membuka link naskah (SEC-2), setup Cloudflare Pages (build `npm run build`, output `dist`, `NODE_VERSION`, `SITE_URL` per lingkungan, preview per PR), cara rollback (tombol Rollback atau `git revert`). Coba rollback sekali dan catat tanggalnya.
   - Cek: `grep -c 'GR-' AGENTS.md CLAUDE.md` menunjukkan 11 guardrail di tiap file; buka README dan cek empat bagian di atas; buka dashboard Cloudflare Pages dan cek deployment produksi aktif.
   - Selesai jika:
-    - [ ] 1. `AGENTS.md` dan `CLAUDE.md` memuat GR-5 sampai GR-15
-    - [ ] 2. README memuat checklist staf untuk link naskah
-    - [ ] 3. README menjelaskan env var, deploy, dan rollback
+    - [x] 1. `AGENTS.md` dan `CLAUDE.md` memuat GR-5 sampai GR-15
+    - [x] 2. README memuat checklist staf untuk link naskah
+    - [x] 3. README menjelaskan env var, deploy, dan rollback
     - [ ] 4. Rollback sudah dicoba sekali dan dicatat di README
+  - Catatan: [!] TERBLOKIR pada poin 4 dan sebagian Cek. Selesai: `AGENTS.md` dan `CLAUDE.md` di root memuat GR-5..GR-15 disalin apa adanya dari PRD; `grep -c 'GR-' AGENTS.md CLAUDE.md` -> 11 dan 11. README ditambah bagian: Env var (detail), Edit konten lewat PR, Reviewer kedua (BR-9), Checklist staf link naskah (SEC-2), Deploy Cloudflare Pages (build `npm run build`, output `dist`, NODE_VERSION 22, SITE_URL per lingkungan, preview per PR), Rollback (tombol Rollback atau `git revert`). Tersisa (butuh akses luar): setup dan deployment produksi aktif di dashboard Cloudflare Pages belum diverifikasi; rollback nyata belum dicoba, jadi tidak ada tanggal rollback di README (tidak dikarang). Dependensi: t5 masih [!] (poin PR uji CI butuh push), isi t6 tidak bergantung pada poin itu.
 
 ## Fase 1 · Hero & CTA
 - [x] t7 · Layout dasar, token CSS, komponen Head, footer, halaman 404 (L)
@@ -168,16 +169,17 @@ Aturan untuk agent:
 
 ## Fase 1 · Form Pengajuan Naskah & Kontak
   - Catatan: npm run check 0 errors; npm run build lulus; test:dist 20 pass, test:content 12 pass. Syarat.astro (dirender di akhir section #alur lewat Alur.astro): dua grup `<h3>` + `<ul>` (buku, jurnal) dari syarat.json, tanpa script; CTA penutup `<a class="btn lbl" href="#ajukan">Ajukan Naskah</a>`. SLA: dengan slaBalasanHariKerja null `grep -c "hari kerja" dist/index.html` = 0; diubah ke 3 → dist memuat "dibalas dalam 3 hari kerja", test:dist 20 pass di kedua kondisi; site.json dikembalikan (git status bersih untuk src/content). Tes dist baru: grup syarat + CTA, dan tes SLA yang membaca site.json (null → tanpa teks, terisi → teks N). `npx impeccable detect src/components dist/index.html` exit 0 tanpa temuan. Syarat masih placeholder [verify] (GR-11). Catatan: tes SLA bersifat kondisional terhadap site.json yang sedang dibangun; dua kondisi dibuktikan lewat dua build manual di atas.
-- [ ] t15 · Markup form pengajuan dengan validasi HTML5 (M)
+- [x] t15 · Markup form pengajuan dengan validasi HTML5 (M)
   - Butuh: t2, t14
   - Kerjakan: Buat `src/components/FormAjukan.astro` (`id="ajukan"`) dengan field BR-7: `nama` (2–100), `email`, `peran` (select: Mahasiswa, Dosen, Peneliti, Penulis umum, Lainnya), `jenis` (select: Ajukan naskah buku, Ajukan artikel jurnal, Pertanyaan umum), `judul_atau_topik` (3–200), `pesan` (20–1000), `persetujuan` checkbox required menaut ke `/kebijakan-privasi/`, opsional `institusi` (≤150) dan `link_naskah` (`type=url`, `pattern="https://.*"`, `maxlength=500` — SEC-2). Label terlihat, tanpa JavaScript. Di sebelah form tampilkan link email dan WhatsApp dari `site.json` (FR-18). Tambah tes dist untuk atribut tiap field dan bahwa pattern menolak `javascript:` dan `http://` tetapi menerima `https://x.id/a`.
   - Cek: `npm run build && npm run test:dist` (tes atribut dan pattern lulus); uji manual di browser: submit kosong dan `link_naskah` `http://` ditolak browser; `npx impeccable detect src/components/FormAjukan.astro`.
   - Selesai jika:
-    - [ ] 1. Setiap field BR-7 punya atribut required/minlength/maxlength yang benar
-    - [ ] 2. Pattern `link_naskah` menolak `javascript:alert(1)` dan `http://x.id`
-    - [ ] 3. Checkbox persetujuan required dan menaut ke `/kebijakan-privasi/`
-    - [ ] 4. Link email dan WhatsApp tampil di samping form
-    - [ ] 5. `npx impeccable detect src/components/FormAjukan.astro` tanpa temuan
+    - [x] 1. Setiap field BR-7 punya atribut required/minlength/maxlength yang benar
+    - [x] 2. Pattern `link_naskah` menolak `javascript:alert(1)` dan `http://x.id`
+    - [x] 3. Checkbox persetujuan required dan menaut ke `/kebijakan-privasi/`
+    - [x] 4. Link email dan WhatsApp tampil di samping form
+    - [x] 5. `npx impeccable detect src/components/FormAjukan.astro` tanpa temuan
+  - Catatan: `npm run check` 0 errors; `npm run build && npm run test:dist` = 24 pass 0 fail (4 tes baru: atribut BR-7 tiap field + opsi select + tanpa script, pattern link_naskah, persetujuan menaut /kebijakan-privasi/, aside email/WhatsApp). Mutasi (dikembalikan): `required` dihapus dari `nama` → 23 pass 1 fail. Browser (`astro preview`, `checkValidity`): form kosong invalid dengan 7 field wajib (nama, email, peran, jenis, judul_atau_topik, pesan, persetujuan); `link_naskah` `http://x.id` dan `javascript:alert(1)` patternMismatch=true, `https://x.id/a` valid. `npx impeccable detect src/components/FormAjukan.astro dist/index.html` exit 0 tanpa temuan (engine regex untuk .astro). File: `src/components/FormAjukan.astro`, `index.astro` memakainya (ganti stub). Field hidden/honeypot untuk t16 sudah ada di komponen ini. Belum diuji: 360/768/1280 px visual (pane tersembunyi, lebar viewport 0); dicek di gate t19.
 - [ ] t16 · Sambungkan form ke Web3Forms (redirect, honeypot, CSP) (M)
   - Butuh: t8, t15
   - Kerjakan: Set `action="https://api.web3forms.com/submit"` `method="POST"` dan hidden field `access_key` (dari `PUBLIC_WEB3FORMS_KEY`), `subject`, `from_name`, `redirect` = `${SITE_URL}/terima-kasih/` (BUG-2), dan honeypot `botcheck` yang disembunyikan dari pengguna (`aria-hidden`, `tabindex=-1`, `autocomplete=off`) (FR-14, SEC-1). Pastikan CSP `form-action` hanya ke Web3Forms (SEC-6). Uji manual di staging dan produksi.

@@ -125,3 +125,13 @@ test('BR-10: skema menolak buku terbit bertahun depan, menerima segera-terbit', 
   const src = readFileSync(new URL('../src/content.config.ts', import.meta.url), 'utf8');
   assert.match(src, /status !== 'terbit' \|\| b\.tahun <= new Date\(\)\.getFullYear\(\)/);
 });
+
+test('SEC-9 / BR-2: fixture testimoni tanpa izin atau tanpa tanggalIzin tidak tampil', () => {
+  const fx = [
+    { nama: 'A', izin: true, tanggalIzin: '2025-01-01' },
+    { nama: 'B', izin: false, tanggalIzin: '2025-01-01' },
+    { nama: 'C', izin: true, tanggalIzin: null },
+    { nama: 'D', izin: true, tanggalIzin: '' },
+  ];
+  assert.deepEqual(testimoniTampil(fx).map((t) => t.nama), ['A']);
+});

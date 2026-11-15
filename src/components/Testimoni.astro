@@ -1,0 +1,44 @@
+---
+import { getCollection } from 'astro:content';
+import { testimoniTampil } from '../lib/visible';
+// FR-24, BR-2, FR-26: hanya izin:true dengan tanggalIzin terisi. Kutipan verbatim, di-escape otomatis oleh Astro (SEC-3).
+const daftar = testimoniTampil((await getCollection('testimoni')).map((e) => e.data));
+if (daftar.length === 0) console.warn('[BR-6] Testimoni: tidak ada item berizin, section disembunyikan');
+---
+{daftar.length > 0 && (
+<section id="testimoni" aria-labelledby="testimoni-title">
+  <p class="lbl">Testimoni</p>
+  <h2 id="testimoni-title">Kata penulis kami</h2>
+  <ul class="testi-list">
+    {daftar.map((t) => (
+      <li class="testi">
+        <figure>
+          <blockquote><p>{t.kutipan}</p></blockquote>
+          <figcaption>
+            {t.foto && t.fotoAlt && <img src={t.foto} alt={t.fotoAlt} width="64" height="64" loading="lazy" decoding="async" />}
+            <span class="testi-nama">{t.nama}</span>
+            <span class="testi-peran">{t.peran}, {t.institusi}</span>
+          </figcaption>
+        </figure>
+      </li>
+    ))}
+  </ul>
+</section>
+)}
+<style>
+  section { padding: 48px 0; border-top: 1px solid var(--rule); display: grid; gap: var(--space-2); }
+  p { margin: 0; }
+  h2 { margin: 0; font-weight: 400; font-size: clamp(28px, 4.4vw, 56px); line-height: 1.05; letter-spacing: -0.02em; }
+  .testi-list { list-style: none; margin: var(--space-1) 0 0; padding: 0; display: grid; gap: var(--space-3); }
+  .testi { border-top: 1px solid var(--rule); padding-top: var(--space-2); }
+  figure { margin: 0; display: grid; gap: var(--space-2); }
+  blockquote { margin: 0; font-size: 22px; line-height: 1.4; max-width: 60ch; font-style: italic; }
+  figcaption { display: grid; grid-template-columns: auto 1fr; column-gap: var(--space-2); align-items: center; }
+  figcaption img { grid-row: span 2; width: 64px; height: 64px; object-fit: cover; border: 1px solid var(--rule); }
+  .testi-nama { font-family: var(--sans); font-weight: 600; font-size: 16px; }
+  .testi-peran { color: var(--muted); font-size: 15px; }
+  @media (min-width: 768px) {
+    section { padding: 96px 0; }
+    .testi-list { grid-template-columns: repeat(2, 1fr); gap: var(--space-4) var(--space-3); }
+  }
+</style>

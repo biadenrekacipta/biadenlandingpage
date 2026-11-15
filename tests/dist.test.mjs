@@ -384,3 +384,25 @@ test('FR-23 / SEC-3: JSON-LD Book/Periodical sama dengan jumlah kartu, valid JSO
   const kartu = (html.match(/class="kartu kartu-(buku|jurnal)/g) || []).length;
   assert.equal(nodes.filter((n) => n['@type'] === 'Book' || n['@type'] === 'Periodical').length, kartu);
 });
+
+// FR-24 / FR-26 / BR-2 / SEC-9 / SEC-3: testimoni. Kondisional terhadap testimoni.json yang sedang dibangun.
+const testiAll = loadJson('testimoni');
+const testiOk = testiAll.filter((t) => t.izin === true && !!t.tanggalIzin);
+
+test('FR-26 / BUG-4: testimoni kosong → tanpa #testimoni dan tanpa link nav', { skip: testiOk.length > 0 }, () => {
+  const html = indexHtml();
+  assert.ok(!html.includes('id="testimoni"'));
+  assert.ok(!html.includes('href="#testimoni"'));
+});
+
+test('FR-24 / SEC-9 / SEC-3: hanya testimoni berizin tampil, kutipan ter-escape, foto beralt', { skip: testiOk.length === 0 }, () => {
+  const html = indexHtml();
+  const sec = html.match(/<section[^>]*id="testimoni"[\s\S]*?<\/section>/)?.[0];
+  assert.ok(sec, 'section #testimoni tidak ada');
+  assert.equal((sec.match(/<blockquote/g) || []).length, testiOk.length);
+  for (const t of testiAll.filter((x) => !testiOk.includes(x))) assert.ok(!html.includes(esc(t.kutipan)), `tampil tanpa izin: ${t.nama}`);
+  for (const t of testiOk) assert.ok(sec.includes(esc(t.kutipan)), `kutipan verbatim hilang: ${t.nama}`);
+  assert.ok(!/<script(?![^>]*ld\+json)[^>]*>\s*alert/.test(html));
+  for (const m of sec.matchAll(/<img[^>]*>/g)) assert.match(m[0], /\salt="[^"]+"/);
+  assert.match(html, /href="#testimoni"/);
+});

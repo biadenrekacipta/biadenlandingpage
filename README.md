@@ -54,3 +54,11 @@ Referensi desain ada di `docs/design-reference.md` (GR-12). UI wajib mengikuti f
 
 - `npm run test:content` memvalidasi JSON (BR-1/2/3/4/10/11, tanggal). Memakai `--experimental-strip-types` agar bisa mengimpor `src/lib/*.ts` di Node 22.12. `STRICT=1` menggagalkan tes bila masih ada `[verify]` (wajib hijau sebelum rilis produksi, GR-11).
 - `npm run test:dist` memeriksa `dist/` (jalankan `npm run build` dulu). `DIST_DIR=<folder>` untuk fixture.
+
+## CI dan branch
+
+`.github/workflows/ci.yml` punya 6 tahap berurutan (tiap tahap `needs` tahap sebelumnya): (1) `astro check`, (2) tes konten, (3) `npm audit --omit=dev --audit-level=high`, (4) gitleaks, (5) CodeQL JS/TS, (6) build, `tests/dist.test.mjs`, lalu `lhci autorun` (preset mobile bawaan Lighthouse). Satu merah memblok merge.
+
+Aturan repo: `main` dilindungi, merge hanya lewat PR dengan semua tahap hijau (atur di GitHub Settings → Branches; belum dilakukan, repo belum punya remote).
+
+Tahap 3 memakai `--omit=dev` karena temuan high ada di rantai `@lhci/cli` (devDependency, alat CI). Tinjau ulang bila versi `@lhci/cli` diperbarui.

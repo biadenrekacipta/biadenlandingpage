@@ -46,8 +46,10 @@ function init(rak) {
   let s = 0, T = 0;
   const aktifAwal = Math.max(0, orig.findIndex((el) => el.getAttribute('data-r') === '0')); // dibaca sebelum data-r dibuang
   function build() {
+    // Belum ada ukuran (CSS belum terpasang atau rak tersembunyi): jangan hitung, ResizeObserver memanggil lagi nanti.
+    if (!(W > 0 && H > 0)) return;
     const butuh = (W + 3 * d) / (ws + gap) + 2;
-    const copies = Math.max(3, Math.ceil(butuh / n));
+    const copies = Math.min(Math.max(3, Math.ceil(butuh / n)), Math.ceil(300 / n)); // batas wajar agar tidak membeku
     if (copies * n === total) return;
     const lama = total;
     stage.querySelectorAll('.tape[data-clone]').forEach((e) => e.remove());
@@ -81,7 +83,7 @@ function init(rak) {
   build();
 
   // ---- State ----
-  let active = mod(Math.round(s), n);
+  let active = aktifAwal; // sama dengan caption statis; build pertama (mungkin lewat ResizeObserver) memulai s dari aktifAwal
   let hover = -1;
   let tiltX = 0, tiltY = 0;
   let onCover = false;
@@ -275,6 +277,10 @@ function init(rak) {
     raf = 0;
     if (!visible) {
       last = 0;
+      return;
+    }
+    if (!total) {
+      raf = requestAnimationFrame(frame); // build belum terjadi
       return;
     }
     const dt = last ? Math.min((t - last) / 1000, 0.05) : 1 / 60;
@@ -490,6 +496,14 @@ function init(rak) {
   new ResizeObserver(() => {
     measure();
     build();
+    if (total) {
+      const a = mod(Math.round(s), n);
+      if (a !== active) {
+        active = a;
+        swap(a, dirLast);
+      }
+      setActiveTab();
+    }
     moveIndicator();
   }).observe(shelf);
   new IntersectionObserver(([en]) => {

@@ -653,7 +653,7 @@ test('FR-33 / SEC-6: CTA Ajukan Naskah punya data-umami-event="cta-ajukan"; even
 test('FR-33 / TC-6: CSP script-src hanya self dan cloud.umami.is, connect-src ke api-gateway.umami.dev, tanpa unsafe-inline', () => {
   const csp = cspHeader();
   assert.equal(/script-src ([^;]+)/.exec(csp)[1].trim(), "'self' https://cloud.umami.is");
-  assert.ok(/connect-src ([^;]+)/.exec(csp)[1].split(/\s+/).includes('https://api-gateway.umami.dev'));
+  assert.deepEqual(/connect-src ([^;]+)/.exec(csp)[1].trim().split(/\s+/), ["'self'", 'https://api-gateway.umami.dev', 'https://gateway.umami.is']);
   assert.ok(!csp.includes('unsafe-inline') && !csp.includes('unsafe-eval'));
 });
 

@@ -39,6 +39,7 @@ test('FR-34 / SEC-6: CSP, nosniff, Referrer-Policy, X-Frame-Options di halaman, 
     assert.match(csp, /(^|; )form-action 'self'(;|$)/, path);
     assert.match(csp, /(^|; )frame-ancestors 'none'(;|$)/, path);
     assert.match(csp, /(^|; )script-src 'self' https:\/\/cloud\.umami\.is(;|$)/, path);
+    assert.match(csp, /(^|; )connect-src 'self' https:\/\/api-gateway\.umami\.dev https:\/\/gateway\.umami\.is(;|$)/, path);
     assert.ok(!/web3forms/i.test(csp), path);
     assert.equal(r.headers.get('x-content-type-options'), 'nosniff', path);
     assert.equal(r.headers.get('x-frame-options'), 'DENY', path);

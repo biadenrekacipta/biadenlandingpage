@@ -3,7 +3,7 @@
 export const CSP = [
   "default-src 'self'",
   "script-src 'self' https://cloud.umami.is",
-  "connect-src 'self' https://api-gateway.umami.dev",
+  "connect-src 'self' https://api-gateway.umami.dev https://gateway.umami.is",
   "base-uri 'self'",
   "object-src 'none'",
   "form-action 'self'",

@@ -1,0 +1,71 @@
+# Hosting: Hostinger (Apache/LiteSpeed), file diunggah ke public_html.
+# Pengganti public/_headers dan public/_redirects (Cloudflare Pages).
+# Semua direktif dibungkus <IfModule> supaya modul yang tak ada tidak memicu HTTP 500.
+# Panduan: docs/hosting-hostinger.md
+
+# --- Dasar ---------------------------------------------------------------
+DirectoryIndex index.html
+ErrorDocument 404 /404.html
+
+<IfModule mod_autoindex.c>
+  Options -Indexes
+</IfModule>
+
+<IfModule mod_mime.c>
+  AddType font/woff2 .woff2
+</IfModule>
+
+# Berkas state action deploy FTP tidak boleh bisa diunduh.
+<FilesMatch "^\.ftp-deploy-sync-state\.json$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+</FilesMatch>
+
+# --- Staging: noindex (FR-34, SEC-7, BUG-7) --------------------------------
+# Host yang diawali staging./stg./dev./test./preview. atau domain sementara
+# Hostinger (*.hostingersite.com) ditandai STAGING_HOST. Domain produksi tidak cocok.
+<IfModule mod_setenvif.c>
+  SetEnvIfNoCase Host "^(staging|stg|dev|test|preview)\." STAGING_HOST=1
+  SetEnvIfNoCase Host "\.hostingersite\.com(:[0-9]+)?$" STAGING_HOST=1
+</IfModule>
+
+# --- Header keamanan (FR-34, TC-6, SEC-4, SEC-6, SEC-7) --------------------
+# Butuh mod_headers. Tanpa modul ini header TIDAK terkirim: verifikasi dengan curl -I.
+<IfModule mod_headers.c>
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' https://cloud.umami.is; connect-src 'self' https://api-gateway.umami.dev; base-uri 'self'; object-src 'none'; form-action https://api.web3forms.com; frame-ancestors 'none'"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set X-Frame-Options "DENY"
+  Header always set X-Robots-Tag "noindex, nofollow" env=STAGING_HOST
+</IfModule>
+
+# --- HTTPS, clean URL, 301 ---------------------------------------------------
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Paksa HTTPS (juga di belakang proxy/CDN yang mengirim X-Forwarded-Proto).
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+  # /x/index.html -> /x/ (trailing slash, sesuai astro trailingSlash: 'always').
+  RewriteCond %{THE_REQUEST} \s/(.*/)?index\.html[\s?]
+  RewriteRule ^(.*/)?index\.html$ /$1 [R=301,L]
+
+  # SEO-10: 301 untuk URL yang berpindah. Belum ada. Contoh (hapus tanda # bila perlu):
+  # RewriteRule ^lama/?$ /baru/ [R=301,L]
+
+  # Aset ber-hash (_astro/) dan font: cache panjang. Ditandai env, dipakai blok mod_headers.
+  RewriteRule ^_astro/ - [E=ASSET_IMMUTABLE:1]
+  RewriteRule ^fonts/ - [E=ASSET_IMMUTABLE:1]
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header set Cache-Control "public, max-age=31536000, immutable" env=ASSET_IMMUTABLE
+</IfModule>
+
+# --- Kompresi ----------------------------------------------------------------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript application/javascript application/json application/xml image/svg+xml
+</IfModule>

@@ -1,10 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
 
 const root = new URL('..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
-const dist = process.env.DIST_DIR || join(root, 'dist');
+// Adapter node: aset statis ada di dist/client, server di dist/server.
+const dist = process.env.DIST_DIR || join(root, 'dist', 'client');
 const UMAMI_HOST = 'cloud.umami.is';
 
 function walk(dir, ext, out = []) {
@@ -65,24 +66,18 @@ test('SEC-3 / GR-14: tidak ada set:html di src/', () => {
 
 const SITE_URL = process.env.SITE_URL || 'http://localhost:4321';
 
-// Hosting Hostinger (Apache/LiteSpeed): header dan redirect ada di .htaccess, bukan _headers/_redirects.
+// Header keamanan di hosting Node dipasang oleh dist/server/entry.mjs (scripts/security-headers.mjs); asersi header ada di tests/server.test.mjs.
+// Tes .htaccess di bawah menjaga berkas lama yang masih disalin dari public/ (dibahas di Stage 2).
 const htaccess = () => readFileSync(join(dist, '.htaccess'), 'utf8');
 const htaccessLines = () => htaccess().split(/\r?\n/).map((l) => l.trim()).filter((l) => l && !l.startsWith('#'));
 const cspHeader = () => /^Header always set Content-Security-Policy "([^"]+)"$/m.exec(htaccessLines().join('\n'))[1];
 
-test('FR-34 / SEC-7: .htaccess memuat CSP, nosniff, Referrer-Policy, frame-ancestors, noindex host staging', () => {
-  const h = htaccessLines().join('\n');
-  const csp = cspHeader();
-  assert.match(csp, /(^|; )default-src 'self'(;|$)/);
-  assert.match(csp, /(^|; )form-action https:\/\/api\.web3forms\.com(;|$)/);
-  assert.match(csp, /(^|; )frame-ancestors 'none'(;|$)/);
-  assert.match(h, /^Header always set X-Content-Type-Options "nosniff"$/m);
-  assert.match(h, /^Header always set Referrer-Policy "\S+"$/m);
-  assert.match(h, /^Header always set X-Frame-Options "DENY"$/m);
-  // noindex hanya untuk host staging: env ditandai lewat Host, header bersyarat env.
-  assert.match(h, /^SetEnvIfNoCase Host "\^\(staging\|[^"]*\)\\\." STAGING_HOST=1$/m);
-  assert.match(h, /^Header always set X-Robots-Tag "noindex(, nofollow)?" env=STAGING_HOST$/m);
-  assert.ok(!/^Header .*X-Robots-Tag.*$/m.test(h.replace(/^Header always set X-Robots-Tag "noindex(, nofollow)?" env=STAGING_HOST$/m, '')), 'X-Robots-Tag tak bersyarat akan mengunci noindex di produksi');
+const serverDir = join(dirname(dist), 'server');
+test('FR-34 / SEC-7: dist/server/entry.mjs membungkus entry Astro dengan modul header keamanan', () => {
+  const entry = readFileSync(join(serverDir, 'entry.mjs'), 'utf8');
+  assert.match(entry, /securityHeaders\(/);
+  assert.match(entry, /astro-entry\.mjs/);
+  assert.ok(existsSync(join(serverDir, 'astro-entry.mjs')) && existsSync(join(serverDir, 'security-headers.mjs')));
 });
 
 test('Hostinger: .htaccess memaksa HTTPS, clean URL /x/index.html, ErrorDocument 404, cache aset, kompresi', () => {
@@ -309,22 +304,14 @@ test('FR-18: link email dan WhatsApp tampil di samping form', () => {
   assert.ok(sec.includes(site.whatsapp));
 });
 
-// t16 / FR-14 / BUG-2 / SEC-1 / SEC-6: koneksi Web3Forms.
-test('FR-14: form POST ke Web3Forms dengan hidden field access_key, subject, from_name, redirect', () => {
+// t16 / FR-14 / SEC-1 / SEC-6: form POST ke endpoint situs sendiri.
+test('FR-14: form POST ke /api/kirim/ tanpa hidden field access_key/redirect', () => {
   const sec = formHtml();
-  const form = /<form\b[^>]*>/.exec(sec)[0];
-  assert.match(form, /action="https:\/\/api\.web3forms\.com\/submit"/);
+  const form = /<form [^>]*>/.exec(sec)[0];
+  assert.match(form, /action="\/api\/kirim\/"/);
   assert.match(form, /method="POST"/i);
-  for (const n of ['access_key', 'subject', 'from_name', 'redirect']) {
-    const tag = tagOf(sec, n);
-    assert.ok(tag && /type="hidden"/.test(tag), `hidden ${n}`);
-  }
-  assert.ok(sec.includes('name="subject" value="') && !/name="subject" value(?=[\s>])/.test(sec), 'subject tidak boleh kosong');
-});
-
-test('BUG-2: redirect = SITE_URL lingkungan + /terima-kasih/', () => {
-  const tag = tagOf(formHtml(), 'redirect');
-  assert.equal(attr(tag, 'value'), `${SITE_URL.replace(/\/$/, '')}/terima-kasih/`);
+  for (const n of ['access_key', 'redirect', 'subject', 'from_name']) assert.ok(!tagOf(sec, n), `tidak boleh ada field ${n}`);
+  assert.ok(!/web3forms/i.test(sec));
 });
 
 test('SEC-1: honeypot botcheck tersembunyi dari pengguna dan teknologi bantu', () => {
@@ -336,10 +323,8 @@ test('SEC-1: honeypot botcheck tersembunyi dari pengguna dan teknologi bantu', (
   assert.ok(!/\brequired\b/.test(tag));
 });
 
-test('SEC-6: form-action CSP hanya Web3Forms dan action form sama dengan itu', () => {
-  const csp = cspHeader();
-  assert.equal(/form-action ([^;]+)/.exec(csp)[1].trim(), 'https://api.web3forms.com');
-  for (const [p, html] of htmlFiles()) for (const m of html.matchAll(/<form\b[^>]*\baction="([^"]+)"/g)) assert.equal(m[1], 'https://api.web3forms.com/submit', p);
+test('SEC-6: semua <form> memakai action /api/kirim/ (CSP form-action dites di server.test.mjs)', () => {
+  for (const [p, html] of htmlFiles()) for (const m of html.matchAll(/<form\b[^>]*\baction="([^"]+)"/g)) assert.equal(m[1], '/api/kirim/', p);
 });
 
 // t17 / FR-15 / FR-16 / BR-12: halaman terima kasih.
@@ -370,9 +355,9 @@ test('t18: kebijakan privasi punya satu h1, title <=60, description <=155', () =
   assert.ok(/<title>([^<]+)<\/title>/.exec(html)[1].length <= 60);
   assert.ok(/<meta name="description" content="([^"]+)"/.exec(html)[1].length <= 155);
 });
-test('t18: teks menyebut retensi 12 bulan, Web3Forms, dan Umami; klausul hukum bertanda [verify]', () => {
+test('t18: teks menyebut retensi 12 bulan, Hostinger, dan Umami; klausul hukum bertanda [verify]', () => {
   const html = kpHtml();
-  assert.ok(html.includes('12 bulan') && html.includes('Web3Forms') && html.includes('Umami'));
+  assert.ok(html.includes('12 bulan') && html.includes('Hostinger') && !/web3forms/i.test(html) && html.includes('Umami'));
   assert.ok(html.includes('[verify]'));
 });
 test('t18: footer dan form menaut ke /kebijakan-privasi/, halaman masuk sitemap', () => {

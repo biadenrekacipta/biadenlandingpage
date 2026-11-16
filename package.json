@@ -5,20 +5,23 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && node scripts/wrap-entry.mjs",
     "check": "astro check",
-    "test:content": "node --experimental-strip-types --no-warnings --test tests/content.test.mjs",
-    "test:dist": "node --test tests/dist.test.mjs",
+    "test:content": "node --experimental-strip-types --no-warnings --test tests/content.test.mjs tests/pengajuan.test.mjs",
+    "test:dist": "node --test tests/dist.test.mjs tests/server.test.mjs",
     "lhci": "lhci autorun"
   },
   "dependencies": {
+    "@astrojs/node": "^11.1.13",
     "@astrojs/sitemap": "^3.7.5",
     "astro": "^7.3.8",
+    "nodemailer": "^10.6.0",
     "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
     "@lhci/cli": "^0.15.1",
+    "@types/nodemailer": "^8.0.2",
     "typescript": "^6.0.3"
   }
 }

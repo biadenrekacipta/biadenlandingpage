@@ -11,6 +11,12 @@
         ],
         "createdAt": "2026-11-15T15:20:29.101Z",
         "reason": "Warna --paper #EDEBE6 diwajibkan docs/design-reference.md (GR-12)"
+      },
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "createdAt": "2026-11-16T23:46:36.044Z",
+        "reason": "Inter Tight dipakai sesuai docs/design-reference.md (GR-12, referensi desain user); sudah ada sebelum sesi ini"
       }
     ]
   }

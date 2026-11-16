@@ -1,4 +1,16 @@
 [
   { "id": "buku", "jenis": "buku", "butir": ["[verify]"] },
-  { "id": "jurnal", "jenis": "jurnal", "butir": ["[verify]"] }
+  {
+    "id": "jurnal",
+    "jenis": "jurnal",
+    "butir": [
+      "Daftar akun di situs jurnal yang dituju, lalu kirim naskah lewat sistem pengiriman daring jurnal tersebut.",
+      "Naskah orisinal dan tidak sedang dipertimbangkan oleh jurnal lain.",
+      "Naskah mengikuti panduan penulis, template naskah resmi, serta format dan gaya rujukan yang ditentukan jurnal.",
+      "Naskah memuat abstrak dan kata kunci yang relevan.",
+      "Data lengkap penulis dan afiliasi diisi pada metadata pengiriman.",
+      "Identitas penulis dihapus dari naskah utama untuk keperluan double-blind peer review.",
+      "Naskah utama berformat DOCX; PDF hanya diterima sebagai file pendamping."
+    ]
+  }
 ]

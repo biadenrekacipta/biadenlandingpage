@@ -135,3 +135,7 @@ Bukti uji rollback: belum dilakukan (butuh deployment produksi dan akses dashboa
 - `redirect` = `${SITE_URL}/terima-kasih/`, jadi tiap lingkungan mendarat di domainnya sendiri (BUG-2).
 - Keputusan: key preview (`*.pages.dev`) terpisah dari key produksi. Set `PUBLIC_WEB3FORMS_KEY` per lingkungan di Cloudflare Pages (tingkat Preview dan Production). Key produksi dibatasi ke domain produksi di dashboard Web3Forms (SEC-5).
 - Honeypot `botcheck` disembunyikan dari pengguna. Uji kirim dengan `botcheck` terisi harus ditolak layanan (belum diuji, butuh key).
+
+## Catatan sumber konten
+
+Ringkasan asal tiap isian konten dari dokumen klien dan sisa `[verify]`: lihat [docs/catatan-sumber-konten.md](docs/catatan-sumber-konten.md).

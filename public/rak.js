@@ -163,13 +163,106 @@ function init(rak) {
     document.body.append(cur);
   }
 
-  // ---- Detail: stub, diisi tahap 3 ----
+  // ---- Detail: sheet kertas tumbuh dari sampul, teks naik per baris, poster muncul sebagai tetesan tinta ----
+  const dlg = rak.querySelector('.detail');
+  const DELAY_TINTA = [0, 120, 220, 300, 360, 420, 180];
+  const EASE_SHEET = 'cubic-bezier(.76,0,.18,1)';
+  let closing = false, inkRaf = 0, inerted = [], overflowLama = '';
+  if (dlg) document.body.append(dlg); // di luar .rak agar tidak ikut tertinggal oleh aturan .ctl
+  const coverRect = () => {
+    let best = null;
+    for (const p of tapes) {
+      const ar = Math.abs(mod(p.v - s + total / 2, total) - total / 2);
+      if (!best || ar < best.ar) best = { p, ar };
+    }
+    const r = best?.p.el.querySelector('.cv').getBoundingClientRect();
+    return r && r.width > 0 ? r : new DOMRect(innerWidth / 2 - d / 2, innerHeight / 2 - H / 2, d, H);
+  };
+  const klip = (r) => {
+    const vw = document.documentElement.clientWidth;
+    return `inset(${r.top}px ${vw - r.right}px ${innerHeight - r.bottom}px ${r.left}px round 3px)`;
+  };
+  const PENUH = 'inset(0px 0px 0px 0px round 0px)';
+
   function openDetail() {
+    if (!dlg || isOpen || closing) return;
+    isOpen = true;
+    T = Math.round(T);
+    const rm = reduce.matches;
+    const f = films[active];
+    for (const it of dlg.querySelectorAll('.d-item')) it.hidden = it.dataset.id !== f.id;
+    const item = dlg.querySelector('.d-item:not([hidden])');
+    if (!item) {
+      isOpen = false;
+      return;
+    }
+    dlg.setAttribute('aria-labelledby', 'd-' + f.id);
+    const blobs = [...item.querySelectorAll('.blob')];
+    blobs.forEach((b) => b.setAttribute('r', rm ? '720' : '0'));
+
+    const rc = coverRect();
+    dlg.hidden = false;
+    dlg.scrollTop = 0;
+    dlg.style.transformOrigin = `${rc.x + rc.width / 2}px ${rc.y + rc.height / 2}px`;
+    dlg.animate(
+      [{ clipPath: klip(rc), transform: 'rotate(-4.5deg)' }, { clipPath: PENUH, transform: 'rotate(0deg)' }],
+      { duration: rm ? 1 : 1050, easing: EASE_SHEET, fill: 'both' },
+    );
+    item.querySelectorAll('.ln').forEach((el, i) => {
+      el.animate([{ transform: 'translateY(110%)' }, { transform: 'translateY(0)' }], {
+        duration: rm ? 1 : 900,
+        delay: rm ? 0 : 620 + i * 75,
+        easing: EASE,
+        fill: 'both',
+      });
+    });
+    if (!rm) {
+      const t0 = performance.now() + 520;
+      const tick = (now) => {
+        let selesai = true;
+        blobs.forEach((b, i) => {
+          const p = Math.min(1, Math.max(0, (now - t0 - DELAY_TINTA[i]) / 1250));
+          b.setAttribute('r', String(720 * (1 - (1 - p) ** 3)));
+          if (p < 1) selesai = false;
+        });
+        if (!selesai && now - t0 < 2400) inkRaf = requestAnimationFrame(tick);
+      };
+      inkRaf = requestAnimationFrame(tick);
+    }
+
+    // Halaman di belakang tidak boleh difokus atau digulir selama dialog terbuka.
+    inerted = [...document.body.children].filter((e) => e !== dlg && e !== cur && !e.inert);
+    inerted.forEach((e) => (e.inert = true));
+    overflowLama = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
+    dlg.querySelector('.d-tutup')?.focus({ preventScroll: true });
     rak.dispatchEvent(new CustomEvent('rak:open', { detail: { index: active } }));
   }
+
   function closeDetail() {
-    rak.dispatchEvent(new CustomEvent('rak:close'));
+    if (!dlg || !isOpen || closing) return;
+    closing = true;
+    const a = dlg.animate(
+      [{ clipPath: PENUH, transform: 'rotate(0deg)' }, { clipPath: klip(coverRect()), transform: 'rotate(-4.5deg)' }],
+      { duration: reduce.matches ? 1 : 850, easing: EASE_SHEET, fill: 'both' },
+    );
+    a.onfinish = () => {
+      cancelAnimationFrame(inkRaf);
+      dlg.hidden = true;
+      dlg.getAnimations({ subtree: true }).forEach((x) => x.cancel()); // buka berikutnya mulai dari nol
+      inerted.forEach((e) => (e.inert = false));
+      inerted = [];
+      document.documentElement.style.overflow = overflowLama;
+      isOpen = false;
+      closing = false;
+      if (play) {
+        play.style.visibility = ''; // frame berikutnya mengatur ulang; fokus butuh elemen terlihat
+        play.focus({ preventScroll: true });
+      }
+      rak.dispatchEvent(new CustomEvent('rak:close'));
+    };
   }
+  dlg?.querySelector('.d-tutup')?.addEventListener('click', closeDetail);
 
   // ---- Frame ----
   const F = (r) => {
@@ -243,7 +336,7 @@ function init(rak) {
     }
 
     if (play) {
-      const k = sstep(Math.max(0, 1 - Math.abs(T - s) * 3));
+      const k = isOpen ? 0 : sstep(Math.max(0, 1 - Math.abs(T - s) * 3));
       play.style.transform = `scale(${k})`;
       play.style.visibility = k < 0.01 ? 'hidden' : '';
     }
@@ -256,7 +349,7 @@ function init(rak) {
         const sp = hover >= 0 && Math.abs(mod(hover - s + total / 2, total) - total / 2) > 0.5;
         cur.dataset.st = overBtn ? 'btn' : onCover ? 'open' : sp ? 'spine' : 'default';
       }
-      cur.style.visibility = mouseInside ? 'visible' : 'hidden';
+      cur.style.visibility = mouseInside && !isOpen ? 'visible' : 'hidden';
     }
 
     raf = requestAnimationFrame(frame);
@@ -385,6 +478,7 @@ function init(rak) {
       if (isOpen) closeDetail();
       return;
     }
+    if (isOpen) return;
     if (!visible && !rak.contains(document.activeElement)) return; // jangan membajak tombol saat rak di luar layar
     if (e.key === 'ArrowLeft') go(-1);
     else if (e.key === 'ArrowRight') go(1);

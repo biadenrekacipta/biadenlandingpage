@@ -1,7 +1,7 @@
 /* Rak jurnal 3D (docs/design-reference.md, Keputusan 2026-11-16). Tahap 1: statis, tanpa JS.
    Geometri: --H tinggi kaset; --ws lebar punggung; --d lebar sampul = kedalaman kotak. */
+:root { --vermilion: #c8391f; } /* warna ada di deskripsi sampul referensi, belum punya token; di :root karena dialog dipindah ke <body> */
 .rak {
-  --vermilion: #c8391f; /* warna ada di deskripsi sampul referensi, belum punya token */
   --H: min(46vh, 31vw);
   --ws: calc(var(--H) * 142 / 840);
   --d: calc(var(--H) * 474 / 900);
@@ -33,7 +33,6 @@
   border: 1px solid var(--rule);
   background: transparent;
   color: var(--ink);
-  font: inherit;
   cursor: pointer;
   transition: color 0.45s var(--ease);
 }
@@ -109,9 +108,9 @@
 .sp::after, .cv::after { content: ''; position: absolute; inset: 0; background: #000; opacity: var(--shade); pointer-events: none; }
 
 /* Warna per jurnal (palet ink, cobalt, vermilion; krem = --sheet). */
-.j-bitechnos { background: var(--cobalt); }
-.j-bedsocart { background: var(--vermilion); }
-.j-beconex { background: var(--ink); }
+.j-bitechnos { background: var(--cobalt); fill: var(--cobalt); }
+.j-bedsocart { background: var(--vermilion); fill: var(--vermilion); }
+.j-beconex { background: var(--ink); fill: var(--ink); }
 
 /* Punggung tipografis */
 .sp { display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: calc(var(--H) * 0.04) 0; border: 1px solid rgba(244, 242, 237, 0.35); }
@@ -132,7 +131,7 @@
 /* Sampul tipografis */
 .cv { display: flex; flex-direction: column; justify-content: space-between; padding: calc(var(--d) * 0.1); border: 1px solid rgba(244, 242, 237, 0.35); }
 .cv-atas { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
-.cv-judul { font-family: var(--serif); font-size: calc(var(--d) * 0.125); line-height: 1; letter-spacing: 0.02em; margin: 0; overflow-wrap: anywhere; }
+.cv-judul { font-family: var(--serif); font-size: calc(var(--d) * 0.11); line-height: 1; letter-spacing: 0; margin: 0; overflow-wrap: anywhere; }
 .cv-sub { font-family: var(--serif); font-style: italic; font-size: max(12px, calc(var(--d) * 0.07)); line-height: 1.25; margin: 8px 0 0; }
 .cv-bidang { margin: 0; }
 
@@ -175,13 +174,41 @@
 }
 .play svg { margin-left: 2px; }
 
-/* Dialog detail (diisi tahap 3) */
-.detail { position: fixed; inset: 0; z-index: 60; background: var(--sheet); }
-.detail[hidden] { display: none; }
+/* Dialog detail: sheet kertas tumbuh dari sampul (rak.js). Dipindah ke <body> saat init. */
+.detail { position: fixed; inset: 0; z-index: 60; background: var(--sheet); overflow-y: auto; overscroll-behavior: contain; }
+.detail[hidden], .d-item[hidden] { display: none; }
+.d-tutup { position: absolute; left: 32px; top: 20px; z-index: 2; background: transparent; color: var(--ink); cursor: pointer; }
+.d-logo { position: absolute; left: 0; right: 0; top: 0; height: 84px; margin: 0; display: grid; place-items: center; color: var(--cobalt); font-family: var(--serif); font-size: 22px; letter-spacing: 0.04em; pointer-events: none; }
+.d-item { display: grid; grid-template-columns: 1fr 1fr; gap: 4vw; align-items: center; min-height: 100%; padding: 110px 6vw 56px 7vw; }
+.d-teks { display: grid; gap: 18px; max-width: 520px; justify-self: end; width: 100%; }
+.mk { overflow: hidden; }
+.ln { margin: 0; }
+.d-sub { color: var(--cobalt); }
+.d-judul { font-family: var(--serif); font-weight: 400; font-size: clamp(40px, 4.6vw, 72px); line-height: 1.05; letter-spacing: -0.025em; padding-bottom: 0.06em; }
+.d-meta { color: var(--muted); }
+.d-ring { font-size: 17px; line-height: 1.5; max-width: 42ch; }
+.d-kredit { font-style: italic; font-size: 15px; color: var(--muted); }
+.d-lihat { color: var(--cobalt); border-color: var(--cobalt); padding: 0 20px; margin: 10px 0 1px; }
+.d-poster { justify-self: start; height: min(78vh, 900px); aspect-ratio: 474 / 900; max-width: 100%; }
+.po-fr { fill: none; stroke: rgba(244, 242, 237, 0.35); stroke-width: 2; }
+.po-lbl { font: 600 15px var(--sans); letter-spacing: 0.09em; fill: var(--sheet); }
+.po-t { font: 400 58px var(--serif); letter-spacing: 0.02em; fill: var(--sheet); }
+.po-s { font: italic 400 26px var(--serif); fill: var(--sheet); }
 
 @media (max-width: 767px) {
   .rak { --H: min(60vw, 40svh); }
   .cap-judul { font-size: 24px; }
   .panah-k { left: 6px; }
   .panah-b { right: 6px; }
+  .tabs button { padding: 0 8px; }
+  .cv-atas, .sp-tag { display: none; }
+  .rak-cursor { display: none; }
+  .rak[data-cursor], .rak[data-cursor] * { cursor: auto; }
+  .d-tutup { left: 16px; top: 10px; }
+  .d-logo { height: 64px; font-size: 17px; }
+  .d-item { grid-template-columns: 1fr; gap: 24px; padding: 84px 22px 40px; align-items: start; }
+  .d-teks { justify-self: stretch; max-width: none; }
+  .d-poster { order: -1; justify-self: center; height: 46svh; }
+  .d-judul { font-size: 42px; }
+  .d-ring { font-size: 16px; }
 }

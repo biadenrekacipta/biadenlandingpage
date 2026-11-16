@@ -433,4 +433,4 @@ User melonggarkan PRD: rak 3D boleh memakai **satu skrip eksternal `'self'`** se
 - `planything/PRD.md` diubah: baris "JavaScript yang dikirim", TC-6, dan TC-7. CSP `default-src 'self'` tidak berubah; inline script dan inline style tetap dilarang.
 - Tanpa JS, tiga jurnal tampil sebagai deret statis dengan satu sampul terbuka (CSS). Tab, panah, dan tombol putar tersembunyi sampai skrip menandai `data-js` pada `.rak`.
 - Sampul dan punggung digambar tipografis dari `jurnal.json` (nama dan bidang). Sheet Higgsfield tidak dipakai. `--vermilion` (#c8391f) ditambahkan di `rak.css`: warna ada di deskripsi sampul referensi tetapi belum punya token; nilai dipilih agar teks krem punya kontras ≥4,5.
-- Tahap: 1 markup dan CSS statis (selesai di branch `rak-vhs`), 2 mesin gerak `rak.js`, 3 sheet detail dan verifikasi.
+- Tahap: 1 markup dan CSS statis, 2 mesin gerak `rak.js`, 3 sheet detail dan verifikasi (ketiganya selesai di branch `rak-vhs`).

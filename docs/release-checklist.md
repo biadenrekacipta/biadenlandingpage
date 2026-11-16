@@ -53,3 +53,10 @@ Ulangi tiap bulan setelah rilis:
 - [ ] `PUBLIC_UMAMI_ID` terisi; dashboard Umami mencatat pageview, event `cta-ajukan`, dan kunjungan `/terima-kasih/`.
 - [ ] `curl -I` produksi menampilkan CSP, `X-Content-Type-Options: nosniff`, dan `Referrer-Policy`.
 - [ ] Rollback (deploy ulang commit/tag sebelumnya atau `git revert`) sudah dicoba sekali; tanggal dicatat di README.
+
+## 7. Rak jurnal (rak.js, keputusan 2026-11-16)
+
+- [ ] Header CSP produksi (`curl -I`) tidak diubah, dan konsol bersih dari pelanggaran CSP di desktop dan mobile saat rak dipakai (geser, buka detail, tutup).
+- [ ] Tanpa JS (matikan JavaScript di browser): tiga jurnal tampil sebagai deret statis dengan satu sampul terbuka, tab dan tombol rak tidak muncul.
+- [ ] Sampul dan punggung tipografis diganti gambar asli penerbit bila sudah ada (`sampul` bukan `[verify]`); tombol "Lihat jurnal" muncul hanya bila `link` berupa URL https.
+- [ ] Cek visual 1440 px dan 375 px, `prefers-reduced-motion: reduce`, dan keyboard (kiri/kanan, Enter, Escape, fokus kembali ke tombol putar).

@@ -14,6 +14,22 @@ const item = jurnal.map((j) => {
   return { ...j, singkat: singkat.trim(), sub: sisa.join(':').trim() };
 });
 // Satu sampul terbuka statis: yang di tengah. ponytail: data-r di CSS hanya mendukung -2..2 (maks 5 jurnal); rak.js menggantikannya.
+// Poster detail: teks SVG tidak membungkus baris sendiri, jadi dibungkus di sini.
+const bungkus = (t: string, maks: number) => {
+  const baris: string[] = [];
+  let cur = '';
+  for (const w of t.split(/\s+/)) {
+    if (cur && (cur + ' ' + w).length > maks) {
+      baris.push(cur);
+      cur = w;
+    } else cur = cur ? cur + ' ' + w : w;
+  }
+  if (cur) baris.push(cur);
+  return baris;
+};
+const STATUS: Record<string, string> = { terbit: 'Terbit', 'segera-terbit': 'Segera terbit', diarsipkan: 'Diarsipkan' };
+// Pusat dan jeda (ms) tujuh tetesan tinta; sama dengan tabel referensi.
+const TINTA = [[150, 330], [340, 600], [250, 120], [90, 760], [400, 250], [260, 860], [230, 470]];
 const aktif = Math.floor(item.length / 2);
 const cur = item[aktif];
 ---
@@ -66,7 +82,48 @@ const cur = item[aktif];
       </button>
     </div>
     <div class="detail ctl" role="dialog" aria-modal="true" aria-label="Detail jurnal" hidden>
-      <button type="button" class="box lbl" data-tutup>Tutup</button>
+      <button type="button" class="box lbl d-tutup">Tutup</button>
+      <p class="d-logo">{site.nama}</p>
+      {item.map((j) => {
+        const sub = bungkus(j.sub, 28);
+        const bid = bungkus(j.bidang.toUpperCase(), 26);
+        const link = j.link.startsWith('https://') ? j.link : null; // "[verify]": tombol tidak dirender (GR-11)
+        return (
+          <div class="d-item" data-id={j.id} hidden>
+            <div class="d-teks">
+              <div class="mk"><p class="ln lbl d-sub">{j.bidang}</p></div>
+              <div class="mk"><h2 class="ln d-judul" id={`d-${j.id}`}>{j.singkat}</h2></div>
+              <div class="mk"><p class="ln lbl d-meta">Jurnal / {STATUS[j.status]}</p></div>
+              <div class="mk"><p class="ln d-ring">{j.ringkasan}</p></div>
+              {j.sub && <div class="mk"><p class="ln d-kredit">{j.sub}</p></div>}
+              {link && (
+                <div class="mk"><a class="ln box lbl d-lihat" href={link} target="_blank" rel="noopener noreferrer">Lihat jurnal</a></div>
+              )}
+            </div>
+            <svg class="d-poster" viewBox="0 0 474 900" aria-hidden="true" focusable="false">
+              <defs>
+                <filter id={`inkf-${j.id}`} filterUnits="userSpaceOnUse" x="-200" y="-200" width="874" height="1300">
+                  <feTurbulence type="fractalNoise" baseFrequency="0.011" numOctaves="3" seed="7" result="n" />
+                  <feDisplacementMap in="SourceGraphic" in2="n" scale="120" xChannelSelector="R" yChannelSelector="G" />
+                </filter>
+                <mask id={`ink-${j.id}`} maskUnits="userSpaceOnUse" x="-200" y="-200" width="874" height="1300">
+                  <g filter={`url(#inkf-${j.id})`}>
+                    {TINTA.map(([x, y]) => <circle class="blob" cx={x} cy={y} r="0" fill="#fff" />)}
+                  </g>
+                </mask>
+              </defs>
+              <g mask={`url(#ink-${j.id})`}>
+                <rect class={`po-bg j-${j.id}`} width="474" height="900" />
+                <rect class="po-fr" x="14" y="14" width="446" height="872" />
+                <text class="po-lbl" x="47" y="84">{site.nama}</text>
+                <text class="po-t" x="47" y="420">{j.singkat}</text>
+                {sub.map((t, i) => <text class="po-s" x="47" y={470 + i * 34}>{t}</text>)}
+                {bid.map((t, i) => <text class="po-lbl" x="47" y={830 - (bid.length - 1 - i) * 26}>{t}</text>)}
+              </g>
+            </svg>
+          </div>
+        );
+      })}
     </div>
   <script is:inline type="module" src="/rak.js"></script>
   </section>

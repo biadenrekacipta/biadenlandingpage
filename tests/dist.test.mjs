@@ -746,7 +746,11 @@ test('SEO-7: teks hero, alur, dan katalog ada di HTML hasil build (tanpa JS)', (
   for (const j of jurnal) assert.ok(teks.includes(j.nama), `nama jurnal "${j.nama}" tidak ada di HTML`);
   // Tidak ada hasil render sisi klien: konten tidak boleh bergantung pada <script> non-JSON-LD, kecuali Umami.
   for (const m of html.matchAll(/<script\b([^>]*)>/g)) {
-    assert.ok(/application\/ld\+json/.test(m[1]) || /cloud\.umami\.is/.test(m[1]), `script tak terduga: ${m[0]}`);
+    // Pengecualian sempit: satu skrip rak /rak.js (keputusan 2026-11-16, peningkatan progresif; konten tetap ada tanpa skrip).
+    assert.ok(
+      /application\/ld\+json/.test(m[1]) || /cloud\.umami\.is/.test(m[1]) || /\bsrc="\/rak\.js"/.test(m[1]),
+      `script tak terduga: ${m[0]}`,
+    );
   }
 });
 

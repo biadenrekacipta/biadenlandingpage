@@ -1,0 +1,59 @@
+name: Publish deploy branch
+
+# Branch `deploy` dihasilkan otomatis oleh workflow ini dan TIDAK boleh diedit tangan:
+# setiap run menimpanya (force-push) dengan satu commit berisi hasil build dist/ saja.
+# Dipakai fitur "Deploy dari GitHub" Hostinger, yang menyalin isi branch apa adanya
+# (tanpa build). Panduan: docs/hosting-hostinger.md
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+concurrency:
+  group: publish-deploy-branch
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Build + terbitkan dist/ ke branch deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      SITE_URL: ${{ vars.SITE_URL || 'https://biadenrekacipta.com' }}
+      PUBLIC_WEB3FORMS_KEY: ${{ vars.PUBLIC_WEB3FORMS_KEY }}
+      PUBLIC_UMAMI_ID: ${{ vars.PUBLIC_UMAMI_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      # Tes yang sama dengan CI tahap 6, dengan SITE_URL yang sama dengan build. Gagal = tidak diterbitkan.
+      - run: node --test tests/dist.test.mjs
+      - name: Pastikan .htaccess ikut di dist/
+        run: test -f dist/.htaccess
+      - name: Terbitkan isi dist/ ke branch deploy
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          out="$(mktemp -d)"
+          cp -a dist/. "$out/"
+          cd "$out"
+          git init -q -b deploy
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "deploy: ${SOURCE_SHA}"
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git"
+          git push --force origin deploy
+          echo "Isi branch deploy:"
+          git ls-tree -r HEAD --name-only | head -50

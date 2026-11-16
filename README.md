@@ -107,7 +107,8 @@ Taruh sampul, foto testimoni, dan logo di `src/assets/` (sumber maks 1 MB per be
 Keputusan pemilik: hosting di Hostinger (statis, Apache/LiteSpeed), bukan Cloudflare Pages seperti di PRD. Panduan lengkap: [docs/hosting-hostinger.md](docs/hosting-hostinger.md).
 
 - Header keamanan (CSP, nosniff, Referrer-Policy), paksa HTTPS, clean URL, ErrorDocument 404, cache aset, dan noindex untuk host staging ada di `public/.htaccess` (ikut ke `dist/`). `_headers` dan `_redirects` Cloudflare sudah dihapus; tesnya dipindah ke `.htaccess` di `tests/dist.test.mjs`.
-- Workflow `.github/workflows/deploy-hostinger.yml` (push ke `main` dan manual) mengunggah `dist/` lewat FTPS, hanya bila variabel repo `DEPLOY_ENABLED` = `true`. Variabel: `SITE_URL`, `PUBLIC_WEB3FORMS_KEY`, `PUBLIC_UMAMI_ID`. Secret: `HOSTINGER_FTP_SERVER`, `HOSTINGER_FTP_USERNAME`, `HOSTINGER_FTP_PASSWORD`, `HOSTINGER_FTP_DIR`. Tidak ada kredensial di repo.
+- Jalur utama: Hostinger "Deploy dari GitHub" memakai branch `deploy`. Branch itu dihasilkan otomatis oleh `.github/workflows/publish-deploy-branch.yml` (push ke `main` dan manual): build, `tests/dist.test.mjs`, lalu force-push isi `dist/` saja sebagai satu commit. Jangan diedit tangan. Pilih `deploy`, bukan `main`, di hPanel: `main` berisi source dan akan menyalin `src/`, `planything/`, `docs/` ke `public_html/` tanpa situs jadi. Langkah klik demi klik, aturan deploy pertama (konten harus bebas `[verify]`), dan webhook auto-deploy: [docs/hosting-hostinger.md](docs/hosting-hostinger.md) bagian 0. Variabel opsional: `SITE_URL` (default `https://biadenrekacipta.com`), `PUBLIC_WEB3FORMS_KEY`, `PUBLIC_UMAMI_ID`.
+- Jalur FTPS (opsional): workflow `.github/workflows/deploy-hostinger.yml` (push ke `main` dan manual) mengunggah `dist/` lewat FTPS, hanya bila variabel repo `DEPLOY_ENABLED` = `true`. Variabel: `SITE_URL`, `PUBLIC_WEB3FORMS_KEY`, `PUBLIC_UMAMI_ID`. Secret: `HOSTINGER_FTP_SERVER`, `HOSTINGER_FTP_USERNAME`, `HOSTINGER_FTP_PASSWORD`, `HOSTINGER_FTP_DIR`. Tidak ada kredensial di repo.
 - Build: `npm run build`, output `dist`, Node sesuai `.node-version` (22).
 
 Status: belum diuji di Hostinger. `.htaccess` hanya divalidasi statis (balance `<IfModule>`, isi direktif); tidak ada Apache lokal. Header butuh `mod_headers`: verifikasi dengan `curl -I` setelah deploy pertama. Belum ada domain final, akun FTP, atau deploy nyata.
@@ -116,7 +117,7 @@ Status: belum diuji di Hostinger. `.htaccess` hanya divalidasi statis (balance `
 
 Tidak ada tombol rollback di Hostinger. Rollback = deploy ulang commit/tag sebelumnya yang sehat:
 
-1. `git revert <sha>` pada commit bermasalah di `main`, buka PR, merge; workflow deploy mengunggah ulang. Atau jalankan workflow `Deploy Hostinger` secara manual dari tag/commit lama.
+1. Jalur `deploy`: GitHub → Actions → "Publish deploy branch" → Run workflow dengan "Use workflow from" = tag/commit `main` sebelumnya (ref harus sudah memuat berkas workflow), lalu klik Deploy ulang di hPanel. Atau `git revert <sha>` di `main`, buka PR, merge. Jalur FTPS: jalankan `Deploy Hostinger` dari ref lama.
 2. Cadangan: backup hPanel atau unduhan `public_html/` sebelum perubahan besar.
 
 Bukti uji rollback: belum dilakukan (butuh deploy nyata). Catat tanggal dan commit di sini setelah dicoba.

@@ -4,6 +4,30 @@ Keputusan pemilik: situs statis (`dist/`) di-host di Hostinger (shared/statis, A
 
 Status: belum pernah diuji di Hostinger. `.htaccess` hanya divalidasi secara statis (tes `tests/dist.test.mjs`); semua langkah di bawah harus dicoba pertama kali oleh pemilik.
 
+## 0. Jalur utama: Deploy dari GitHub (branch `deploy`)
+
+Fitur "Deploy dari GitHub" (Git auto-deployment) di hPanel hanya menyalin isi satu branch apa adanya ke `public_html/`, tanpa build. Branch `main` berisi source Astro (bukan situs jadi), jadi Hostinger harus memakai branch `deploy`.
+
+Branch `deploy` dihasilkan otomatis oleh workflow `.github/workflows/publish-deploy-branch.yml` pada setiap push ke `main` (dan manual lewat Run workflow). Workflow: `npm ci`, `npm run build`, `node --test tests/dist.test.mjs`; bila tes lulus, isi `dist/` (termasuk `.htaccess`) dikomit sebagai satu commit baru (`deploy: <sha main>`) lalu di-force-push ke `deploy`. Tidak ada secret selain `GITHUB_TOKEN` bawaan. Branch `deploy` hanya berisi hasil build; jangan diedit tangan (ditimpa pada run berikutnya).
+
+Variabel repo (opsional, Settings → Secrets and variables → Actions → Variables): `SITE_URL` (default `https://biadenrekacipta.com`), `PUBLIC_WEB3FORMS_KEY`, `PUBLIC_UMAMI_ID`. Kosong = analytics/form tanpa key (build mencetak peringatan).
+
+### Langkah klik demi klik
+
+1. GitHub → repo `biadenrekacipta/biadenlandingpage` → Actions → "Publish deploy branch": pastikan run terakhir hijau dan branch `deploy` ada (Code → pilih branch `deploy`). Bila belum ada, klik Run workflow (branch `main`).
+2. hPanel → Websites → `biadenrekacipta.com` → Advanced → Git (atau "Hubungkan repositori Git").
+3. Pilih GitHub, beri izin Hostinger ke repo `biadenlandingpage`.
+4. Pilih repositori `biadenlandingpage`, Branch = `deploy` (bukan `main`). Direktori root: `public_html`.
+5. Klik Deploy.
+6. Setelah deploy pertama berhasil, aktifkan auto-deploy: Hostinger menyediakan URL webhook di panel Git. Tempel di GitHub → Settings → Webhooks → Add webhook (Content type `application/json`, event Push). Sejak itu tiap push ke `deploy` (oleh workflow) memicu deploy otomatis.
+7. Jalankan verifikasi header di bagian 4.
+
+Peringatan deploy pertama: Deploy pertama kali baru aman bila konten sudah tidak memuat `[verify]` (placeholder yang dilarang di produksi; lihat `docs/catatan-sumber-konten.md`). Sebelum itu, situs yang tampil di domain produksi masih berisi placeholder. Selain itu, Deploy menimpa isi `public_html/`: cadangkan dulu isi lama (bagian 6).
+
+Risiko bila Hostinger diarahkan ke `main`: yang tersalin ke `public_html/` adalah source (`src/`, `package.json`, `planything/`, `docs/`, `tests/`, dst.), bukan situs jadi. Halaman tidak jalan (tidak ada `index.html`), dan berkas internal/perencanaan terbuka untuk publik. Selalu pilih `deploy`.
+
+Jalur FTPS di bagian 3 tetap tersedia sebagai opsi; jangan aktifkan keduanya sekaligus ke folder yang sama.
+
 ## 1. Domain dan SSL (hPanel)
 
 1. hPanel → Domains: sambungkan domain final ke paket hosting (nameserver Hostinger atau A record sesuai petunjuk hPanel).
@@ -18,9 +42,9 @@ Produksi: `public_html/` (root domain). Staging: buat subdomain (mis. `staging.<
 
 Peringatan: action deploy menyinkronkan folder tujuan. File di `HOSTINGER_FTP_DIR` yang tidak ada di `dist/` akan dihapus pada deploy berikutnya. Jangan arahkan ke folder yang berisi file lain.
 
-## 3. GitHub: variabel dan secret
+## 3. Opsional: deploy FTPS (GitHub: variabel dan secret)
 
-Settings → Secrets and variables → Actions.
+Jalur alternatif; jalur utama ada di bagian 0. Settings → Secrets and variables → Actions.
 
 Variables (nilai publik):
 
@@ -75,7 +99,8 @@ Periksa juga di browser (DevTools → Console) bahwa tidak ada pelanggaran CSP p
 Tidak ada tombol rollback.
 
 - Sebelum deploy produksi pertama dan sebelum perubahan besar: hPanel → Files → Backups (atau unduh `public_html/` lewat File Manager) dan simpan.
-- Rollback = deploy ulang commit/tag sebelumnya yang sehat: di GitHub `git revert <sha>` lalu merge ke `main` (deploy otomatis), atau jalankan workflow `Deploy Hostinger` lewat Run workflow dengan memilih tag/commit lama pada "Use workflow from".
+- Rollback (jalur `deploy`): GitHub → Actions → "Publish deploy branch" → Run workflow, pada "Use workflow from" pilih tag/commit `main` sebelumnya yang sehat (workflow membangun ulang dari ref itu dan menimpa `deploy`). Lalu di hPanel klik Deploy ulang (atau tunggu webhook). Syarat: ref itu sudah memuat berkas workflow (commit sebelum workflow ini ditambahkan tidak bisa dipakai); bila tidak, pakai `git revert <sha>` lalu merge ke `main`.
+- Jalur FTPS: jalankan workflow `Deploy Hostinger` dengan cara yang sama.
 - Catat tanggal percobaan rollback pertama di README setelah benar-benar dicoba (belum dilakukan).
 
 ## 7. Batasan

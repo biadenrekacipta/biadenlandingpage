@@ -77,6 +77,8 @@ jobs:
     name: 6. Build + tes dist + Lighthouse CI
     needs: codeql
     runs-on: ubuntu-latest
+    env:
+      SITE_URL: https://example.com
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -85,7 +87,5 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-        env:
-          SITE_URL: https://example.com
       - run: node --test tests/dist.test.mjs
       - run: npx lhci autorun

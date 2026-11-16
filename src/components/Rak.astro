@@ -11,7 +11,7 @@ const jurnal = (await getCollection('jurnal'))
 // "BITECHNOS: Journal of ..." menjadi singkatan dan subjudul. Tanpa titik dua, seluruh nama jadi judul.
 const item = jurnal.map((j) => {
   const [singkat, ...sisa] = j.nama.split(':');
-  return { ...j, singkat: singkat.trim(), sub: sisa.join(':').trim() };
+  return { ...j, singkat: (singkat ?? '').trim(), sub: sisa.join(':').trim() };
 });
 // Satu sampul terbuka statis: yang di tengah. ponytail: data-r di CSS hanya mendukung -2..2 (maks 5 jurnal); rak.js menggantikannya.
 // Poster detail: teks SVG tidak membungkus baris sendiri, jadi dibungkus di sini.
@@ -31,7 +31,7 @@ const STATUS: Record<string, string> = { terbit: 'Terbit', 'segera-terbit': 'Seg
 // Pusat dan jeda (ms) tujuh tetesan tinta; sama dengan tabel referensi.
 const TINTA = [[150, 330], [340, 600], [250, 120], [90, 760], [400, 250], [260, 860], [230, 470]];
 const aktif = Math.floor(item.length / 2);
-const cur = item[aktif];
+const cur = item[aktif]!;
 ---
 {item.length > 0 && (
   <section class="rak" aria-label="Rak jurnal">

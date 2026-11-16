@@ -22,7 +22,7 @@ Node: 22 (`.node-version`), terverifikasi dengan v22.12.0 lokal.
 | Script | Fungsi |
 |---|---|
 | `npm run dev` | Server lokal |
-| `npm run build` | Build statis ke `dist/` |
+| `npm run build` | Build Astro (halaman prerender + server Node) ke `dist/`; entry `dist/server/entry.mjs` |
 | `npm run check` | `astro check` (lint + tipe) |
 | `npm run test:content` | `node --test tests/content.test.mjs` |
 | `npm run test:dist` | `node --test tests/dist.test.mjs` (butuh build dulu) |
@@ -30,7 +30,7 @@ Node: 22 (`.node-version`), terverifikasi dengan v22.12.0 lokal.
 
 ## Env var
 
-Salin `.env.example` ke `.env`: `SITE_URL`, `PUBLIC_WEB3FORMS_KEY`, `PUBLIC_UMAMI_ID`.
+Salin `.env.example` ke `.env`: `SITE_URL`, `PUBLIC_UMAMI_ID`, serta `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_TO` (form kirim email lewat mailbox Hostinger). Nilai SMTP nyata hanya di hPanel, jangan di berkas.
 
 ## Catatan audit dependensi
 
@@ -72,7 +72,7 @@ Perubahan `src/content/legalitas.json` dan `src/content/testimoni.json` wajib di
 | Var | Fungsi | Catatan |
 |---|---|---|
 | `SITE_URL` | URL kanonik, sitemap, OG | Beda per lingkungan: produksi = domain final, staging = URL subdomain staging, lokal = `http://localhost:4321` |
-| `PUBLIC_WEB3FORMS_KEY` | Access key Web3Forms untuk form pengajuan | Key publik form; jangan pakai secret lain di var `PUBLIC_*` |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_TO` | SMTP mailbox Hostinger dan penerima pengajuan | Dibaca saat server jalan; `SMTP_PASS` rahasia, isi di hPanel |
 | `PUBLIC_UMAMI_ID` | Website ID Umami | Kosong = script analytics tidak dimuat |
 
 Jangan commit `.env`. Hanya `.env.example` yang masuk repo.
@@ -102,33 +102,33 @@ Situs tidak pernah mengambil (fetch) isi link naskah; hanya staf yang membukanya
 
 Taruh sampul, foto testimoni, dan logo di `src/assets/` (sumber maks 1 MB per berkas; PNG, JPG, WebP, atau AVIF). Di JSON tulis path relatif ke folder itu, mis. `"sampul": "buku/judul.jpg"`. Build mengubahnya jadi WebP sesuai ukuran tampil (hasil maks 200 KB), dan gagal bila berkasnya tidak ada.
 
-## Deploy: Hostinger
+## Deploy: Hostinger (Node.js)
 
-Keputusan pemilik: hosting di Hostinger (statis, Apache/LiteSpeed), bukan Cloudflare Pages seperti di PRD. Panduan lengkap: [docs/hosting-hostinger.md](docs/hosting-hostinger.md).
+Keputusan pemilik (2026-11-16): hosting Hostinger jenis Node.js (Astro `@astrojs/node`, standalone); form kirim email lewat SMTP mailbox Hostinger. Panduan lengkap: [docs/hosting-hostinger.md](docs/hosting-hostinger.md).
 
-- Header keamanan (CSP, nosniff, Referrer-Policy), paksa HTTPS, clean URL, ErrorDocument 404, cache aset, dan noindex untuk host staging ada di `public/.htaccess` (ikut ke `dist/`). `_headers` dan `_redirects` Cloudflare sudah dihapus; tesnya dipindah ke `.htaccess` di `tests/dist.test.mjs`.
-- Jalur utama: Hostinger "Deploy dari GitHub" memakai branch `deploy`. Branch itu dihasilkan otomatis oleh `.github/workflows/publish-deploy-branch.yml` (push ke `main` dan manual): build, `tests/dist.test.mjs`, lalu force-push isi `dist/` saja sebagai satu commit. Jangan diedit tangan. Pilih `deploy`, bukan `main`, di hPanel: `main` berisi source dan akan menyalin `src/`, `planything/`, `docs/` ke `public_html/` tanpa situs jadi. Langkah klik demi klik, aturan deploy pertama (konten harus bebas `[verify]`), dan webhook auto-deploy: [docs/hosting-hostinger.md](docs/hosting-hostinger.md) bagian 0. Variabel opsional: `SITE_URL` (default `https://biadenrekacipta.com`), `PUBLIC_WEB3FORMS_KEY`, `PUBLIC_UMAMI_ID`.
-- Jalur FTPS (opsional): workflow `.github/workflows/deploy-hostinger.yml` (push ke `main` dan manual) mengunggah `dist/` lewat FTPS, hanya bila variabel repo `DEPLOY_ENABLED` = `true`. Variabel: `SITE_URL`, `PUBLIC_WEB3FORMS_KEY`, `PUBLIC_UMAMI_ID`. Secret: `HOSTINGER_FTP_SERVER`, `HOSTINGER_FTP_USERNAME`, `HOSTINGER_FTP_PASSWORD`, `HOSTINGER_FTP_DIR`. Tidak ada kredensial di repo.
-- Build: `npm run build`, output `dist`, Node sesuai `.node-version` (22).
+- Pengaturan hPanel: build `npm run build`, output `dist`, entry `dist/server/entry.mjs`, Node 22.x, npm. Hostinger membangun sendiri dari GitHub.
+- Branch: pilih branch yang berisi perubahan Node.js SSR ini, saat ini `rak-vhs`, bukan `main` (belum memuat adapter, endpoint, dan pembungkus header). Ganti ke `main` setelah di-merge.
+- Header keamanan (CSP, nosniff, Referrer-Policy, X-Frame-Options, noindex staging, cache aset) dikirim server Node lewat pembungkus `dist/server/entry.mjs` (`scripts/security-headers.mjs`, `scripts/wrap-entry.mjs`). `public/.htaccess` tidak dipakai di Node (dipertahankan, ditandai).
+- Workflow `publish-deploy-branch.yml` dan `deploy-hostinger.yml` (deploy statis) dinonaktifkan; berkas dipertahankan menunggu keputusan pemilik. CI: `.github/workflows/ci.yml` (build + semua tes).
 
-Status: belum diuji di Hostinger. `.htaccess` hanya divalidasi statis (balance `<IfModule>`, isi direktif); tidak ada Apache lokal. Header butuh `mod_headers`: verifikasi dengan `curl -I` setelah deploy pertama. Belum ada domain final, akun FTP, atau deploy nyata.
+Status: belum diuji di Hostinger. Verifikasi `curl -I` produksi setelah deploy pertama (docs/hosting-hostinger.md bagian 4). Belum ada deploy nyata.
 
 ## Rollback
 
 Tidak ada tombol rollback di Hostinger. Rollback = deploy ulang commit/tag sebelumnya yang sehat:
 
-1. Jalur `deploy`: GitHub → Actions → "Publish deploy branch" → Run workflow dengan "Use workflow from" = tag/commit `main` sebelumnya (ref harus sudah memuat berkas workflow), lalu klik Deploy ulang di hPanel. Atau `git revert <sha>` di `main`, buka PR, merge. Jalur FTPS: jalankan `Deploy Hostinger` dari ref lama.
-2. Cadangan: backup hPanel atau unduhan `public_html/` sebelum perubahan besar.
+1. Di hPanel pilih commit/branch sehat sebelumnya dan deploy ulang, atau `git revert <sha>` di branch yang dipakai Hostinger lalu push. Hostinger membangun ulang.
+2. Cadangan: backup hPanel atau unduhan folder domain sebelum perubahan besar.
 
 Bukti uji rollback: belum dilakukan (butuh deploy nyata). Catat tanggal dan commit di sini setelah dicoba.
 
-## Form pengajuan (Web3Forms)
+## Form pengajuan (SMTP Hostinger)
 
-- Form mengirim POST langsung ke `https://api.web3forms.com/submit`; CSP `form-action` hanya mengizinkan host itu.
-- Access key dibaca dari env `PUBLIC_WEB3FORMS_KEY`; jangan di-commit. Build mencetak peringatan bila kosong.
-- `redirect` = `${SITE_URL}/terima-kasih/`, jadi tiap lingkungan mendarat di domainnya sendiri (BUG-2).
-- Keputusan: key staging terpisah dari key produksi. Set `PUBLIC_WEB3FORMS_KEY` per lingkungan (variabel repo GitHub untuk staging dan produksi). Key produksi dibatasi ke domain produksi di dashboard Web3Forms (SEC-5).
-- Honeypot `botcheck` disembunyikan dari pengguna. Uji kirim dengan `botcheck` terisi harus ditolak layanan (belum diuji, butuh key).
+- Form mengirim POST ke `/api/kirim/` (endpoint Node `src/pages/api/kirim.ts`); CSP `form-action 'self'`. Tidak ada layanan form pihak ketiga (sebelumnya Web3Forms, diganti 2026-11-16).
+- Validasi di server, honeypot `botcheck` (terisi = redirect sukses tanpa email), rate limit per IP di memori, batas ukuran body. Sukses: redirect 303 ke `/terima-kasih/`.
+- Email dikirim lewat nodemailer ke `MAIL_TO` dari mailbox `SMTP_USER`; `Reply-To` = email pengirim form. SMTP kosong: tidak mengirim, halaman 503, log peringatan.
+- Kredensial SMTP hanya di env hPanel; jangan di-commit (GR-7).
+- Uji nyata (kirim ke mailbox, honeypot terisi tidak mengirim) belum dilakukan; butuh deploy dan mailbox.
 
 ## Catatan sumber konten
 

@@ -1,13 +1,13 @@
 name: Deploy Hostinger
 
-# Deploy statis ke Hostinger lewat FTPS. Nonaktif sampai variabel repo
-# DEPLOY_ENABLED = 'true' (Settings > Secrets and variables > Actions > Variables).
-# Panduan: docs/hosting-hostinger.md
+# USANG (keputusan 2026-11-16): hosting pindah ke Hostinger Node.js SSR, yang membangun
+# sendiri dari GitHub (docs/hosting-hostinger.md). Deploy statis lewat FTPS tidak lagi
+# valid: dist/ sekarang berisi server Node dan endpoint form, bukan situs statis.
+# Dinonaktifkan: hanya manual (workflow_dispatch) dan job selalu dilewati.
+# Berkas dipertahankan (GR-9); hapus setelah pemilik memutuskan.
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
 
 permissions:
   contents: read
@@ -19,11 +19,10 @@ concurrency:
 jobs:
   deploy:
     name: Build + unggah dist/ ke Hostinger
-    if: ${{ vars.DEPLOY_ENABLED == 'true' }}
+    if: ${{ false }}
     runs-on: ubuntu-latest
     env:
       SITE_URL: ${{ vars.SITE_URL }}
-      PUBLIC_WEB3FORMS_KEY: ${{ vars.PUBLIC_WEB3FORMS_KEY }}
       PUBLIC_UMAMI_ID: ${{ vars.PUBLIC_UMAMI_ID }}
     steps:
       - name: Cek konfigurasi
@@ -46,9 +45,7 @@ jobs:
       - run: npm ci
       - run: npm run build
       # Tes yang sama dengan CI tahap 6, dengan SITE_URL produksi/staging. Gagal = tidak diunggah.
-      - run: node --test tests/dist.test.mjs
-      - name: Pastikan .htaccess ikut di dist/
-        run: test -f dist/.htaccess
+      - run: npm run test:dist
       # Pin ke SHA commit rilis v4.4.0 (SamKirkland/FTP-Deploy-Action). Perbarui lewat PR.
       - uses: SamKirkland/FTP-Deploy-Action@110f9186c050f71550953127052e77650219c287 # v4.4.0
         with:

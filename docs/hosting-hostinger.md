@@ -1,110 +1,93 @@
-# Hosting di Hostinger
+# Hosting di Hostinger (Node.js)
 
-Keputusan pemilik: situs statis (`dist/`) di-host di Hostinger (shared/statis, Apache atau LiteSpeed), bukan Cloudflare Pages seperti di PRD. Tidak ada `_headers` atau `_redirects`; semuanya ada di `public/.htaccess` yang ikut ke `dist/`.
+Keputusan pemilik (2026-11-16): situs berjalan sebagai aplikasi Node.js di Hostinger (Astro adapter `@astrojs/node`, mode `standalone`). Halaman tetap diprerender statis; hanya endpoint form `POST /api/kirim/` yang dinamis dan mengirim email lewat mailbox Hostinger (SMTP). Web3Forms tidak dipakai lagi. Jalur lama (statis Apache + `.htaccess`, branch `deploy`, FTPS) usang; lihat bagian 7.
 
-Status: belum pernah diuji di Hostinger. `.htaccess` hanya divalidasi secara statis (tes `tests/dist.test.mjs`); semua langkah di bawah harus dicoba pertama kali oleh pemilik.
+Status: belum pernah di-deploy ke Hostinger. Kode dan header sudah terbukti lokal (`tests/server.test.mjs` menjalankan `dist/server/entry.mjs` sungguhan). Semua langkah di bawah dicoba pertama kali oleh pemilik.
 
-## 0. Jalur utama: Deploy dari GitHub (branch `deploy`)
+## 1. Pengaturan aplikasi Node.js di hPanel
 
-Fitur "Deploy dari GitHub" (Git auto-deployment) di hPanel hanya menyalin isi satu branch apa adanya ke `public_html/`, tanpa build. Branch `main` berisi source Astro (bukan situs jadi), jadi Hostinger harus memakai branch `deploy`.
-
-Branch `deploy` dihasilkan otomatis oleh workflow `.github/workflows/publish-deploy-branch.yml` pada setiap push ke `main` (dan manual lewat Run workflow). Workflow: `npm ci`, `npm run build`, `node --test tests/dist.test.mjs`; bila tes lulus, isi `dist/` (termasuk `.htaccess`) dikomit sebagai satu commit baru (`deploy: <sha main>`) lalu di-force-push ke `deploy`. Tidak ada secret selain `GITHUB_TOKEN` bawaan. Branch `deploy` hanya berisi hasil build; jangan diedit tangan (ditimpa pada run berikutnya).
-
-Variabel repo (opsional, Settings → Secrets and variables → Actions → Variables): `SITE_URL` (default `https://biadenrekacipta.com`), `PUBLIC_WEB3FORMS_KEY`, `PUBLIC_UMAMI_ID`. Kosong = analytics/form tanpa key (build mencetak peringatan).
-
-### Langkah klik demi klik
-
-1. GitHub → repo `biadenrekacipta/biadenlandingpage` → Actions → "Publish deploy branch": pastikan run terakhir hijau dan branch `deploy` ada (Code → pilih branch `deploy`). Bila belum ada, klik Run workflow (branch `main`).
-2. hPanel → Websites → `biadenrekacipta.com` → Advanced → Git (atau "Hubungkan repositori Git").
-3. Pilih GitHub, beri izin Hostinger ke repo `biadenlandingpage`.
-4. Pilih repositori `biadenlandingpage`, Branch = `deploy` (bukan `main`). Direktori root: `public_html`.
-5. Klik Deploy.
-6. Setelah deploy pertama berhasil, aktifkan auto-deploy: Hostinger menyediakan URL webhook di panel Git. Tempel di GitHub → Settings → Webhooks → Add webhook (Content type `application/json`, event Push). Sejak itu tiap push ke `deploy` (oleh workflow) memicu deploy otomatis.
-7. Jalankan verifikasi header di bagian 4.
-
-Peringatan deploy pertama: Deploy pertama kali baru aman bila konten sudah tidak memuat `[verify]` (placeholder yang dilarang di produksi; lihat `docs/catatan-sumber-konten.md`). Sebelum itu, situs yang tampil di domain produksi masih berisi placeholder. Selain itu, Deploy menimpa isi `public_html/`: cadangkan dulu isi lama (bagian 6).
-
-Risiko bila Hostinger diarahkan ke `main`: yang tersalin ke `public_html/` adalah source (`src/`, `package.json`, `planything/`, `docs/`, `tests/`, dst.), bukan situs jadi. Halaman tidak jalan (tidak ada `index.html`), dan berkas internal/perencanaan terbuka untuk publik. Selalu pilih `deploy`.
-
-Jalur FTPS di bagian 3 tetap tersedia sebagai opsi; jangan aktifkan keduanya sekaligus ke folder yang sama.
-
-## 1. Domain dan SSL (hPanel)
-
-1. hPanel → Domains: sambungkan domain final ke paket hosting (nameserver Hostinger atau A record sesuai petunjuk hPanel).
-2. hPanel → Security → SSL: aktifkan SSL gratis untuk domain dan tunggu status aktif.
-3. Aktifkan "Force HTTPS" di hPanel bila ada. `.htaccess` juga memaksa HTTPS, jadi tidak bentrok.
-
-Domain produksi final belum ditentukan: isi di `SITE_URL` (langkah 3).
-
-## 2. Folder tujuan
-
-Produksi: `public_html/` (root domain). Staging: buat subdomain (mis. `staging.<domain>`) di hPanel → Domains → Subdomains; folder default `public_html/staging/` atau yang ditampilkan hPanel. Pakai nilai itu sebagai `HOSTINGER_FTP_DIR` untuk workflow staging. Akhiri path dengan `/`.
-
-Peringatan: action deploy menyinkronkan folder tujuan. File di `HOSTINGER_FTP_DIR` yang tidak ada di `dist/` akan dihapus pada deploy berikutnya. Jangan arahkan ke folder yang berisi file lain.
-
-## 3. Opsional: deploy FTPS (GitHub: variabel dan secret)
-
-Jalur alternatif; jalur utama ada di bagian 0. Settings → Secrets and variables → Actions.
-
-Variables (nilai publik):
-
-| Nama | Isi |
+| Kolom | Nilai |
 |---|---|
-| `DEPLOY_ENABLED` | `true` untuk mengaktifkan workflow. Kosong/lain = job dilewati |
-| `SITE_URL` | URL kanonik, mis. `https://domain-final.example` (tanpa slash akhir). Menentukan canonical, sitemap, OG, redirect form |
-| `PUBLIC_WEB3FORMS_KEY` | Access key Web3Forms (key publik form; beda untuk staging dan produksi, SEC-5) |
-| `PUBLIC_UMAMI_ID` | Website ID Umami (kosong = analytics mati) |
+| Sumber | Repositori GitHub `biadenrekacipta/biadenlandingpage` |
+| Branch | Branch yang berisi perubahan Node.js SSR ini. Saat ini `rak-vhs`, BUKAN `main` (`main` belum memuat adapter Node, endpoint, dan pembungkus header). Setelah `rak-vhs` di-merge ke `main`, ganti ke `main` |
+| Framework | Astro (atau "Other" bila tidak ada) |
+| Versi Node.js | 22.x (sesuai `.node-version`) |
+| Package manager | npm |
+| Perintah build | `npm run build` |
+| Direktori output | `dist` |
+| Entry file | `dist/server/entry.mjs` |
 
-Secrets (kredensial; hanya diisi pemilik, jangan ditempel di chat atau commit):
+Jangan klik Lanjutkan/Deploy sebelum branch dan entry file benar. `npm run build` menjalankan `astro build` lalu `scripts/wrap-entry.mjs`, yang menjadikan `dist/server/entry.mjs` pembungkus header keamanan (CSP dan kawan-kawan) untuk semua respons, termasuk halaman statis, aset, endpoint, dan 404.
 
-| Nama | Isi |
-|---|---|
-| `HOSTINGER_FTP_SERVER` | Host FTP dari hPanel → Files → FTP Accounts |
-| `HOSTINGER_FTP_USERNAME` | Username akun FTP |
-| `HOSTINGER_FTP_PASSWORD` | Password akun FTP |
-| `HOSTINGER_FTP_DIR` | Folder tujuan, mis. `public_html/` |
+## 2. Variabel lingkungan
 
-Buat akun FTP khusus deploy yang dibatasi ke folder tujuan. Workflow `.github/workflows/deploy-hostinger.yml` berjalan pada push ke `main` dan `workflow_dispatch`, hanya bila `DEPLOY_ENABLED == 'true'`. Ia menolak jalan bila `SITE_URL` atau secret kosong, menjalankan `npm run build` dan `tests/dist.test.mjs` dengan `SITE_URL` itu, lalu mengunggah `dist/` lewat FTPS.
+Isi di hPanel (Environment variables) langsung oleh pemilik. Nilai rahasia tidak ditulis di repo, di dokumen ini, maupun di chat.
 
-Satu environment saja per repo. Untuk staging dan produksi terpisah, salin workflow menjadi berkas kedua dengan variabel/secret berbeda (atau pakai GitHub Environments), setelah produksi terbukti jalan.
+| Nama | Nilai | Kapan dibaca |
+|---|---|---|
+| `SITE_URL` | `https://biadenrekacipta.com` | Saat build (canonical, sitemap, OG) |
+| `PUBLIC_UMAMI_ID` | `50c40988-5e6c-4465-86d7-88662f0b81f4` | Saat build (ID publik Umami) |
+| `SMTP_HOST` | `smtp.hostinger.com` | Saat jalan |
+| `SMTP_PORT` | `465` (SSL) | Saat jalan |
+| `SMTP_USER` | alamat mailbox pengirim yang dibuat di hPanel (Emails) | Saat jalan |
+| `SMTP_PASS` | password mailbox itu; diisi pemilik sendiri | Saat jalan |
+| `MAIL_TO` | alamat penerima pengajuan (staf penerbit) | Saat jalan |
 
-### Pilihan action
+Catatan:
 
-`SamKirkland/FTP-Deploy-Action` v4.4.0, di-pin ke SHA commit `110f9186c050f71550953127052e77650219c287`. Alasan: action FTP/FTPS yang umum dipakai, sinkronisasi diff (hanya unggah file berubah), mendukung FTPS. Risiko: pihak ketiga yang menerima password FTP; karena itu di-pin ke SHA (bukan tag yang bisa dipindah) dan job hanya punya `contents: read`. Naikkan versi lewat PR terpisah dan cek ulang SHA. Alternatif tanpa pihak ketiga: unggah `dist/` manual lewat File Manager/SFTP.
+- `SITE_URL` dan `PUBLIC_UMAMI_ID` ikut tertanam ke halaman statis. Setel keduanya SEBELUM build; mengubahnya berarti build ulang (deploy ulang).
+- `SMTP_*` dan `MAIL_TO` dibaca saat server jalan. Bila salah satunya kosong, endpoint tidak mengirim email, mencatat peringatan di log, dan membalas halaman 503 "Form belum aktif" (server tidak crash).
+- `HOST` dan `PORT`: Hostinger biasanya menyetel `PORT` sendiri; entry membacanya dan memakai `0.0.0.0` bila `HOST` tidak diisi sesuai konfigurasi adapter. Jangan menyetel `PORT` kecuali diminta panel.
+- Buat mailbox dulu: hPanel → Emails → buat akun email di domain, lalu pakai alamat dan password-nya untuk `SMTP_USER` dan `SMTP_PASS`.
 
-Action menaruh `.ftp-deploy-sync-state.json` di folder tujuan; `.htaccess` memblokir akses ke berkas itu.
+## 3. Domain dan SSL
 
-## 4. Verifikasi header
+1. hPanel → Domains: sambungkan `biadenrekacipta.com` ke aplikasi Node.js.
+2. hPanel → Security → SSL: aktifkan SSL gratis dan tunggu status aktif.
+3. Aktifkan "Force HTTPS" bila ada. Server Node tidak memaksa HTTPS sendiri (`public/.htaccess` tidak berlaku di Node).
 
-Header butuh `mod_headers`. Bila modul tidak ada, direktif dilewati diam-diam (dibungkus `<IfModule>`) dan CSP TIDAK terkirim. Wajib dicek setelah deploy pertama:
+Peringatan deploy pertama: konten produksi tidak boleh memuat placeholder `[verify]` (GR-11; lihat `docs/catatan-sumber-konten.md`). Cek `STRICT=1 npm run test:content` sebelum mengarahkan domain.
+
+## 4. Verifikasi header setelah deploy
+
+Header dikirim oleh server Node (bukan Apache), jadi tidak bergantung `mod_headers`. Tetap wajib dicek:
 
 ```bash
-curl -sI https://domain-final.example/ | grep -iE "content-security-policy|x-content-type-options|referrer-policy|x-frame-options|x-robots-tag"
-curl -sI http://domain-final.example/ | head -3          # harus 301 ke https
-curl -sI https://domain-final.example/kebijakan-privasi/index.html | grep -i location   # harus 301 ke .../kebijakan-privasi/
-curl -sI https://domain-final.example/tidak-ada/ | head -1   # harus 404
-curl -sI https://domain-final.example/_astro/<file-css> | grep -i cache-control   # public, max-age=31536000, immutable
+curl -sI https://biadenrekacipta.com/ | grep -iE "content-security-policy|x-content-type-options|referrer-policy|x-frame-options|x-robots-tag"
+curl -sI https://biadenrekacipta.com/_astro/<file-css> | grep -iE "content-security-policy|cache-control"
+curl -sI https://biadenrekacipta.com/tidak-ada/ | head -1
+curl -sI -X POST https://biadenrekacipta.com/api/kirim/ | head -5
 ```
 
-Yang harus tampil di domain produksi: CSP, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `X-Frame-Options: DENY`; `X-Robots-Tag` TIDAK ada. Bila header tidak muncul: hubungi dukungan Hostinger untuk memastikan `mod_headers` aktif, atau minta modul/`AllowOverride` diaktifkan. LiteSpeed membaca `.htaccess` Apache tetapi dukungan direktif bisa berbeda; hasil `curl` yang menentukan.
+Yang harus tampil di produksi: CSP (`form-action 'self'`, tanpa domain pihak ketiga selain Umami), `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `X-Frame-Options: DENY`; `X-Robots-Tag` TIDAK ada. Aset di `/_astro/` dan `/fonts/` memakai `Cache-Control: public, max-age=31536000, immutable`. URL tidak dikenal mengembalikan 404 dengan header yang sama.
 
 Periksa juga di browser (DevTools → Console) bahwa tidak ada pelanggaran CSP pada halaman, form, dan Umami.
 
+Uji form: kirim satu pengajuan nyata dari produksi; email masuk ke `MAIL_TO` (balas ke pengirim lewat Reply-To) dan browser mendarat di `/terima-kasih/`. Kirim satu dengan kolom honeypot terisi (hanya bisa lewat curl): tidak ada email.
+
 ## 5. Staging dan noindex
 
-`.htaccess` mengirim `X-Robots-Tag: noindex, nofollow` bila host diawali `staging.`, `stg.`, `dev.`, `test.`, `preview.`, atau berakhiran `.hostingersite.com` (domain sementara Hostinger; belum diverifikasi bahwa itu pola domain sementara akun ini). Cek: `curl -sI https://staging.domain-final.example/ | grep -i x-robots-tag`. Pakai nama subdomain di daftar itu agar aturan berlaku. Gunakan juga `SITE_URL` staging yang benar dan access key Web3Forms terpisah.
+Server mengirim `X-Robots-Tag: noindex, nofollow` bila host diawali `staging.`, `stg.`, `dev.`, `test.`, atau `preview.`, atau berakhiran `.hostingersite.com` (pola domain sementara Hostinger; belum diverifikasi bahwa itu pola domain akun ini). Pakai salah satu nama itu untuk staging, dengan `SITE_URL` staging, mailbox/`MAIL_TO` uji, dan aplikasi Node terpisah.
 
 ## 6. Backup dan rollback
 
-Tidak ada tombol rollback.
+Tidak ada tombol rollback bawaan.
 
-- Sebelum deploy produksi pertama dan sebelum perubahan besar: hPanel → Files → Backups (atau unduh `public_html/` lewat File Manager) dan simpan.
-- Rollback (jalur `deploy`): GitHub → Actions → "Publish deploy branch" → Run workflow, pada "Use workflow from" pilih tag/commit `main` sebelumnya yang sehat (workflow membangun ulang dari ref itu dan menimpa `deploy`). Lalu di hPanel klik Deploy ulang (atau tunggu webhook). Syarat: ref itu sudah memuat berkas workflow (commit sebelum workflow ini ditambahkan tidak bisa dipakai); bila tidak, pakai `git revert <sha>` lalu merge ke `main`.
-- Jalur FTPS: jalankan workflow `Deploy Hostinger` dengan cara yang sama.
+- Sebelum deploy produksi pertama dan sebelum perubahan besar: catat commit yang sedang jalan dan, bila ada berkas lain di folder domain, unduh lewat hPanel → Files → Backups atau File Manager.
+- Rollback: di hPanel ganti branch/commit ke yang sehat sebelumnya dan deploy ulang, atau `git revert <sha>` di branch yang dipakai Hostinger lalu push (deploy ulang otomatis bila auto-deploy aktif). Aplikasi membangun sendiri, jadi tidak perlu mengunggah apa pun.
 - Catat tanggal percobaan rollback pertama di README setelah benar-benar dicoba (belum dilakukan).
 
-## 7. Batasan
+## 7. Jalur lama (usang)
+
+Tidak berlaku untuk hosting Node.js dan sudah dinonaktifkan (berkas tidak dihapus, menunggu keputusan pemilik):
+
+- Branch `deploy` yang dihasilkan `.github/workflows/publish-deploy-branch.yml` (hasil build statis tanpa server; endpoint form tidak ada di dalamnya).
+- Deploy FTPS lewat `.github/workflows/deploy-hostinger.yml` (hanya mengunggah `dist/` statis).
+- `public/.htaccess` (Apache/LiteSpeed): tidak dibaca oleh Node. Header kini dikirim `dist/server/entry.mjs`.
+
+## 8. Batasan
 
 - HSTS belum diaktifkan (sulit dibatalkan); pertimbangkan setelah HTTPS stabil beberapa minggu.
-- CDN, rate limit, dan preview per PR dari Cloudflare Pages tidak tersedia; preview per PR digantikan staging manual.
-- Ukuran/kuota file dan jumlah koneksi FTP mengikuti paket Hostinger [verify].
+- Rate limit form disimpan di memori proses (lihat `buatLimiter` yang dipakai `src/pages/api/kirim.ts`); hilang saat restart dan tidak dibagi antarinstance. Cukup untuk satu proses.
+- CDN dan preview per PR dari Cloudflare Pages tidak tersedia; preview digantikan staging manual.
+- Kuota SMTP, jumlah email per jam, dan batas resource paket Node.js mengikuti paket Hostinger [verify].

@@ -1,5 +1,8 @@
-# Hosting: Hostinger (Apache/LiteSpeed), file diunggah ke public_html.
-# Pengganti public/_headers dan public/_redirects (Cloudflare Pages).
+# TIDAK DIPAKAI sejak 2026-11-16: hosting Hostinger Node.js tidak membaca .htaccess.
+# Header keamanan kini dikirim server Node (scripts/security-headers.mjs, dibungkus
+# ke dist/server/entry.mjs). Berkas ini dipertahankan (GR-9) bila suatu saat kembali
+# ke hosting statis Apache/LiteSpeed. Jangan jadikan sumber kebenaran header.
+# Hosting statis lama: Hostinger (Apache/LiteSpeed), file diunggah ke public_html.
 # Semua direktif dibungkus <IfModule> supaya modul yang tak ada tidak memicu HTTP 500.
 # Panduan: docs/hosting-hostinger.md
 

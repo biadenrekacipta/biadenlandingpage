@@ -29,8 +29,8 @@ Semua angka adalah estimasi. Tidak ada yang diberikan di brief, jadi semua `[ver
 | Kumpulkan konten oleh staf penerbit (legalitas, katalog, testimoni, jawaban FAQ) | 2 person-hari = Rp 600.000 | Rp 300.000/hari [verify] |
 | **Total sekali bayar** | **Rp 3.100.000** | jumlah di atas |
 | Domain | Rp 250.000/tahun | harga umum [verify] |
-| Hosting Cloudflare Pages | Rp 0 | free tier [verify] |
-| Form Web3Forms | Rp 0 | free tier [verify] |
+| Hosting Hostinger Node.js (keputusan 2026-11-16) | sesuai paket pemilik | paket sudah dimiliki [verify] |
+| Form via SMTP mailbox Hostinger (keputusan 2026-11-16) | Rp 0 tambahan | termasuk paket hosting [verify] |
 | Analytics Umami Cloud | Rp 0 | free tier [verify] |
 | **Biaya 12 bulan** | **Rp 3.350.000** | Rp 3.100.000 + Rp 250.000 |
 
@@ -151,7 +151,7 @@ Inti pembeda: transparansi.
 **Fase:** 1 · **Prioritas:** Must
 
 - [FR-13] The system shall menyediakan form dengan field sesuai [BR-7], label terlihat, dan validasi HTML5 native.
-- [FR-14] The system shall mengirim form lewat HTTP POST ke Web3Forms dengan hidden field `access_key`, `subject`, `from_name`, `redirect`, dan honeypot `botcheck`.
+- [FR-14] The system shall mengirim form lewat HTTP POST ke endpoint server sendiri `/api/kirim/` (Node.js), yang memvalidasi di server lalu mengirim email lewat SMTP mailbox Hostinger ke `MAIL_TO`, dan me-redirect 303 ke `/terima-kasih/`. Honeypot `botcheck` tetap dipakai; tidak ada hidden field `access_key` (keputusan 2026-11-16, menggantikan Web3Forms).
 - [FR-15] The system shall mengarahkan submit sukses ke `/terima-kasih/`, yang menjelaskan langkah berikutnya (dari tahap 2 alur dan SLA bila ada).
 - [FR-16] The system shall menandai `/terima-kasih/` dengan `noindex` dan mengeluarkannya dari `sitemap.xml`.
 - [FR-17] The system shall mewajibkan checkbox persetujuan yang menaut ke `/kebijakan-privasi/`.
@@ -209,7 +209,7 @@ Fondasi `<head>`, sitemap, robots, dan 404 dikerjakan di Fase 1. Sisanya selesai
 - [BR-13] Semua tanggal disimpan sebagai `YYYY-MM-DD` dan ditampilkan sebagai tanggal kalender (WIB, tanpa jam). Jangan konversi lewat zona waktu lokal ([BUG-1]).
 - [BR-14] Konversi = kunjungan unik `/terima-kasih/` ÷ pengunjung unik `/` (30 hari, tanpa traffic tim). CTR CTA = pengunjung unik dengan event `cta-ajukan` ÷ pengunjung unik `/`.
 - [BR-15] Tidak ada status pengajuan di situs. Status cancelled, rejected, dan archived tidak dilacak di sini; hanya `diarsipkan` untuk katalog.
-- [BR-16] Retensi data pengajuan di mailbox dan dashboard Web3Forms: 12 bulan lalu dihapus (default, confirm).
+- [BR-16] Retensi data pengajuan di mailbox: 12 bulan lalu dihapus (default, confirm).
 - [BR-17] `lastUpdated` di `site.json` diisi manual saat konten berubah, ditampilkan di footer sebagai "Terakhir diperbarui" ([DEBT-3]).
 
 ## 10. Peran & Hak Akses
@@ -219,9 +219,9 @@ Fondasi `<head>`, sitemap, robots, dan 404 dikerjakan di Fase 1. Sisanya selesai
 | Pengunjung (anonim) | Membaca semua halaman publik, mengirim form | Semua halaman publik (all); submission miliknya sendiri (own) |
 | Editor Konten | Mengedit file konten dan membuka PR | Semua file konten (all) |
 | Reviewer | Approve PR, wajib untuk `legalitas.json`/`testimoni.json` | Semua file konten (all) |
-| Staf Penerbit | Menerima email submission, menghapus sesuai retensi, mengelola dashboard Web3Forms dan Umami | Semua submission (all) |
+| Staf Penerbit | Menerima email submission, menghapus sesuai retensi, mengelola mailbox penerima dan dashboard Umami | Semua submission (all) |
 
-Tidak ada ekspor massal di situs. Ekspor dari dashboard Web3Forms/Umami hanya untuk Staf Penerbit.
+Tidak ada ekspor massal di situs. Ekspor dari mailbox/dashboard Umami hanya untuk Staf Penerbit.
 
 ## 11. Alur Pengguna Utama
 
@@ -252,7 +252,7 @@ Tidak ada ekspor massal di situs. Ekspor dari dashboard Web3Forms/Umami hanya un
 
 **Keamanan:**
 - HTTPS saja, header sesuai [FR-34].
-- Tidak ada secret di repo. Access key Web3Forms bersifat publik, dibatasi domain di dashboard [verify].
+- Tidak ada secret di repo. Kredensial SMTP (`SMTP_PASS`) hanya di env hosting (hPanel), dibaca server saat jalan, tidak pernah dikirim ke browser.
 
 **Ketersediaan:**
 - Mengikuti SLA CDN Cloudflare Pages [verify].
@@ -274,7 +274,7 @@ Tidak ada ekspor massal di situs. Ekspor dari dashboard Web3Forms/Umami hanya un
 **Backup dan restore:**
 - Repo GitHub adalah backup konten dan kode.
 - Restore = redeploy dari commit atau tag, atau rollback deployment di Cloudflare Pages.
-- Submission ada di mailbox staf dan dashboard Web3Forms.
+- Submission ada di mailbox staf.
 
 **Batas ukuran:**
 - Tidak ada upload.
@@ -288,11 +288,11 @@ Tidak ada ekspor massal di situs. Ekspor dari dashboard Web3Forms/Umami hanya un
 | Build | Render statis, optimasi gambar, `sitemap.xml`, `llms.txt`, JSON-LD | Astro |
 | CI | Lint, test, audit, secret scan, SAST, build | GitHub Actions |
 | Hosting/CDN | Menyajikan HTML/CSS/aset statis dan header | Cloudflare Pages |
-| Layanan form | Menerima POST, filter spam, kirim email ke staf | Web3Forms (pihak ketiga) |
+| Endpoint form | Menerima POST, validasi, honeypot, rate limit, kirim email ke staf | Server Node.js sendiri + SMTP mailbox Hostinger |
 | Analytics | Hitung kunjungan dan event tanpa cookie | Umami Cloud (pihak ketiga) |
 | Browser pengunjung | Render halaman, kirim form langsung ke layanan form | HTML/CSS |
 
-Alur data: Editor push konten ke GitHub. CI jalan, Cloudflare Pages build dan deploy. Pengunjung memuat halaman statis dari CDN. Form dikirim langsung dari browser ke Web3Forms, yang meneruskan ke email staf dan me-redirect browser ke `/terima-kasih/`. Browser juga mengirim event kunjungan ke Umami.
+Alur data: Editor push konten ke GitHub. CI jalan, Cloudflare Pages build dan deploy. Pengunjung memuat halaman (diprerender) dari server Node.js Hostinger, yang menambahkan header keamanan di semua respons. Form dikirim ke `/api/kirim/` di server yang sama, yang mengirim email lewat SMTP mailbox Hostinger ke staf dan me-redirect browser ke `/terima-kasih/`. Browser juga mengirim event kunjungan ke Umami.
 
 ```mermaid
 flowchart LR
@@ -300,7 +300,7 @@ flowchart LR
   Repo --> CI[GitHub Actions CI]
   CI --> Pages[Cloudflare Pages]
   Visitor[Pengunjung] -->|GET halaman statis| Pages
-  Visitor -->|POST form| W3F[Web3Forms]
+  Visitor -->|POST form| W3F[Endpoint /api/kirim + SMTP Hostinger]
   W3F -->|email| Staff[Staf Penerbit]
   W3F -->|redirect| Pages
   Visitor -->|event tanpa cookie| Umami[Umami Cloud]
@@ -317,7 +317,7 @@ Produk ini tidak punya perilaku AI atau agent saat runtime. Semua keputusan adal
 | Tampilkan testimoni | tampil / sembunyi | Rule [BR-2] | `izin`, `tanggalIzin` | Gagal → sembunyi | Log CI |
 | Tampilkan angka klaim | tampil / build gagal | Rule [BR-3] | angka, `sumber` | Tanpa sumber → build gagal | Log CI |
 | Tampilkan section kosong | tampil / sembunyi | Rule [BR-6] | jumlah item lolos | 0 item → sembunyi + nav ikut hilang | Log CI |
-| Terima submission form | terima / tolak | Layanan form (honeypot, filter spam) [BR-7] | field form, `botcheck` | Honeypot terisi → ditolak | Dashboard Web3Forms |
+| Terima submission form | terima / tolak | Endpoint form (honeypot, rate limit) [BR-7] | field form, `botcheck` | Honeypot terisi → ditolak | Mailbox penerima |
 | Lolos CI | lolos / gagal | Rule: semua tahap hijau | hasil tiap stage | Satu merah → blok merge | GitHub Actions |
 | Rilis ke produksi | deploy / tahan | Manusia (Reviewer) [BR-9] | PR, preview | Ragu → tidak merge | Riwayat PR |
 | Rollback | rollback / lanjut | Manusia (Staf/Editor) | error produksi, Lighthouse | Fitur kritis rusak → rollback | Riwayat deploy Cloudflare |
@@ -414,7 +414,7 @@ Tidak ada tabel, skema, atau migrasi. Konten disimpan sebagai file JSON di `src/
 | `pertanyaan` | string | dari pertanyaan nyata calon penulis |
 | `jawaban` | string | teks polos ≤ 500 karakter, tanpa HTML |
 
-### FormSubmission (tidak disimpan situs; dikirim ke Web3Forms)
+### FormSubmission (tidak disimpan situs; dikirim sebagai email lewat SMTP)
 | Field | Tipe | Catatan |
 |---|---|---|
 | `nama`, `email`, `peran`, `jenis`, `judul_atau_topik`, `pesan` | string | wajib ([BR-7]) |
@@ -428,7 +428,7 @@ Tidak ada tabel, skema, atau migrasi. Konten disimpan sebagai file JSON di `src/
 
 | Method | Path | Tujuan | Peran | Lingkup data |
 |---|---|---|---|---|
-| POST | `https://api.web3forms.com/submit` [verify] | Kirim pengajuan/pertanyaan dari form | Pengunjung | own (data yang ia kirim sendiri) |
+| POST | `/api/kirim/` (server sendiri) | Kirim pengajuan/pertanyaan dari form | Pengunjung | own (data yang ia kirim sendiri) |
 | GET | `https://cloud.umami.is/script.js` [verify] | Muat script analytics | Pengunjung | all (halaman publik) |
 | POST | `https://api-gateway.umami.dev/api/send` [verify] | Kirim pageview dan event tanpa cookie | Pengunjung | all (event anonim) |
 
@@ -446,25 +446,25 @@ Tidak ada tabel, skema, atau migrasi. Konten disimpan sebagai file JSON di `src/
 | CSS polos dengan custom properties | UI. Token diambil dari `docs/design-reference.md`. Tanpa Tailwind dan tanpa component library | Satu halaman, tidak perlu framework CSS |
 | Font self-hosted (sesuai referensi desain) | Tipografi | Tanpa request ke Google Fonts (privasi, CSP, performa) |
 | `node:test` (stdlib) | Test konten dan hasil build | Tanpa framework test |
-| Web3Forms (free tier) [verify] | Form dan email | Tanpa backend, access key publik, ada filter spam |
+| `@astrojs/node` (standalone) + `nodemailer` | Server Node.js, endpoint form, kirim email SMTP | Keputusan pemilik 2026-11-16; hosting Hostinger Node.js |
 | Umami Cloud (free tier) [verify] | Analytics tanpa cookie | Tanpa cookie banner, murah |
-| Cloudflare Pages | Hosting statis, header, preview per PR | Gratis [verify], CDN global, rollback mudah |
+| Hostinger Node.js (keputusan 2026-11-16, menggantikan Cloudflare Pages dan Hostinger statis) | Hosting aplikasi Node, build dari GitHub | Header dikirim server Node |
 | GitHub + GitHub Actions | Repo, CI, CodeQL, gitleaks | Standar |
 
 **Bahasa:** Indonesia saja (`lang="id"`). Audiens yang disebut berbasis Indonesia. Versi Inggris ditunda ([DEBT-4]).
 
-**Form:** Web3Forms dipilih karena tanpa server dan tanpa upload. Formspree adalah alternatif bila kuota tidak cukup.
+**Form:** (keputusan 2026-11-16) endpoint Node.js `/api/kirim/` + SMTP mailbox Hostinger. Menggantikan Web3Forms (riwayat: dipilih awal karena tanpa server; ditinggalkan karena hosting kini Node.js dan pemilik memakai mailbox sendiri).
 
-**Hosting:** Cloudflare Pages dipilih karena statis, gratis, dan punya preview per PR.
+**Hosting:** (keputusan 2026-11-16) Hostinger Node.js, build dari branch GitHub. Menggantikan Cloudflare Pages (PRD awal) dan Hostinger statis/Apache.
 
 ## 18. Batasan Teknis
 
-- [TC-1] Tidak ada upload, jadi tidak ada batas upload. Body form harus kecil (< 10 KB), dibatasi layanan Web3Forms [verify] → affects [FR-13], [FR-14].
+- [TC-1] Tidak ada upload, jadi tidak ada batas upload. Body form harus kecil (< 10 KB), dibatasi endpoint `/api/kirim/` → affects [FR-13], [FR-14].
 - [TC-2] Versi Astro, Node, dan library pin ke versi yang benar-benar terinstal (lockfile commit). Agent mencatat versinya di README [verify] → affects semua FR.
 - [TC-3] Versi Node diset lewat `.node-version` atau env `NODE_VERSION` di Cloudflare Pages. Tidak ada container image sendiri; build memakai build image Cloudflare [verify] → affects [FR-31].
 - [TC-4] Cloudflare Pages: batas jumlah file dan ukuran per file, batas aturan `_headers` [verify] → affects [FR-34], [FR-35].
-- [TC-5] Kuota gratis Web3Forms dan Umami terbatas [verify] → affects [FR-14], [FR-33], [KILL-3].
-- [TC-6] CSP wajib mengizinkan hanya `self`, host script Umami, dan `form-action` ke Web3Forms. Tidak ada inline script atau inline style. Satu skrip eksternal `'self'` (`type="module"`) diizinkan untuk rak jurnal; CSP `default-src 'self'` tidak berubah (keputusan 2026-11-16) → affects [FR-14], [FR-33], [FR-34].
+- [TC-5] Kuota email SMTP Hostinger dan kuota gratis Umami terbatas [verify] → affects [FR-14], [FR-33], [KILL-3].
+- [TC-6] CSP wajib mengizinkan hanya `self`, host script Umami, dan `form-action 'self'` (form dikirim ke `/api/kirim/` di server sendiri; keputusan 2026-11-16 menggantikan Web3Forms). Header dikirim server Node untuk SEMUA respons lewat pembungkus `dist/server/entry.mjs`, bukan `_headers` atau `.htaccess`. Tidak ada inline script atau inline style. Satu skrip eksternal `'self'` (`type="module"`) diizinkan untuk rak jurnal; CSP `default-src 'self'` tidak berubah (keputusan 2026-11-16) → affects [FR-14], [FR-33], [FR-34].
 - [TC-7] Seluruh situs harus berfungsi tanpa JavaScript, kecuali analytics dan rak jurnal. Rak hanya peningkatan progresif: tanpa JS, tiga jurnal tetap tampil sebagai deret statis dengan satu sampul terbuka, dan semua konten ada di HTML (keputusan 2026-11-16) → affects [FR-2], [FR-10], [FR-27].
 - [TC-8] Domain produksi lewat env `SITE_URL`. Canonical, sitemap, dan JSON-LD memakainya → affects [FR-30], [FR-31], [BUG-7].
 - [TC-9] Gambar di repo wajib punya sumber ≤ 1 MB dan hasil optimasi ≤ 200 KB → affects [FR-21], [FR-35].
@@ -510,7 +510,7 @@ Tidak ada tabel, skema, atau migrasi. Konten disimpan sebagai file JSON di `src/
 **Guardrails:**
 - [GR-1] Validasi input form lewat atribut HTML5 sesuai [BR-7]; tidak ada validasi yang hanya di klien untuk keamanan → enforced by code check + tes `dist.test.mjs`.
 - [GR-2] Tidak ada endpoint server. Menambah route server atau API butuh perubahan PRD lebih dulu → enforced by review.
-- [GR-3] Rate limit dan filter spam lewat layanan form (honeypot, kuota) → enforced by konfigurasi Web3Forms + [SEC-1].
+- [GR-3] Rate limit per IP (memori) dan honeypot di endpoint form → enforced by `tests/server.test.mjs` + [SEC-1].
 - [GR-4] Tidak ada AI di produk, jadi tidak ada validasi output AI → enforced by review (menambah AI butuh PRD baru).
 - [GR-5] Agent hanya mengerjakan lingkup task yang diberikan → enforced by review PR.
 - [GR-6] Agent tidak menambah dependensi yang tidak ada di Tech Stack → enforced by review `package.json` diff.
@@ -529,12 +529,12 @@ Semua [GR-5] sampai [GR-15] disalin ke `AGENTS.md` dan `CLAUDE.md` di fondasi Fa
 ## 20. Kerentanan, Bug & Technical Debt
 
 **Kerentanan:**
-- [SEC-1] Spam dan abuse form (A04 Insecure Design) → honeypot `botcheck`, filter spam Web3Forms, persetujuan wajib → tes: kirim dengan `botcheck` terisi harus ditolak; kirim tanpa persetujuan harus ditolak browser.
+- [SEC-1] Spam dan abuse form (A04 Insecure Design) → honeypot `botcheck`, rate limit endpoint, persetujuan wajib → tes: kirim dengan `botcheck` terisi harus ditolak; kirim tanpa persetujuan harus ditolak browser.
 - [SEC-2] Link naskah berbahaya yang dikirim ke staf (phishing/malware) (A03 Injection / A08 Software and Data Integrity Failures) → pola input hanya `https://` maksimal 500 karakter, tidak pernah di-fetch, checklist staf di README → tes: `javascript:` dan `http://` ditolak validasi; cek README memuat checklist.
 - [SEC-3] XSS lewat konten JSON (A03 Injection) → Astro auto-escape, `set:html` dilarang, FAQ teks polos → tes: grep `set:html` di CI gagal bila ada; fixture berisi `<script>` muncul sebagai teks ter-escape di `dist/`.
 - [SEC-4] Script pihak ketiga dikompromikan (A08 Software and Data Integrity Failures) → CSP ketat, hanya Umami → tes: `dist.test.mjs` gagal bila ada `<script src>` eksternal selain Umami; `curl -I` menunjukkan header CSP.
-- [SEC-5] Access key Web3Forms disalahgunakan pihak lain (A05 Security Misconfiguration) → key dibatasi ke domain di dashboard [verify]; tidak ada secret lain → tes: checklist rilis mencatat batasan domain aktif; gitleaks bersih.
-- [SEC-6] Data pribadi pengirim form (nama, email, institusi) (A02 Cryptographic Failures / privasi data) → HTTPS, halaman kebijakan privasi, persetujuan, retensi 12 bulan ([BR-16]), analytics tanpa cookie, tanpa PII di analytics → tes: link privasi dekat form; `form-action` di CSP hanya ke Web3Forms.
+- [SEC-5] Kredensial SMTP bocor (A05 Security Misconfiguration) → `SMTP_PASS` hanya di env hosting, tidak di repo atau browser; (riwayat: access key Web3Forms, diganti 2026-11-16) → tes: gitleaks bersih; `.env.example` tanpa nilai nyata.
+- [SEC-6] Data pribadi pengirim form (nama, email, institusi) (A02 Cryptographic Failures / privasi data) → HTTPS, halaman kebijakan privasi, persetujuan, retensi 12 bulan ([BR-16]), analytics tanpa cookie, tanpa PII di analytics → tes: link privasi dekat form; `form-action` di CSP hanya `'self'`.
 - [SEC-7] Clickjacking dan header lemah (A05 Security Misconfiguration) → `frame-ancestors 'none'`, `X-Content-Type-Options: nosniff`, `Referrer-Policy` → tes: `curl -I` memuat header.
 - [SEC-8] Dependensi rentan atau secret bocor (A06 Vulnerable and Outdated Components) → `npm audit`, lockfile, gitleaks, CodeQL → tes: CI gagal bila audit high atau secret terdeteksi.
 - [SEC-9] Klaim legal atau testimoni palsu/tanpa izin (A04 Insecure Design: penyalahgunaan konten) → flag `terverifikasi` dan `izin`, reviewer kedua ([BR-9]) → tes: `content.test.mjs` gagal bila item tampil tanpa flag.
@@ -660,5 +660,5 @@ Exit criteria:
 7. Kebijakan crawler AI: setuju default "izinkan semua" ([GEO-2])?
 8. Perlu versi Inggris, mengingat audiens akademik dan jurnal?
 9. Retensi 12 bulan dan isi kebijakan privasi perlu ditinjau pihak hukum terhadap UU No. 27 Tahun 2022 tentang Pelindungan Data Pribadi [verify].
-10. Siapa penerima email submission dan siapa pemilik akun Web3Forms, Umami, dan Cloudflare?
+10. Siapa penerima email submission dan siapa pemilik mailbox pengirim, akun Umami, dan akun Hostinger?
 11. Asumsi bisnis di bagian 2 (10 pertanyaan/minggu, tarif harian) benar? Jika tidak, hitung ulang ROI.

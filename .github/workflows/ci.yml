@@ -32,7 +32,7 @@ jobs:
           node-version-file: .node-version
           cache: npm
       - run: npm ci
-      - run: node --experimental-strip-types --no-warnings --test tests/content.test.mjs
+      - run: npm run test:content
 
   audit:
     name: 3. Audit dependensi
@@ -87,5 +87,5 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      - run: node --test tests/dist.test.mjs
+      - run: npm run test:dist
       - run: npx lhci autorun

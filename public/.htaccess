@@ -1,5 +1,8 @@
-# Hosting: Hostinger (Apache/LiteSpeed), file diunggah ke public_html.
-# Pengganti public/_headers dan public/_redirects (Cloudflare Pages).
+# TIDAK DIPAKAI sejak 2026-11-16: hosting Hostinger Node.js tidak membaca .htaccess.
+# Header keamanan kini dikirim server Node (scripts/security-headers.mjs, dibungkus
+# ke dist/server/entry.mjs). Berkas ini dipertahankan (GR-9) bila suatu saat kembali
+# ke hosting statis Apache/LiteSpeed. Jangan jadikan sumber kebenaran header.
+# Hosting statis lama: Hostinger (Apache/LiteSpeed), file diunggah ke public_html.
 # Semua direktif dibungkus <IfModule> supaya modul yang tak ada tidak memicu HTTP 500.
 # Panduan: docs/hosting-hostinger.md
 
@@ -33,7 +36,7 @@ ErrorDocument 404 /404.html
 # --- Header keamanan (FR-34, TC-6, SEC-4, SEC-6, SEC-7) --------------------
 # Butuh mod_headers. Tanpa modul ini header TIDAK terkirim: verifikasi dengan curl -I.
 <IfModule mod_headers.c>
-  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' https://cloud.umami.is; connect-src 'self' https://api-gateway.umami.dev; base-uri 'self'; object-src 'none'; form-action https://api.web3forms.com; frame-ancestors 'none'"
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' https://cloud.umami.is; connect-src 'self' https://api-gateway.umami.dev; base-uri 'self'; object-src 'none'; form-action 'self'; frame-ancestors 'none'"
   Header always set X-Content-Type-Options "nosniff"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
   Header always set X-Frame-Options "DENY"

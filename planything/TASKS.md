@@ -14,6 +14,8 @@ Aturan untuk agent:
 7. Tool MCP planything (`get_next_task`, `update_task`) opsional. Kalau tidak tersedia, cukup edit file ini: planything memantaunya setiap detik.
 8. Guardrail `[GR-n]` di PRD.md berlaku untuk setiap task. Kalau sebuah task hanya bisa selesai dengan melanggarnya, tandai `[!]` dan jelaskan di "Catatan". Jangan cari jalan pintas.
 
+> Catatan keputusan 2026-11-16 (pemilik): hosting pindah ke Hostinger Node.js SSR dan form dikirim lewat SMTP mailbox Hostinger (`/api/kirim/`), bukan Web3Forms; deploy bukan lagi statis Cloudflare/Apache. Catatan task di bawah yang menyebut Web3Forms, `_headers`, `.htaccess`, atau Cloudflare Pages adalah riwayat dan tidak lagi berlaku. Sumber kebenaran: `planything/PRD.md` (TC-6, bagian 17) dan `docs/hosting-hostinger.md`.
+
 ## Fase 1 · Fondasi
 - [x] t1 · Setup repo Astro, library Tech Stack, catat versi di README (M)
   - Kerjakan: Init proyek Astro (template minimal, TypeScript strict) tanpa Tailwind dan tanpa component library. Install hanya library dari Tech Stack: `@astrojs/sitemap`, `@astrojs/check`, `typescript`, `sharp` (cek dulu bawaan Astro atau perlu diinstal), `@lhci/cli`. Atur `astro.config.mjs` dengan `site` dari env `SITE_URL` (TC-8) dan integrasi sitemap. Buat `.node-version` (Node LTS), `.env.example` berisi `SITE_URL`, `PUBLIC_WEB3FORMS_KEY`, `PUBLIC_UMAMI_ID`. Commit lockfile. Tulis `README.md` dengan tabel versi yang benar-benar terpasang (TC-2) dan script npm: `dev`, `build`, `check`, `test:content`, `test:dist`, `lhci`.

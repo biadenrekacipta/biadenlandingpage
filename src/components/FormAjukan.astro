@@ -1,15 +1,9 @@
 ---
 import { getEntry } from 'astro:content';
 // FR-13, FR-17, FR-18, BR-7, BR-8: form tanpa JS, validasi HTML5 native.
-// FR-14, SEC-1, BUG-2: hidden field dan honeypot untuk Web3Forms; redirect dari SITE_URL.
+// FR-14, SEC-1: form POST ke endpoint situs sendiri (src/pages/api/kirim.ts), honeypot botcheck.
+import { PERAN as peran, JENIS as jenis } from '../lib/pengajuan.ts';
 const site = (await getEntry('site', 'site'))!.data;
-const peran = ['Mahasiswa', 'Dosen', 'Peneliti', 'Penulis umum', 'Lainnya'];
-const jenis = ['Ajukan naskah buku', 'Ajukan artikel jurnal', 'Pertanyaan umum'];
-// ponytail: access key dibaca dari env publik; kosong saat dev/CI. Key produksi dibatasi domain di dashboard (SEC-5).
-const accessKey = import.meta.env.PUBLIC_WEB3FORMS_KEY ?? '';
-if (!accessKey) console.warn('[t16] PUBLIC_WEB3FORMS_KEY kosong: form tidak akan terkirim sebelum key diisi di env.');
-const siteUrl = (Astro.site?.href ?? 'http://localhost:4321/').replace(/\/$/, '');
-const redirect = `${siteUrl}/terima-kasih/`;
 const isEmail = site.email.includes('@');
 const waDigits = site.whatsapp.replace(/[\s()+-]/g, '');
 const waLink = /^\d{8,15}$/.test(waDigits) ? `https://wa.me/${waDigits}` : null;
@@ -19,11 +13,7 @@ const waLink = /^\d{8,15}$/.test(waDigits) ? `https://wa.me/${waDigits}` : null;
   <h2 id="ajukan-title">Kirim naskah atau pertanyaan Anda</h2>
   <p class="ajukan-lead">Isi form berikut. Naskah dikirim lewat tautan https, bukan unggahan berkas.</p>
   <div class="ajukan-grid">
-    <form class="ajukan-form" action="https://api.web3forms.com/submit" method="POST">
-      <input type="hidden" name="access_key" value={accessKey} />
-      <input type="hidden" name="subject" value={`Pengajuan baru dari situs ${site.nama}`} />
-      <input type="hidden" name="from_name" value={`Situs ${site.nama}`} />
-      <input type="hidden" name="redirect" value={redirect} />
+    <form class="ajukan-form" action="/api/kirim/" method="POST">
       <p class="hp" aria-hidden="true">
         <label>Jangan diisi <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true" /></label>
       </p>

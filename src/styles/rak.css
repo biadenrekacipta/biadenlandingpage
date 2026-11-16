@@ -1,0 +1,218 @@
+/* Rak jurnal 3D (docs/design-reference.md, Keputusan 2026-11-16). Tahap 1: statis, tanpa JS.
+   Geometri: --H tinggi kaset; --ws lebar punggung; --d lebar sampul = kedalaman kotak. */
+:root { --vermilion: #c8391f; } /* warna ada di deskripsi sampul referensi, belum punya token; di :root karena dialog dipindah ke <body> */
+.rak {
+  --H: min(46vh, 31vw);
+  --ws: calc(var(--H) * 142 / 840);
+  --d: calc(var(--H) * 474 / 900);
+  --gap: calc(var(--H) * 0.03);
+  position: relative;
+  padding-block: var(--space-3);
+  display: grid;
+  justify-items: center;
+}
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Kontrol hanya berguna dengan JS: tersembunyi sampai rak.js menandai data-js. */
+.rak:not([data-js]) .ctl { display: none; }
+
+.tabs { display: flex; position: relative; margin-bottom: var(--space-3); }
+.tabs button {
+  position: relative;
+  z-index: 1;
+  margin-left: -1px;
+  padding: 0 14px;
+  min-height: 44px;
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition: color 0.45s var(--ease);
+}
+.tabs button[aria-current='true'] { color: #fff; }
+.tab-ind { position: absolute; left: 0; top: 0; height: 100%; width: 0; background: var(--cobalt); transition: width 0.6s var(--ease), transform 0.6s var(--ease); }
+
+.shelf {
+  position: relative;
+  width: 100%;
+  height: calc(var(--H) + 80px);
+  perspective: 2200px;
+  perspective-origin: 50% 50%;
+  touch-action: pan-y;
+  overflow-x: clip;
+}
+.stage {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  transform-style: preserve-3d;
+}
+
+/* Posisi statis: data-r = indeks relatif ke kaset terbuka. Rumus F(r) referensi untuk r bulat (B = ±0,5). */
+.tape { --r: 0; --s: 0; --o: 0; --tx: 0deg; --ty: 0deg; --lift: 0; }
+.tape[data-r='-2'] { --r: -2; --s: -1; }
+.tape[data-r='-1'] { --r: -1; --s: -1; }
+.tape[data-r='0'] { --o: 1; }
+.tape[data-r='1'] { --r: 1; --s: 1; }
+.tape[data-r='2'] { --r: 2; --s: 1; }
+.tape {
+  --x: calc(var(--r) * (var(--ws) + var(--gap)) + var(--s) * 0.5 * (var(--d) - var(--ws) + 1.6 * var(--gap)));
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
+  z-index: calc(100 - 4 * var(--r) * var(--s));
+  transform:
+    translate3d(
+      var(--x),
+      calc(var(--o) * var(--H) * -0.025 - var(--lift) * var(--H) * 0.045),
+      calc(var(--o) * var(--H) * 0.2)
+    )
+    rotateZ(calc(var(--o) * -4.5deg))
+    rotateX(calc(var(--o) * var(--tx)))
+    rotateY(calc(var(--o) * -90deg + var(--o) * var(--ty)));
+}
+
+.sp, .cv {
+  position: absolute;
+  top: calc(var(--H) / -2);
+  height: var(--H);
+  overflow: hidden;
+  backface-visibility: hidden;
+  border-radius: 2px;
+  color: var(--sheet);
+}
+.sp { --shade: calc(var(--o) * 0.55); width: var(--ws); left: calc(var(--ws) / -2); transform: translateZ(calc(var(--d) / 2)); }
+.cv {
+  --shade: calc((1 - var(--o)) * 0.5);
+  width: var(--d);
+  left: calc(var(--d) / -2);
+  transform: rotateY(90deg) translateZ(calc(var(--ws) / 2));
+  box-shadow: 0 30px 60px -28px rgba(20, 16, 10, 0.55);
+}
+.sp::after, .cv::after { content: ''; position: absolute; inset: 0; background: #000; opacity: var(--shade); pointer-events: none; }
+
+/* Sisi sampul pada kaset tertutup hanya terlihat sebagai irisan miring: sembunyikan isinya agar tidak bocor sebagai teks kecil. */
+.tape:not([data-open]) .cv > * { visibility: hidden; }
+
+/* Warna per jurnal (palet ink, cobalt, vermilion; krem = --sheet). */
+.j-bitechnos { background: var(--cobalt); fill: var(--cobalt); }
+.j-bedsocart { background: var(--vermilion); fill: var(--vermilion); }
+.j-beconex { background: var(--ink); fill: var(--ink); }
+
+/* Punggung tipografis */
+.sp { display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: calc(var(--H) * 0.04) 0; border: 1px solid rgba(244, 242, 237, 0.35); }
+.sp-nama {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-family: var(--serif);
+  font-size: calc(var(--ws) * 0.42);
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+.sp-tag, .cv-tag {
+  font-size: max(11px, calc(var(--H) * 0.026));
+  border: 1px solid currentColor;
+  padding: 3px 5px;
+}
+
+/* Sampul tipografis */
+.cv { display: flex; flex-direction: column; justify-content: space-between; padding: calc(var(--d) * 0.1); border: 1px solid rgba(244, 242, 237, 0.35); }
+.cv-atas { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
+.cv-judul { font-family: var(--serif); font-size: calc(var(--d) * 0.11); line-height: 1; letter-spacing: 0; margin: 0; overflow-wrap: anywhere; }
+.cv-sub { font-family: var(--serif); font-style: italic; font-size: max(12px, calc(var(--d) * 0.07)); line-height: 1.25; margin: 8px 0 0; }
+.cv-bidang { margin: 0; }
+
+/* Caption */
+.cap { text-align: center; display: grid; justify-items: center; gap: 9px; margin-top: var(--space-2); }
+.cap-m { overflow: hidden; display: grid; justify-items: center; width: min(92vw, 760px); }
+.cap-m > * { grid-area: 1 / 1; }
+.cap-judul { font-family: var(--serif); font-weight: 400; font-size: 31px; line-height: 1.12; letter-spacing: -0.01em; padding-bottom: 0.08em; }
+.cap-sub { color: var(--cobalt); font-weight: 500; }
+.shelf { user-select: none; -webkit-user-select: none; }
+.play { transform-origin: 50% 50%; }
+
+/* Kursor kustom: hanya pointer:fine dan hanya di atas rak (rak.js menandai data-cursor). */
+.rak[data-cursor], .rak[data-cursor] * { cursor: none; }
+.rak-cursor { position: fixed; left: 0; top: 0; z-index: 100; width: 58px; height: 58px; margin: -29px 0 0 -29px; pointer-events: none; visibility: hidden; }
+.rc-ring { position: absolute; inset: 0; border: 1.5px solid var(--ink); border-radius: 50%; transition: transform 0.5s var(--ease), background-color 0.4s var(--ease), border-color 0.4s var(--ease); }
+.rc-dot { position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; background: var(--ink); transition: transform 0.4s var(--ease); }
+.rc-lbl { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: #fff; transform: scale(0); transition: transform 0.45s var(--ease); }
+.rak-cursor[data-st='spine'] .rc-ring { transform: scale(0.72); }
+.rak-cursor[data-st='btn'] .rc-ring { transform: scale(0.55); }
+.rak-cursor[data-st='btn'] .rc-dot { transform: scale(0); }
+.rak-cursor[data-st='open'] .rc-ring { transform: scale(1.75); background: var(--cobalt); border-color: var(--cobalt); }
+.rak-cursor[data-st='open'] .rc-dot { transform: scale(0); }
+.rak-cursor[data-st='open'] .rc-lbl { transform: scale(1); }
+
+.panah, .play { position: absolute; z-index: 5; display: grid; place-items: center; border: 0; background: transparent; color: var(--ink); cursor: pointer; }
+.area { position: relative; width: 100%; }
+.panah { width: 44px; height: 44px; top: calc(var(--H) + 80px + var(--space-2) - 6px); }
+.panah-k { left: 20px; }
+.panah-b { right: 20px; }
+.play {
+  width: 44px;
+  height: 44px;
+  left: calc(50% - var(--d) / 2 - 27px);
+  top: calc(50% + var(--H) * 0.36 - 22px);
+  border: 1px solid var(--cobalt);
+  border-radius: 50%;
+  color: var(--cobalt);
+  background: rgba(237, 235, 230, 0.75);
+}
+.play svg { margin-left: 2px; }
+
+/* Dialog detail: sheet kertas tumbuh dari sampul (rak.js). Dipindah ke <body> saat init. */
+.detail { position: fixed; inset: 0; z-index: 60; background: var(--sheet); overflow-y: auto; overscroll-behavior: contain; }
+.detail[hidden], .d-item[hidden] { display: none; }
+.d-tutup { position: absolute; left: 32px; top: 20px; z-index: 2; background: transparent; color: var(--ink); cursor: pointer; }
+.d-logo { position: absolute; left: 0; right: 0; top: 0; height: 84px; margin: 0; display: grid; place-items: center; color: var(--cobalt); font-family: var(--serif); font-size: 22px; letter-spacing: 0.04em; pointer-events: none; }
+.d-item { display: grid; grid-template-columns: 1fr 1fr; gap: 4vw; align-items: center; min-height: 100%; padding: 110px 6vw 56px 7vw; }
+.d-teks { display: grid; gap: 18px; max-width: 520px; justify-self: end; width: 100%; }
+.mk { overflow: hidden; }
+.ln { margin: 0; }
+.d-sub { color: var(--cobalt); }
+.d-judul { font-family: var(--serif); font-weight: 400; font-size: clamp(40px, 4.6vw, 72px); line-height: 1.05; letter-spacing: -0.025em; padding-bottom: 0.06em; }
+.d-meta { color: var(--muted); }
+.d-ring { font-size: 17px; line-height: 1.5; max-width: 42ch; }
+.d-kredit { font-style: italic; font-size: 15px; color: var(--muted); }
+.d-lihat { color: var(--cobalt); border-color: var(--cobalt); padding: 0 20px; margin: 10px 0 1px; }
+.d-poster { justify-self: start; height: min(78vh, 900px); aspect-ratio: 474 / 900; max-width: 100%; }
+.po-fr { fill: none; stroke: rgba(244, 242, 237, 0.35); stroke-width: 2; }
+.po-lbl { font: 600 15px var(--sans); letter-spacing: 0.09em; fill: var(--sheet); }
+.po-t { font: 400 58px var(--serif); letter-spacing: 0.02em; fill: var(--sheet); }
+.po-s { font: italic 400 26px var(--serif); fill: var(--sheet); }
+
+@media (max-width: 767px) {
+  .rak { --H: min(60vw, 40svh); }
+  .cap-judul { font-size: 24px; }
+  .panah-k { left: 6px; }
+  .panah-b { right: 6px; }
+  .tabs button { padding: 0 8px; }
+  .cv-atas { display: none; }
+  .sp-tag { writing-mode: vertical-rl; transform: rotate(180deg); padding: 5px 3px; letter-spacing: 0.05em; }
+  .rak-cursor { display: none; }
+  .rak[data-cursor], .rak[data-cursor] * { cursor: auto; }
+  .d-tutup { left: 16px; top: 10px; }
+  .d-logo { height: 64px; font-size: 17px; }
+  .d-item { grid-template-columns: 1fr; gap: 24px; padding: 84px 22px 40px; align-items: start; }
+  .d-teks { justify-self: stretch; max-width: none; }
+  .d-poster { order: -1; justify-self: center; height: 46svh; }
+  .d-judul { font-size: 42px; }
+  .d-ring { font-size: 16px; }
+}

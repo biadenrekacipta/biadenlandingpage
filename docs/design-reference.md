@@ -426,3 +426,11 @@ Noto Sans JP/Serif SC tidak dipakai (situs hanya `lang="id"`).
 - `.lbl` 11px (referensi 10.5px): detector impeccable menolak teks fungsional di bawah 11px.
 - `.box` min-height 44px (referensi 21px): target sentuh ≥44px (EC-1.9).
 - Detector `cream-palette` menandai `--paper` #EDEBE6; warna itu diwajibkan referensi (GR-12), jadi disuppress di `.impeccable/config.json` untuk `dist/**` dengan alasan tertulis.
+
+## Keputusan 2026-11-16
+
+User melonggarkan PRD: rak 3D boleh memakai **satu skrip eksternal `'self'`** sebagai peningkatan progresif. Menggantikan bagian "Belum dikerjakan" di Keputusan t7.
+- `planything/PRD.md` diubah: baris "JavaScript yang dikirim", TC-6, dan TC-7. CSP `default-src 'self'` tidak berubah; inline script dan inline style tetap dilarang.
+- Tanpa JS, tiga jurnal tampil sebagai deret statis dengan satu sampul terbuka (CSS). Tab, panah, dan tombol putar tersembunyi sampai skrip menandai `data-js` pada `.rak`.
+- Sampul dan punggung digambar tipografis dari `jurnal.json` (nama dan bidang). Sheet Higgsfield tidak dipakai. `--vermilion` (#c8391f) ditambahkan di `rak.css`: warna ada di deskripsi sampul referensi tetapi belum punya token; nilai dipilih agar teks krem punya kontras ≥4,5.
+- Tahap: 1 markup dan CSS statis, 2 mesin gerak `rak.js`, 3 sheet detail dan verifikasi (ketiganya selesai di branch `rak-vhs`).

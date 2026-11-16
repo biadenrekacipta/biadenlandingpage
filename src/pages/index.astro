@@ -2,6 +2,7 @@
 import { getEntry, getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import Hero from '../components/Hero.astro';
+import Rak from '../components/Rak.astro';
 import Profil from '../components/Profil.astro';
 import Alur from '../components/Alur.astro';
 import Katalog from '../components/Katalog.astro';
@@ -60,6 +61,9 @@ const description = `Penerbit buku dan jurnal akademik ${site.nama}. Lihat profi
   <JsonLd data={ld} />
   <div class="wrap">
     <Hero />
+  </div>
+  <Rak />
+  <div class="wrap">
     {tampil('profil') && <Profil />}
     {tampil('alur') && <Alur />}
     {tampil('katalog') && <Katalog />}

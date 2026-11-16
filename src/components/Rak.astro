@@ -1,0 +1,72 @@
+---
+import '../styles/rak.css';
+import { getEntry, getCollection } from 'astro:content';
+// Rak jurnal (docs/design-reference.md, Keputusan 2026-11-16). Tahap 1: markup statis; rak.js (tahap 2) menambah gerak.
+// GR-11: semua teks dari jurnal.json dan site.json. Sampul dan punggung digambar tipografis, bukan gambar penerbit.
+const site = (await getEntry('site', 'site'))!.data;
+const jurnal = (await getCollection('jurnal'))
+  .map((e) => ({ ...e.data, id: e.id }))
+  .filter((j) => j.status !== 'diarsipkan')
+  .sort((a, b) => a.urutan - b.urutan);
+// "BITECHNOS: Journal of ..." menjadi singkatan dan subjudul. Tanpa titik dua, seluruh nama jadi judul.
+const item = jurnal.map((j) => {
+  const [singkat, ...sisa] = j.nama.split(':');
+  return { ...j, singkat: singkat.trim(), sub: sisa.join(':').trim() };
+});
+// Satu sampul terbuka statis: yang di tengah. ponytail: data-r di CSS hanya mendukung -2..2 (maks 5 jurnal); rak.js menggantikannya.
+const aktif = Math.floor(item.length / 2);
+const cur = item[aktif];
+---
+{item.length > 0 && (
+  <section class="rak" aria-label="Rak jurnal">
+    <nav class="tabs ctl" aria-label="Pilih jurnal">
+      <button type="button" class="lbl" aria-pressed="false" data-tab="semua">Semua</button>
+      {item.map((j) => (
+        <button type="button" class="lbl" aria-pressed="false" data-tab={j.id}>{j.singkat}</button>
+      ))}
+    </nav>
+    <div class="area">
+      <div class="shelf">
+        <ul class="stage" role="list">
+          {item.map((j, i) => (
+            <li class="tape" data-r={i - aktif} data-id={j.id}>
+              <div class={`sp j-${j.id}`} aria-hidden="true">
+                <span class="sp-nama">{j.singkat}</span>
+                <span class="sp-tag lbl">Jurnal</span>
+              </div>
+              <div class={`cv j-${j.id}`} aria-hidden="true">
+                <div>
+                  <div class="cv-atas">
+                    <span class="lbl">{site.nama}</span>
+                  </div>
+                </div>
+                <div>
+                  <p class="cv-judul">{j.singkat}</p>
+                  {j.sub && <p class="cv-sub">{j.sub}</p>}
+                </div>
+                <p class="cv-bidang lbl">{j.bidang}</p>
+              </div>
+              <span class="sr">{j.nama}. {j.bidang}.</span>
+            </li>
+          ))}
+        </ul>
+        <button type="button" class="play ctl" aria-label="Buka jurnal">
+          <svg width="12" height="14" viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0 L12 7 L0 14 Z" fill="currentColor" /></svg>
+        </button>
+      </div>
+      <div class="cap" aria-live="polite">
+        <p class="cap-judul">{cur.singkat}</p>
+        <p class="cap-sub lbl">{cur.bidang}</p>
+      </div>
+      <button type="button" class="panah panah-k ctl" aria-label="Jurnal sebelumnya">
+        <svg width="18" height="10" viewBox="0 0 18 10" aria-hidden="true"><path d="M5 1 L1 5 L5 9 M1 5 H17" fill="none" stroke="currentColor" stroke-width="1.2" /></svg>
+      </button>
+      <button type="button" class="panah panah-b ctl" aria-label="Jurnal berikutnya">
+        <svg width="18" height="10" viewBox="0 0 18 10" aria-hidden="true"><path d="M13 1 L17 5 L13 9 M17 5 H1" fill="none" stroke="currentColor" stroke-width="1.2" /></svg>
+      </button>
+    </div>
+    <div class="detail ctl" role="dialog" aria-modal="true" aria-label="Detail jurnal" hidden>
+      <button type="button" class="box lbl" data-tutup>Tutup</button>
+    </div>
+  </section>
+)}

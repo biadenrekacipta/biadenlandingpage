@@ -65,14 +65,62 @@ test('SEC-3 / GR-14: tidak ada set:html di src/', () => {
 
 const SITE_URL = process.env.SITE_URL || 'http://localhost:4321';
 
-test('FR-34 / SEC-7: _headers memuat CSP, nosniff, Referrer-Policy, frame-ancestors, noindex *.pages.dev', () => {
-  const h = readFileSync(join(dist, '_headers'), 'utf8');
-  assert.match(h, /Content-Security-Policy:.*default-src 'self'/);
-  assert.match(h, /Content-Security-Policy:.*form-action https:\/\/api\.web3forms\.com(;|$)/m);
-  assert.match(h, /Content-Security-Policy:.*frame-ancestors 'none'/);
-  assert.match(h, /X-Content-Type-Options:\s*nosniff/);
-  assert.match(h, /Referrer-Policy:\s*\S+/);
-  assert.match(h, /https:\/\/\*\.pages\.dev\/\*\r?\n\s+X-Robots-Tag:\s*noindex/);
+// Hosting Hostinger (Apache/LiteSpeed): header dan redirect ada di .htaccess, bukan _headers/_redirects.
+const htaccess = () => readFileSync(join(dist, '.htaccess'), 'utf8');
+const htaccessLines = () => htaccess().split(/\r?\n/).map((l) => l.trim()).filter((l) => l && !l.startsWith('#'));
+const cspHeader = () => /^Header always set Content-Security-Policy "([^"]+)"$/m.exec(htaccessLines().join('\n'))[1];
+
+test('FR-34 / SEC-7: .htaccess memuat CSP, nosniff, Referrer-Policy, frame-ancestors, noindex host staging', () => {
+  const h = htaccessLines().join('\n');
+  const csp = cspHeader();
+  assert.match(csp, /(^|; )default-src 'self'(;|$)/);
+  assert.match(csp, /(^|; )form-action https:\/\/api\.web3forms\.com(;|$)/);
+  assert.match(csp, /(^|; )frame-ancestors 'none'(;|$)/);
+  assert.match(h, /^Header always set X-Content-Type-Options "nosniff"$/m);
+  assert.match(h, /^Header always set Referrer-Policy "\S+"$/m);
+  assert.match(h, /^Header always set X-Frame-Options "DENY"$/m);
+  // noindex hanya untuk host staging: env ditandai lewat Host, header bersyarat env.
+  assert.match(h, /^SetEnvIfNoCase Host "\^\(staging\|[^"]*\)\\\." STAGING_HOST=1$/m);
+  assert.match(h, /^Header always set X-Robots-Tag "noindex(, nofollow)?" env=STAGING_HOST$/m);
+  assert.ok(!/^Header .*X-Robots-Tag.*$/m.test(h.replace(/^Header always set X-Robots-Tag "noindex(, nofollow)?" env=STAGING_HOST$/m, '')), 'X-Robots-Tag tak bersyarat akan mengunci noindex di produksi');
+});
+
+test('Hostinger: .htaccess memaksa HTTPS, clean URL /x/index.html, ErrorDocument 404, cache aset, kompresi', () => {
+  const h = htaccessLines().join('\n');
+  assert.match(h, /^RewriteEngine On$/m);
+  assert.match(h, /^RewriteCond %\{HTTPS\} !=on$/m);
+  assert.match(h, /^RewriteRule \^ https:\/\/%\{HTTP_HOST\}%\{REQUEST_URI\} \[R=301,L\]$/m);
+  assert.match(h, /^RewriteRule \^\(\.\*\/\)\?index\\\.html\$ \/\$1 \[R=301,L\]$/m);
+  assert.match(h, /^ErrorDocument 404 \/404\.html$/m);
+  assert.ok(existsSync(join(dist, '404.html')), '404.html harus ada untuk ErrorDocument');
+  assert.match(h, /^RewriteRule \^_astro\/ - \[E=ASSET_IMMUTABLE:1\]$/m);
+  assert.match(h, /^RewriteRule \^fonts\/ - \[E=ASSET_IMMUTABLE:1\]$/m);
+  assert.match(h, /^Header set Cache-Control "public, max-age=31536000, immutable" env=ASSET_IMMUTABLE$/m);
+  assert.match(h, /^AddOutputFilterByType DEFLATE .*text\/html/m);
+  assert.match(h, /ftp-deploy-sync-state/);
+});
+
+test('Hostinger: tiap direktif modul dibungkus <IfModule> seimbang (tanpa itu modul hilang = HTTP 500)', () => {
+  const stack = [];
+  const MODULE_DIRECTIVES = {
+    mod_headers: /^Header /, mod_rewrite: /^Rewrite(Engine|Cond|Rule) /, mod_deflate: /^AddOutputFilterByType /,
+    mod_setenvif: /^SetEnvIf/, mod_authz_core: /^Require /, mod_autoindex: /^Options /, mod_mime: /^AddType /,
+  };
+  for (const l of htaccessLines()) {
+    const open = /^<IfModule (!?)(mod_\w+)\.c>$/.exec(l);
+    if (open) { stack.push(open[2]); continue; }
+    if (/^<FilesMatch "[^"]+">$/.test(l)) { stack.push('FilesMatch'); continue; }
+    if (l === '</FilesMatch>') { assert.equal(stack.pop(), 'FilesMatch', '</FilesMatch> tidak seimbang'); continue; }
+    if (l === '</IfModule>') { assert.ok(stack.length && stack.pop() !== 'FilesMatch', 'penutup </IfModule> berlebih'); continue; }
+    assert.ok(!/^</.test(l), `tag tak dikenal: ${l}`);
+    for (const [mod, re] of Object.entries(MODULE_DIRECTIVES)) if (re.test(l)) assert.ok(stack.includes(mod), `${l} di luar <IfModule ${mod}.c>`);
+  }
+  assert.equal(stack.length, 0, '<IfModule> tidak ditutup');
+});
+
+test('Hostinger: tidak ada sisa _headers/_redirects Cloudflare di dist', () => {
+  assert.ok(!existsSync(join(dist, '_headers')));
+  assert.ok(!existsSync(join(dist, '_redirects')));
 });
 
 test('TC-6: tidak ada script inline (kecuali JSON-LD) dan tidak ada style inline', () => {
@@ -289,7 +337,7 @@ test('SEC-1: honeypot botcheck tersembunyi dari pengguna dan teknologi bantu', (
 });
 
 test('SEC-6: form-action CSP hanya Web3Forms dan action form sama dengan itu', () => {
-  const csp = /Content-Security-Policy:\s*(.*)/.exec(readFileSync(join(dist, '_headers'), 'utf8'))[1];
+  const csp = cspHeader();
   assert.equal(/form-action ([^;]+)/.exec(csp)[1].trim(), 'https://api.web3forms.com');
   for (const [p, html] of htmlFiles()) for (const m of html.matchAll(/<form\b[^>]*\baction="([^"]+)"/g)) assert.equal(m[1], 'https://api.web3forms.com/submit', p);
 });
@@ -618,7 +666,7 @@ test('FR-33 / SEC-6: CTA Ajukan Naskah punya data-umami-event="cta-ajukan"; even
 });
 
 test('FR-33 / TC-6: CSP script-src hanya self dan cloud.umami.is, connect-src ke api-gateway.umami.dev, tanpa unsafe-inline', () => {
-  const csp = /Content-Security-Policy:\s*(.*)/.exec(readFileSync(join(dist, '_headers'), 'utf8'))[1];
+  const csp = cspHeader();
   assert.equal(/script-src ([^;]+)/.exec(csp)[1].trim(), "'self' https://cloud.umami.is");
   assert.ok(/connect-src ([^;]+)/.exec(csp)[1].split(/\s+/).includes('https://api-gateway.umami.dev'));
   assert.ok(!csp.includes('unsafe-inline') && !csp.includes('unsafe-eval'));

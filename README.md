@@ -71,7 +71,7 @@ Perubahan `src/content/legalitas.json` dan `src/content/testimoni.json` wajib di
 
 | Var | Fungsi | Catatan |
 |---|---|---|
-| `SITE_URL` | URL kanonik, sitemap, OG | Beda per lingkungan: produksi = domain final, preview = URL preview Cloudflare, lokal = `http://localhost:4321` |
+| `SITE_URL` | URL kanonik, sitemap, OG | Beda per lingkungan: produksi = domain final, staging = URL subdomain staging, lokal = `http://localhost:4321` |
 | `PUBLIC_WEB3FORMS_KEY` | Access key Web3Forms untuk form pengajuan | Key publik form; jangan pakai secret lain di var `PUBLIC_*` |
 | `PUBLIC_UMAMI_ID` | Website ID Umami | Kosong = script analytics tidak dimuat |
 
@@ -102,38 +102,31 @@ Situs tidak pernah mengambil (fetch) isi link naskah; hanya staf yang membukanya
 
 Taruh sampul, foto testimoni, dan logo di `src/assets/` (sumber maks 1 MB per berkas; PNG, JPG, WebP, atau AVIF). Di JSON tulis path relatif ke folder itu, mis. `"sampul": "buku/judul.jpg"`. Build mengubahnya jadi WebP sesuai ukuran tampil (hasil maks 200 KB), dan gagal bila berkasnya tidak ada.
 
-## Deploy: Cloudflare Pages
+## Deploy: Hostinger
 
-Pengaturan proyek di dashboard Cloudflare Pages (terhubung ke repo GitHub):
+Keputusan pemilik: hosting di Hostinger (statis, Apache/LiteSpeed), bukan Cloudflare Pages seperti di PRD. Panduan lengkap: [docs/hosting-hostinger.md](docs/hosting-hostinger.md).
 
-| Setelan | Nilai |
-|---|---|
-| Production branch | `main` |
-| Build command | `npm run build` |
-| Build output directory | `dist` |
-| `NODE_VERSION` | `22` (sama dengan `.node-version`) |
-| `SITE_URL` | Produksi: domain final. Preview: set terpisah di environment Preview |
-| `PUBLIC_WEB3FORMS_KEY`, `PUBLIC_UMAMI_ID` | Isi di Production dan Preview |
+- Header keamanan (CSP, nosniff, Referrer-Policy), paksa HTTPS, clean URL, ErrorDocument 404, cache aset, dan noindex untuk host staging ada di `public/.htaccess` (ikut ke `dist/`). `_headers` dan `_redirects` Cloudflare sudah dihapus; tesnya dipindah ke `.htaccess` di `tests/dist.test.mjs`.
+- Workflow `.github/workflows/deploy-hostinger.yml` (push ke `main` dan manual) mengunggah `dist/` lewat FTPS, hanya bila variabel repo `DEPLOY_ENABLED` = `true`. Variabel: `SITE_URL`, `PUBLIC_WEB3FORMS_KEY`, `PUBLIC_UMAMI_ID`. Secret: `HOSTINGER_FTP_SERVER`, `HOSTINGER_FTP_USERNAME`, `HOSTINGER_FTP_PASSWORD`, `HOSTINGER_FTP_DIR`. Tidak ada kredensial di repo.
+- Build: `npm run build`, output `dist`, Node sesuai `.node-version` (22).
 
-Preview: setiap PR otomatis dapat URL preview. Periksa halaman di URL itu sebelum merge. Header keamanan ada di `public/_headers`.
-
-Status: pengaturan di atas belum diverifikasi di dashboard Cloudflare (butuh akses akun).
+Status: belum diuji di Hostinger. `.htaccess` hanya divalidasi statis (balance `<IfModule>`, isi direktif); tidak ada Apache lokal. Header butuh `mod_headers`: verifikasi dengan `curl -I` setelah deploy pertama. Belum ada domain final, akun FTP, atau deploy nyata.
 
 ## Rollback
 
-Dua cara:
+Tidak ada tombol rollback di Hostinger. Rollback = deploy ulang commit/tag sebelumnya yang sehat:
 
-1. Dashboard Cloudflare Pages → Deployments → pilih deployment produksi lama yang sehat → Rollback to this deployment.
-2. Lewat git: `git revert <sha>` pada commit bermasalah di `main`, buka PR, merge, dan Pages membangun ulang.
+1. `git revert <sha>` pada commit bermasalah di `main`, buka PR, merge; workflow deploy mengunggah ulang. Atau jalankan workflow `Deploy Hostinger` secara manual dari tag/commit lama.
+2. Cadangan: backup hPanel atau unduhan `public_html/` sebelum perubahan besar.
 
-Bukti uji rollback: belum dilakukan (butuh deployment produksi dan akses dashboard). Catat tanggal dan deployment di sini setelah dicoba.
+Bukti uji rollback: belum dilakukan (butuh deploy nyata). Catat tanggal dan commit di sini setelah dicoba.
 
 ## Form pengajuan (Web3Forms)
 
 - Form mengirim POST langsung ke `https://api.web3forms.com/submit`; CSP `form-action` hanya mengizinkan host itu.
 - Access key dibaca dari env `PUBLIC_WEB3FORMS_KEY`; jangan di-commit. Build mencetak peringatan bila kosong.
 - `redirect` = `${SITE_URL}/terima-kasih/`, jadi tiap lingkungan mendarat di domainnya sendiri (BUG-2).
-- Keputusan: key preview (`*.pages.dev`) terpisah dari key produksi. Set `PUBLIC_WEB3FORMS_KEY` per lingkungan di Cloudflare Pages (tingkat Preview dan Production). Key produksi dibatasi ke domain produksi di dashboard Web3Forms (SEC-5).
+- Keputusan: key staging terpisah dari key produksi. Set `PUBLIC_WEB3FORMS_KEY` per lingkungan (variabel repo GitHub untuk staging dan produksi). Key produksi dibatasi ke domain produksi di dashboard Web3Forms (SEC-5).
 - Honeypot `botcheck` disembunyikan dari pengguna. Uji kirim dengan `botcheck` terisi harus ditolak layanan (belum diuji, butuh key).
 
 ## Catatan sumber konten

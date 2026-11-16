@@ -16,12 +16,12 @@ Isi tiap kotak dengan bukti (tangkapan layar, URL, tanggal, nama pelaksana). Kot
 - [ ] `https://<domain>/sitemap-index.xml` disubmit di menu Sitemaps; statusnya "Success".
 - [ ] Tangkapan layar verifikasi dan status sitemap dilampirkan di PR rilis.
 - [ ] `https://<domain>/robots.txt` menunjuk ke sitemap yang sama; `/terima-kasih/` tidak ada di sitemap.
-- [ ] Host `*.pages.dev` mengirim `X-Robots-Tag: noindex` (`curl -I <url-preview>`).
+- [ ] Host staging mengirim `X-Robots-Tag: noindex` dan produksi tidak (`curl -I`, lihat docs/hosting-hostinger.md).
 
 ## 3. Batas domain access key Web3Forms (SEC-5)
 
 - [ ] Di dashboard Web3Forms, access key produksi dibatasi ke domain produksi. Catat tanggal dan nama pelaksana.
-- [ ] Key preview terpisah dari key produksi dan diisi lewat env Cloudflare Pages tingkat preview.
+- [ ] Key preview terpisah dari key produksi dan diisi lewat variabel GitHub Actions staging.
 - [ ] `PUBLIC_WEB3FORMS_KEY` terisi di env produksi; tidak ada key di repo (gitleaks bersih).
 - [ ] Kirim satu submission uji dari domain produksi: email masuk ke staf dan URL akhir `/terima-kasih/`.
 - [ ] Kirim satu submission dengan `botcheck` terisi: tidak ada email masuk.
@@ -52,4 +52,4 @@ Ulangi tiap bulan setelah rilis:
 - [ ] Katalog, testimoni berizin, dan logo mitra diisi dari penerbit; gambar berada di `src/assets/` (sumber ≤ 1 MB).
 - [ ] `PUBLIC_UMAMI_ID` terisi; dashboard Umami mencatat pageview, event `cta-ajukan`, dan kunjungan `/terima-kasih/`.
 - [ ] `curl -I` produksi menampilkan CSP, `X-Content-Type-Options: nosniff`, dan `Referrer-Policy`.
-- [ ] Rollback (tombol Rollback Cloudflare Pages atau `git revert`) sudah dicoba sekali; tanggal dicatat di README.
+- [ ] Rollback (deploy ulang commit/tag sebelumnya atau `git revert`) sudah dicoba sekali; tanggal dicatat di README.

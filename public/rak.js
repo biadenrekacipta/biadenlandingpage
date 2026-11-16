@@ -333,6 +333,7 @@ function init(rak) {
       p.el.style.transform = `translate3d(${x}px,${y}px,${o * 0.2 * H}px) rotateZ(${-4.5 * o}deg) rotateX(${tiltX * o}deg) rotateY(${-90 * o + tiltY * o}deg)`;
       p.el.style.zIndex = String(Math.round(100 - ar * 4));
       p.el.style.setProperty('--o', String(o));
+      p.el.toggleAttribute('data-open', o > 0.35);
     }
 
     if (play) {

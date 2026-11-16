@@ -107,6 +107,9 @@
 }
 .sp::after, .cv::after { content: ''; position: absolute; inset: 0; background: #000; opacity: var(--shade); pointer-events: none; }
 
+/* Sisi sampul pada kaset tertutup hanya terlihat sebagai irisan miring: sembunyikan isinya agar tidak bocor sebagai teks kecil. */
+.tape:not([data-open]) .cv > * { visibility: hidden; }
+
 /* Warna per jurnal (palet ink, cobalt, vermilion; krem = --sheet). */
 .j-bitechnos { background: var(--cobalt); fill: var(--cobalt); }
 .j-bedsocart { background: var(--vermilion); fill: var(--vermilion); }
@@ -201,7 +204,8 @@
   .panah-k { left: 6px; }
   .panah-b { right: 6px; }
   .tabs button { padding: 0 8px; }
-  .cv-atas, .sp-tag { display: none; }
+  .cv-atas { display: none; }
+  .sp-tag { writing-mode: vertical-rl; transform: rotate(180deg); padding: 5px 3px; letter-spacing: 0.05em; }
   .rak-cursor { display: none; }
   .rak[data-cursor], .rak[data-cursor] * { cursor: auto; }
   .d-tutup { left: 16px; top: 10px; }

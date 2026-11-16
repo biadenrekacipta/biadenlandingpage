@@ -5,6 +5,11 @@ Sumber: "Jawaban Tugas Klien - PT Biaden Reka Cipta.docx" (2 November 2026), dar
 ## Terisi
 | Berkas | Isian | Bagian dokumen |
 |---|---|---|
+| site.json | `tagline` (apa adanya, bahasa Inggris) | "ABOUT US", judul |
+| site.json | `ringkasan`, `profil` (ringkasan bahasa Indonesia dari teks About) | "ABOUT US", "Our Journals" |
+| site.json | `email` | A1, "Email PT" (sementara; klien menandainya "mungkin belum aman") |
+| site.json | `whatsapp` | A1, "Contact PT: 0859-3454-2215" ditulis `+62 859-3454-2215` agar tautan wa.me benar. SEMENTARA: dokumen tidak menyebut nomor ini WhatsApp |
+| faq.json `alur` | alur artikel jurnal saja | Manuscript Submission Process |
 | jurnal.json | `nama` tiga jurnal (singkatan + judul resmi) | A2, "Our Journals" |
 | jurnal.json | `bidang`, `ringkasan` | Narasi Focus & Scope (bagian B) |
 | jurnal.json | `issn: null` | B, "ISSN cetak/online": belum ada, menunggu terbitan pertama |
@@ -18,7 +23,8 @@ Sumber: "Jawaban Tugas Klien - PT Biaden Reka Cipta.docx" (2 November 2026), dar
 - jurnal.json: `sampul`, `sampulAlt`, `link` (alamat situs jurnal di dokumen masih "…………"; sampul "dapat dibuat setelah nama, volume/nomor, periode, desain disepakati"). `unggulan` tetap false.
 - faq.json: `alur`, `durasi`, `biaya`, `isbn`; bagian buku di `syarat`.
 - syarat.json `buku`.
-- site.json: seluruhnya (tagline, ringkasan, profil, lokasi, email, whatsapp, sameAs, SLA, klaimAngka).
+- site.json: `lokasi`, `sameAs`, SLA, `klaimAngka`. `profil` belum menyebut lokasi.
+- faq.json `alur`: bagian buku.
 - legalitas, alur, buku, mitra, testimoni: tidak ada data di dokumen.
 
 ## Kontradiksi dan catatan

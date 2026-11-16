@@ -1,5 +1,5 @@
 [
-  { "id": "alur", "pertanyaan": "Bagaimana alur menerbitkan naskah?", "jawaban": "[verify]" },
+  { "id": "alur", "pertanyaan": "Bagaimana alur menerbitkan naskah?", "jawaban": "Artikel jurnal: daftar akun di situs jurnal, siapkan naskah sesuai panduan penulis, kirim lewat sistem daring, skrining editorial, peer review independen, revisi bila diminta, lalu penerimaan akhir, copyediting, dan penerbitan. Pengiriman tidak menjamin penerimaan. Alur penerbitan buku [verify]." },
   { "id": "syarat", "pertanyaan": "Apa syarat naskah buku dan artikel jurnal?", "jawaban": "Untuk artikel jurnal: naskah orisinal dan tidak sedang dipertimbangkan jurnal lain, mengikuti panduan penulis dan template resmi, memuat abstrak dan kata kunci, serta tanpa identitas penulis di naskah utama. Naskah utama berformat DOCX. Syarat naskah buku [verify]." },
   { "id": "durasi", "pertanyaan": "Berapa lama proses penerbitan?", "jawaban": "[verify]" },
   { "id": "biaya", "pertanyaan": "Berapa biaya penerbitan?", "jawaban": "[verify]" },

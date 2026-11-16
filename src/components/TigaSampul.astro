@@ -1,0 +1,49 @@
+---
+import { getCollection } from 'astro:content';
+// Ilustrasi tiga sampul duotone. Nama dari jurnal.json (GR-11); bukan gambar penerbit.
+const jurnal = (await getCollection('jurnal')).map((e) => ({ id: e.id, singkat: e.data.nama.split(':')[0]!.trim(), urutan: e.data.urutan })).sort((a, b) => a.urutan - b.urutan).slice(0, 3);
+const posisi = [
+  { x: 40, y: 70, r: -7 },
+  { x: 190, y: 40, r: 2 },
+  { x: 340, y: 78, r: 8 },
+];
+const WARNA: Record<string, string> = { bitechnos: 'ts-cobalt', bedsocart: 'ts-vermilion', beconex: 'ts-ink' };
+---
+{jurnal.length > 0 && (
+<svg class="tiga" viewBox="0 0 520 440" role="img" aria-label={`Ilustrasi sampul ${jurnal.map((j) => j.singkat).join(', ')}`}>
+  <defs>
+    <pattern id="halftone" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="4" cy="4" r="1.6" class="dot" /></pattern>
+  </defs>
+  <circle cx="260" cy="230" r="190" class="blob" />
+  <rect x="0" y="360" width="520" height="80" fill="url(#halftone)" class="ht" />
+  {jurnal.map((j, i) => {
+    const p = posisi[i]!;
+    return (
+      <g transform={`translate(${p.x} ${p.y}) rotate(${p.r} 70 150)`}>
+        <rect x="6" y="8" width="140" height="300" class="ts-sh" />
+        <rect width="140" height="300" class={`ts-cv ${WARNA[j.id] ?? 'ts-ink'}`} />
+        <rect x="8" y="8" width="124" height="284" class="ts-fr" />
+        <text x="18" y="30" class="mini">BIADENREKACIPTA</text>
+        <circle cx="70" cy="140" r="34" class="tinta" />
+        <path d="M36 200h68M36 212h50" class="gr" />
+        <text x="18" y="268" class="judul">{j.singkat}</text>
+      </g>
+    );
+  })}
+</svg>
+)}
+<style>
+  .tiga { width: 100%; height: auto; max-width: 520px; display: block; }
+  .blob { fill: var(--sheet); }
+  .dot { fill: var(--ink); opacity: 0.2; }
+  .ht { opacity: 0.9; }
+  .ts-sh { fill: var(--ink); opacity: 0.18; }
+  .ts-cobalt { fill: var(--cobalt); }
+  .ts-vermilion { fill: var(--vermilion, #c8391f); }
+  .ts-ink { fill: var(--ink); }
+  .ts-fr { fill: none; stroke: var(--sheet); stroke-width: 1; opacity: 0.6; }
+  .mini { font: 600 8px var(--sans); letter-spacing: 0.14em; fill: var(--sheet); }
+  .tinta { fill: var(--sheet); opacity: 0.9; }
+  .gr { stroke: var(--sheet); stroke-width: 1.5; fill: none; }
+  .judul { font: 400 17px var(--serif); letter-spacing: 0.02em; fill: var(--sheet); }
+</style>

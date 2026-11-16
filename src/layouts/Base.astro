@@ -15,6 +15,7 @@ const umamiId = import.meta.env.PUBLIC_UMAMI_ID;
 <html lang="id">
   <head>
     <Head title={title} description={description} noindex={noindex} />
+    <script is:inline src="/halaman.js"></script>
     {umamiId && <script defer src="https://cloud.umami.is/script.js" data-website-id={umamiId}></script>}
   </head>
   <body>

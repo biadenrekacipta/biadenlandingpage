@@ -2,6 +2,7 @@
 import { getEntry, getCollection } from 'astro:content';
 import { legalitasTampil } from '../lib/visible';
 import Kontak from './Kontak.astro';
+import TigaSampul from './TigaSampul.astro';
 // FR-5, FR-7, FR-8: profil, kontak, dan angka klaim dari site.json.
 // BR-3: klaim hanya tampil bila sumber terisi (skema zod juga menggagalkan build tanpa sumber).
 const site = (await getEntry('site', 'site'))!.data;
@@ -11,13 +12,16 @@ const legal = legalitasTampil((await getCollection('legalitas')).map((e) => e.da
 if (legal.length === 0) console.warn('[BR-6] Profil: tidak ada legalitas terverifikasi, blok legalitas disembunyikan.');
 ---
 <section id="profil" aria-labelledby="profil-title">
-  <p class="lbl">Profil</p>
-  <h2 id="profil-title">Tentang {site.nama}</h2>
-  <p class="profil-lead">{site.profil}</p>
-  <div class="profil-kontak">
-    <p class="lbl">Kontak resmi</p>
-    <Kontak />
+  <div class="profil-teks">
+    <p class="lbl" data-rv>Profil</p>
+    <h2 id="profil-title" data-rv>Tentang {site.nama}</h2>
+    <p class="profil-lead" data-rv>{site.profil}</p>
+    <div class="profil-kontak" data-rv>
+      <p class="lbl">Kontak resmi</p>
+      <Kontak />
+    </div>
   </div>
+  <div class="profil-art" data-rv><TigaSampul /></div>
   {legal.length > 0 && (
     <div class="legal">
       <h3 class="lbl">Legalitas terverifikasi</h3>
@@ -50,6 +54,8 @@ if (legal.length === 0) console.warn('[BR-6] Profil: tidak ada legalitas terveri
   section { padding: 48px 0; border-top: 1px solid var(--rule); display: grid; gap: var(--space-2); }
   p { margin: 0; }
   h2 { margin: 0; font-weight: 400; font-size: clamp(28px, 4.4vw, 56px); line-height: 1.05; letter-spacing: -0.02em; }
+  .profil-teks { display: grid; gap: var(--space-2); align-content: start; }
+  .profil-art { align-self: center; }
   .profil-lead { max-width: 60ch; font-size: 19px; line-height: 1.5; }
   .profil-kontak { display: grid; gap: var(--space-1); }
   .legal { display: grid; gap: var(--space-1); }
@@ -64,7 +70,8 @@ if (legal.length === 0) console.warn('[BR-6] Profil: tidak ada legalitas terveri
   .klaim-nilai { font-size: 32px; line-height: 1.1; }
   .klaim-sumber { font-size: 15px; color: var(--muted); }
   @media (min-width: 768px) {
-    section { padding: 96px 0; }
+    section { padding: 96px 0; grid-template-columns: 1.1fr 0.9fr; column-gap: var(--space-4); }
+    .legal, .klaim { grid-column: 1 / -1; }
     .klaim { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
   }
 </style>

@@ -3,13 +3,13 @@ import type { Section } from '../lib/sections';
 interface Props {
   nama: string;
   sections: Section[];
+  jumlahJurnal?: number;
 }
-const { nama, sections } = Astro.props;
+const { nama, sections, jumlahJurnal = 0 } = Astro.props;
 ---
 <header class="nav">
   <div class="wrap nav-in">
-    <a class="nav-brand" href="/">{nama}</a>
-    <nav aria-label="Navigasi utama">
+    <nav aria-label="Navigasi utama" class="nav-kiri">
       {/* ponytail: dua daftar (inline di desktop, <details> di mobile) tanpa JS. Satu <details> yang dipaksa terbuka di desktop butuh ::details-content yang belum merata di browser. */}
       <ul class="nav-desktop">
         {sections.map((s) => <li><a class="nav-link lbl" href={`#${s.id}`}>{s.label}</a></li>)}
@@ -21,6 +21,11 @@ const { nama, sections } = Astro.props;
         </ul>
       </details>
     </nav>
+    <a class="nav-brand" href="/" aria-label={`${nama}, beranda`}>
+      <span class="nav-logo">{nama}</span>
+      <span class="nav-sub">Penerbit jurnal ilmiah</span>
+    </a>
+    <p class="nav-fakta lbl">{jumlahJurnal > 0 ? `${jumlahJurnal} jurnal · terbit Juni & Desember` : 'Terbit Juni & Desember'}</p>
   </div>
 </header>
 <style>
@@ -32,8 +37,12 @@ const { nama, sections } = Astro.props;
     background: var(--paper);
     border-bottom: 1px solid var(--rule);
   }
-  .nav-in { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
-  .nav-brand { font-size: 22px; letter-spacing: -0.01em; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
+  .nav-in { height: 100%; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: var(--space-2); }
+  .nav-kiri { justify-self: start; }
+  .nav-brand { display: grid; justify-items: center; gap: 5px; text-decoration: none; color: var(--cobalt); min-height: 44px; align-content: center; }
+  .nav-logo { font-size: 17px; letter-spacing: 0.04em; line-height: 1; }
+  .nav-sub { font-family: var(--sans); font-weight: 600; font-size: 9px; letter-spacing: 0.34em; padding-left: 0.34em; text-transform: uppercase; line-height: 1; }
+  .nav-fakta { display: none; margin: 0; justify-self: end; }
   ul { list-style: none; margin: 0; padding: 0; }
   .nav-desktop { display: none; gap: var(--space-1); }
   .nav-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; text-decoration: none; }
@@ -54,5 +63,9 @@ const { nama, sections } = Astro.props;
   @media (min-width: 768px) {
     .nav-desktop { display: flex; }
     .nav-mobile { display: none; }
+    .nav-logo { font-size: 22px; }
+  }
+  @media (min-width: 1100px) {
+    .nav-fakta { display: block; }
   }
 </style>

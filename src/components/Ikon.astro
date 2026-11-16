@@ -1,0 +1,60 @@
+---
+// Ikon duotone gaya cetak sablon: satu blok warna sedikit meleset dari garis tinta (ink, cobalt, vermilion).
+interface Props { nama: 'naskah' | 'skrining' | 'review' | 'keputusan' | 'terbit' | 'jurnal' | 'kalender' | 'etika' | 'cs'; }
+const { nama } = Astro.props;
+---
+<svg class="ikon" viewBox="0 0 56 56" width="56" height="56" aria-hidden="true" focusable="false">
+  {nama === 'naskah' && (<>
+    <rect class="a" x="14" y="10" width="26" height="34" />
+    <path class="l" d="M10 6h24l8 8v34H10zM34 6v8h8M17 24h18M17 31h18M17 38h12" />
+  </>)}
+  {nama === 'skrining' && (<>
+    <circle class="b" cx="26" cy="24" r="14" />
+    <circle class="l" cx="22" cy="20" r="14" />
+    <path class="l" d="M32 30l14 14" />
+  </>)}
+  {nama === 'review' && (<>
+    <circle class="a" cx="22" cy="28" r="14" />
+    <circle class="b" cx="36" cy="28" r="14" />
+    <circle class="l" cx="20" cy="26" r="14" />
+    <circle class="l" cx="34" cy="26" r="14" />
+  </>)}
+  {nama === 'keputusan' && (<>
+    <rect class="a" x="12" y="12" width="34" height="34" />
+    <rect class="l" x="8" y="8" width="34" height="34" />
+    <path class="l" d="M16 26l8 8 14-16" />
+  </>)}
+  {nama === 'terbit' && (<>
+    <path class="b" d="M10 14c8-3 14-2 20 2v32c-6-4-12-5-20-2zM30 16c6-4 12-5 20-2v32c-8-3-14-2-20 2z" />
+    <path class="l" d="M6 10c8-3 14-2 20 2v32c-6-4-12-5-20-2zM26 12c6-4 12-5 20-2v32c-8-3-14-2-20 2z" />
+  </>)}
+  {nama === 'jurnal' && (<>
+    <rect class="a" x="12" y="14" width="10" height="34" />
+    <rect class="b" x="26" y="10" width="10" height="38" />
+    <rect class="l" x="8" y="10" width="10" height="34" />
+    <rect class="l" x="22" y="6" width="10" height="38" />
+    <rect class="l" x="36" y="12" width="10" height="32" />
+  </>)}
+  {nama === 'kalender' && (<>
+    <rect class="a" x="12" y="16" width="36" height="32" />
+    <rect class="l" x="8" y="12" width="36" height="32" />
+    <path class="l" d="M16 8v8M36 8v8M8 22h36" />
+    <circle class="b" cx="19" cy="33" r="4" />
+    <circle class="b" cx="33" cy="33" r="4" />
+  </>)}
+  {nama === 'etika' && (<>
+    <circle class="b" cx="32" cy="32" r="18" />
+    <circle class="l" cx="28" cy="28" r="18" />
+    <path class="l" d="M19 28l7 7 12-14" />
+  </>)}
+  {nama === 'cs' && (<>
+    <path class="a" d="M12 14h38v26H30l-8 8v-8H12z" />
+    <path class="l" d="M8 10h38v26H26l-8 8v-8H8zM16 20h22M16 27h14" />
+  </>)}
+</svg>
+<style>
+  .ikon { display: block; width: 56px; height: 56px; }
+  .l { fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+  .a { fill: var(--cobalt); }
+  .b { fill: var(--vermilion, #c8391f); }
+</style>

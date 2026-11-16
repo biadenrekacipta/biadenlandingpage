@@ -9,9 +9,9 @@ else if (daftar.length < 5) console.warn(`[FR-28] FAQ: ${daftar.length} item (di
 ---
 {daftar.length > 0 && (
 <section id="faq" aria-labelledby="faq-title">
-  <p class="lbl">FAQ</p>
-  <h2 id="faq-title">Pertanyaan yang sering diajukan</h2>
-  <div class="faq-list">
+  <p class="lbl" data-rv>FAQ</p>
+  <h2 id="faq-title" data-rv>Pertanyaan yang sering diajukan</h2>
+  <div class="faq-list" data-rv>
     {daftar.map((f) => (
       <details>
         <summary>{f.pertanyaan}</summary>

@@ -1,6 +1,8 @@
 ---
 import { getCollection, getEntry } from 'astro:content';
 import Syarat from './Syarat.astro';
+import Ikon from './Ikon.astro';
+const IKON = ['naskah', 'skrining', 'review', 'keputusan', 'terbit'] as const;
 import { kontakLinks } from '../lib/kontak';
 // FR-9 (keputusan 2026-11-17): alur ringkas, tanpa durasi/biaya; detail biaya dan jadwal ditangani CS.
 const tahap = (await getCollection('alur')).map((e) => e.data).sort((a, b) => a.nomor - b.nomor);
@@ -8,19 +10,20 @@ const site = (await getEntry('site', 'site'))!.data;
 const { wa, mail } = kontakLinks(site, 'Halo, saya ingin menanyakan biaya dan jadwal penerbitan naskah.');
 ---
 <section id="alur" aria-labelledby="alur-title">
-  <p class="lbl">Alur Terbit</p>
-  <h2 id="alur-title">Dari naskah sampai terbit, kami temani</h2>
+  <p class="lbl" data-rv>Alur Terbit</p>
+  <h2 id="alur-title" data-rv>Dari naskah sampai terbit, kami temani</h2>
   <p class="alur-lead">Prosesnya jelas dalam {tahap.length} langkah. Anda fokus pada riset, kami mengawal sisanya.</p>
   <ol class="alur-list">
     {tahap.map((t) => (
-      <li class="alur-item">
+      <li class="alur-item" data-rv>
+        <Ikon nama={IKON[(t.nomor - 1) % IKON.length]!} />
         <span class="alur-no lbl" aria-hidden="true">{String(t.nomor).padStart(2, '0')}</span>
         <h3>{t.judul}</h3>
         <p class="alur-desc">{t.deskripsi}</p>
       </li>
     ))}
   </ol>
-  <div class="alur-cs">
+  <div class="alur-cs" data-rv>
     <p class="alur-cs-teks">Ingin tahu biaya dan jadwal untuk naskah Anda? Tim CS kami menjelaskannya langsung.</p>
     <div class="alur-cs-btn">
       {wa && <a class="btn lbl" href={wa} rel="noopener noreferrer">Tanya CS di WhatsApp</a>}

@@ -5,6 +5,9 @@ import Hero from '../components/Hero.astro';
 import Rak from '../components/Rak.astro';
 import Profil from '../components/Profil.astro';
 import Alur from '../components/Alur.astro';
+import Alasan from '../components/Alasan.astro';
+import Penutup from '../components/Penutup.astro';
+import Pemisah from '../components/Pemisah.astro';
 import Katalog from '../components/Katalog.astro';
 import Testimoni from '../components/Testimoni.astro';
 import Faq from '../components/Faq.astro';
@@ -57,18 +60,23 @@ const title = `${site.nama}: Penerbit Buku dan Jurnal Akademik`;
 const description = `Penerbit buku dan jurnal akademik ${site.nama}. Lihat profil, alur terbit, dan ajukan naskah Anda.`;
 ---
 <Base title={title} description={description}>
-  <Nav slot="header" nama={site.nama} sections={ada} />
+  <Nav slot="header" nama={site.nama} sections={ada} jumlahJurnal={(await getCollection('jurnal')).length} />
   <JsonLd data={ld} />
-  <div class="wrap">
-    <Hero />
-  </div>
-  <Rak />
-  <div class="wrap">
-    {tampil('profil') && <Profil />}
-    {tampil('alur') && <Alur />}
-    {tampil('katalog') && <Katalog />}
-    {tampil('testimoni') && <Testimoni />}
-    {tampil('faq') && <Faq />}
-    {tampil('ajukan') && <FormAjukan />}
+  <div class="beranda">
+    <div class="wrap hero-wrap">
+      <Hero />
+    </div>
+    <Rak />
+    <div class="wrap isi">
+      <Pemisah />
+      {tampil('profil') && <Profil />}
+      <Alasan />
+      {tampil('alur') && <Alur />}
+      {tampil('katalog') && <Katalog />}
+      {tampil('testimoni') && <Testimoni />}
+      {tampil('faq') && <Faq />}
+      <Penutup />
+      {tampil('ajukan') && <FormAjukan />}
+    </div>
   </div>
 </Base>

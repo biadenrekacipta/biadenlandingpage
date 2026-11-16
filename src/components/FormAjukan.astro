@@ -9,8 +9,8 @@ const waDigits = site.whatsapp.replace(/[\s()+-]/g, '');
 const waLink = /^\d{8,15}$/.test(waDigits) ? `https://wa.me/${waDigits}` : null;
 ---
 <section id="ajukan" aria-labelledby="ajukan-title">
-  <p class="lbl">Ajukan Naskah</p>
-  <h2 id="ajukan-title">Kirim naskah atau pertanyaan Anda</h2>
+  <p class="lbl" data-rv>Ajukan Naskah</p>
+  <h2 id="ajukan-title" data-rv>Kirim naskah atau pertanyaan Anda</h2>
   <p class="ajukan-lead">Isi form berikut. Naskah dikirim lewat tautan https, bukan unggahan berkas.</p>
   <div class="ajukan-grid">
     <form class="ajukan-form" action="/api/kirim/" method="POST">

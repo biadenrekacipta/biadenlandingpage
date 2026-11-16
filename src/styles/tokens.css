@@ -113,3 +113,30 @@ section[id], main[id] { scroll-margin-top: var(--header-h); }
     transition-delay: 0s !important;
   }
 }
+
+/* Reveal saat scroll: hanya mask slide/clip, tanpa fade opacity (halaman.js menambah html.rv-on). */
+html.rv-on [data-rv] {
+  clip-path: inset(0 0 100% 0);
+  transform: translateY(28px);
+  transition: clip-path 0.9s var(--ease), transform 0.9s var(--ease);
+}
+html.rv-on [data-rv][data-in] { clip-path: inset(-14px); transform: none; }
+html.rv-on [data-rv]:nth-child(2) { transition-delay: 0.07s; }
+html.rv-on [data-rv]:nth-child(3) { transition-delay: 0.14s; }
+html.rv-on [data-rv]:nth-child(4) { transition-delay: 0.21s; }
+html.rv-on [data-rv]:nth-child(5) { transition-delay: 0.28s; }
+
+/* Kursor cincin seluruh halaman (pointer:fine); rak punya kursor sendiri. */
+html.pg-cur, html.pg-cur * { cursor: none; }
+.pg-cursor { position: fixed; left: 0; top: 0; z-index: 100; width: 44px; height: 44px; margin: -22px 0 0 -22px; pointer-events: none; visibility: hidden; }
+.pc-ring { position: absolute; inset: 0; border: 1.5px solid var(--ink); border-radius: 50%; transition: transform 0.5s var(--ease); }
+.pc-dot { position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; background: var(--ink); transition: transform 0.4s var(--ease); }
+.pg-cursor[data-st='btn'] .pc-ring { transform: scale(0.6); }
+.pg-cursor[data-st='btn'] .pc-dot { transform: scale(0); }
+
+/* Beranda: h1 tetap pertama di DOM (SEO-6), tetapi rak tampil lebih dulu di layar (referensi: rak jadi pusat layar pertama). */
+.beranda { display: flex; flex-direction: column; }
+.beranda > * { width: 100%; }
+.beranda > .rak { order: 1; }
+.beranda > .hero-wrap { order: 2; }
+.beranda > .isi { order: 3; }

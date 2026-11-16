@@ -1,0 +1,65 @@
+---
+import { getCollection } from 'astro:content';
+import Ikon from './Ikon.astro';
+// Soft selling: hanya fakta dari sumber penerbit (GR-11). 3 = jumlah jurnal di jurnal.json;
+// 2 terbitan per tahun (Juni dan Desember) dan minimal 2 reviewer: "Jawaban Tugas Klien", 2 Nov 2026, sama dengan faq.json.
+const jumlahJurnal = (await getCollection('jurnal')).length;
+const angka = [
+  { n: String(jumlahJurnal), l: 'Jurnal ilmiah', k: 'Sains dan teknik, pendidikan dan sosial, bisnis dan ekonomi.' },
+  { n: '2×', l: 'Terbit setahun', k: 'Edisi Juni dan Desember.' },
+  { n: '2+', l: 'Reviewer independen', k: 'Setiap naskah dinilai minimal dua reviewer.' },
+];
+const poin = [
+  { ikon: 'jurnal', t: 'Tiga rumah untuk riset Anda', d: 'Pilih jurnal yang paling dekat dengan bidang Anda, dari teknik dan sains terapan sampai ekonomi dan humaniora.' },
+  { ikon: 'review', t: 'Penilaian yang adil', d: 'Double-blind peer review menjaga naskah dinilai dari isinya, bukan dari siapa penulisnya.' },
+  { ikon: 'etika', t: 'Etika dan hak cipta terjaga', d: 'Etika publikasi mengacu pada pedoman COPE, dan hak cipta naskah tetap pada penulis.' },
+  { ikon: 'cs', t: 'Ada yang mendampingi', d: 'Bingung memilih jurnal atau menyiapkan naskah? Tim CS kami siap menjawab lewat WhatsApp dan email.' },
+] as const;
+---
+<section class="alasan" aria-labelledby="alasan-title">
+  <p class="lbl" data-rv>Kenapa Biadenrekacipta</p>
+  <h2 id="alasan-title" data-rv>Terbit bersama kami, tanpa repot</h2>
+  <ul class="angka">
+    {angka.map((a) => (
+      <li class="angka-i" data-rv>
+        <span class="angka-n">{a.n}</span>
+        <span class="angka-l lbl">{a.l}</span>
+        <span class="angka-k">{a.k}</span>
+      </li>
+    ))}
+  </ul>
+  <ul class="poin">
+    {poin.map((p) => (
+      <li class="poin-i" data-rv>
+        <Ikon nama={p.ikon} />
+        <h3>{p.t}</h3>
+        <p>{p.d}</p>
+      </li>
+    ))}
+  </ul>
+</section>
+<style>
+  .alasan { padding: 48px 0; border-top: 1px solid var(--rule); display: grid; gap: var(--space-2); }
+  p { margin: 0; }
+  h2 { margin: 0; font-weight: 400; font-size: clamp(28px, 4.4vw, 56px); line-height: 1.05; letter-spacing: -0.02em; max-width: 18ch; }
+  ul { list-style: none; margin: 0; padding: 0; }
+  .angka { display: grid; gap: 0; margin-top: var(--space-2); border: 1px solid var(--rule); }
+  .angka-i { display: grid; gap: 6px; padding: var(--space-3); border-top: 1px solid var(--rule); align-content: start; }
+  .angka-i:first-child { border-top: 0; }
+  .angka-n { font-size: clamp(72px, 14vw, 132px); line-height: 0.9; letter-spacing: -0.04em; color: var(--cobalt); }
+  .angka-k { color: var(--muted); max-width: 26ch; }
+  .poin { display: grid; gap: var(--space-3); margin-top: var(--space-3); }
+  .poin-i { display: grid; gap: var(--space-1); align-content: start; }
+  .poin-i h3 { margin: var(--space-1) 0 0; font-weight: 400; font-size: 24px; line-height: 1.15; }
+  .poin-i p { color: var(--muted); max-width: 34ch; }
+  @media (min-width: 768px) {
+    .alasan { padding: 96px 0; }
+    .angka { grid-template-columns: repeat(3, 1fr); }
+    .angka-i { border-top: 0; border-left: 1px solid var(--rule); }
+    .angka-i:first-child { border-left: 0; }
+    .poin { grid-template-columns: repeat(2, 1fr); gap: var(--space-4) var(--space-3); }
+  }
+  @media (min-width: 1100px) {
+    .poin { grid-template-columns: repeat(4, 1fr); }
+  }
+</style>

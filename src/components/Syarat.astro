@@ -14,12 +14,13 @@ const sla = site.slaBalasanHariKerja;
 <div class="syarat">
   <div class="syarat-grup">
     {grup.map((g) => (
-      <div class="syarat-box">
+      <details class="syarat-box" data-rv>
+        <summary class="lbl">Lihat {g.judul.toLowerCase()}</summary>
         <h3>{g.judul}</h3>
         <ul>
           {g.butir.map((b) => <li>{b}</li>)}
         </ul>
-      </div>
+      </details>
     ))}
   </div>
   <div class="syarat-cta">
@@ -30,7 +31,10 @@ const sla = site.slaBalasanHariKerja;
 <style>
   .syarat { display: grid; gap: var(--space-3); margin-top: var(--space-3); }
   .syarat-grup { display: grid; gap: var(--space-3); }
-  .syarat-box { border-top: 1px solid var(--rule); padding-top: var(--space-2); display: grid; gap: var(--space-1); }
+  .syarat-box { border: 1px solid var(--rule); padding: 0 var(--space-3); }
+  .syarat-box[open] { padding-bottom: var(--space-3); }
+  .syarat-box summary { cursor: pointer; min-height: 56px; display: flex; align-items: center; }
+  .syarat-box h3, .syarat-box ul { margin-top: var(--space-1); }
   h3 { margin: 0; font-weight: 400; font-size: 26px; line-height: 1.15; }
   ul { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
   .syarat-cta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
@@ -48,6 +52,6 @@ const sla = site.slaBalasanHariKerja;
   }
   .btn:hover { background: var(--ink); border-color: var(--ink); }
   @media (min-width: 768px) {
-    .syarat-grup { grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+    .syarat-grup { grid-template-columns: 1fr 1fr; gap: var(--space-4); align-items: start; }
   }
 </style>

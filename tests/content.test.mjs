@@ -49,10 +49,12 @@ test('BR-10: tahun buku berstatus terbit tidak melebihi tahun berjalan', () => {
   for (const b of buku) if (b.status === 'terbit') assert.ok(b.tahun <= tahunIni, b.judul);
 });
 
-test('BR-11: setiap tahap alur punya durasi dan biaya', () => {
+// Keputusan 2026-11-17 (PRD): BR-11 dicabut; biaya dan durasi ditangani CS, tidak boleh ada di alur.json.
+test('Keputusan 2026-11-17: tahap alur hanya nomor, judul, deskripsi (tanpa durasi/biaya)', () => {
+  assert.ok(alur.length > 0);
   for (const a of alur) {
-    assert.ok(a.durasi.trim() !== '', `durasi tahap ${a.nomor}`);
-    assert.ok(a.biaya.trim() !== '', `biaya tahap ${a.nomor}`);
+    assert.ok(a.judul.trim() !== '' && a.deskripsi.trim() !== '', `tahap ${a.nomor}`);
+    for (const k of ['durasi', 'biaya', 'penanggungJawab', 'output']) assert.ok(!(k in a), `${k} tahap ${a.nomor}`);
   }
 });
 
@@ -87,11 +89,6 @@ test('SEC-9: fixture legalitas tidak terverifikasi atau bernilai kosong tidak ta
   assert.deepEqual(legalitasTampil(fx).map((i) => i.label), ['A']);
 });
 
-test('BR-11 / kelengkapan transparansi: 100% tahap alur punya durasi dan biaya', () => {
-  assert.ok(alur.length > 0);
-  const lengkap = alur.filter((a) => a.durasi.trim() !== '' && a.biaya.trim() !== '');
-  assert.equal(lengkap.length / alur.length, 1);
-});
 
 const item = (id, o = {}) => ({ id, unggulan: true, status: 'terbit', urutan: 1, tahun: 2020, ...o });
 

@@ -47,7 +47,7 @@ const ld = {
       url: origin,
       description: site.ringkasan,
       email: site.email,
-      address: site.lokasi,
+      ...(site.lokasi ? { address: site.lokasi } : {}),
       ...(site.sameAs.length ? { sameAs: site.sameAs } : {}),
     },
     { '@type': 'WebSite', '@id': `${origin}#website`, url: origin, name: site.nama, inLanguage: 'id', publisher: { '@id': orgId } },

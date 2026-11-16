@@ -1,5 +1,32 @@
 [
-  { "id": "bitechnos", "nama": "BITECHNOS: Journal of Applied Science, Engineering, and Digital Innovation", "issn": null, "bidang": "Sains terapan, teknik, dan inovasi digital", "ringkasan": "Riset sains terapan, teknik, teknologi, dan inovasi digital: informatika, AI, industri, energi terbarukan, IoT, hingga teknologi pertanian dan pangan.", "sampul": "[verify]", "sampulAlt": "[verify]", "link": "[verify]", "status": "terbit", "unggulan": false, "urutan": 1 },
-  { "id": "bedsocart", "nama": "BEDSOCART: Journal of Education, Social Sciences, and Humanities", "issn": null, "bidang": "Pendidikan, ilmu sosial, dan humaniora", "ringkasan": "Riset pendidikan, ilmu sosial, dan humaniora: kurikulum dan pembelajaran, teknologi pendidikan, komunikasi, kebijakan publik, bahasa, sastra, sejarah, dan budaya.", "sampul": "[verify]", "sampulAlt": "[verify]", "link": "[verify]", "status": "terbit", "unggulan": false, "urutan": 2 },
-  { "id": "beconex", "nama": "BECONEX: Journal of Business, Economics, and Management", "issn": null, "bidang": "Bisnis, ekonomi, dan manajemen", "ringkasan": "Riset empiris, konseptual, dan terapan bidang bisnis, ekonomi, dan manajemen: pemasaran, SDM, keuangan, akuntansi, ekonomi digital, kewirausahaan, dan UMKM.", "sampul": "[verify]", "sampulAlt": "[verify]", "link": "[verify]", "status": "terbit", "unggulan": false, "urutan": 3 }
+  {
+    "id": "bitechnos",
+    "nama": "BITECHNOS: Journal of Applied Science, Engineering, and Digital Innovation",
+    "issn": null,
+    "bidang": "Sains terapan, teknik, dan inovasi digital",
+    "ringkasan": "Riset sains terapan, teknik, teknologi, dan inovasi digital: informatika, AI, industri, energi terbarukan, IoT, hingga teknologi pertanian dan pangan.",
+    "status": "terbit",
+    "unggulan": false,
+    "urutan": 1
+  },
+  {
+    "id": "bedsocart",
+    "nama": "BEDSOCART: Journal of Education, Social Sciences, and Humanities",
+    "issn": null,
+    "bidang": "Pendidikan, ilmu sosial, dan humaniora",
+    "ringkasan": "Riset pendidikan, ilmu sosial, dan humaniora: kurikulum dan pembelajaran, teknologi pendidikan, komunikasi, kebijakan publik, bahasa, sastra, sejarah, dan budaya.",
+    "status": "terbit",
+    "unggulan": false,
+    "urutan": 2
+  },
+  {
+    "id": "beconex",
+    "nama": "BECONEX: Journal of Business, Economics, and Management",
+    "issn": null,
+    "bidang": "Bisnis, ekonomi, dan manajemen",
+    "ringkasan": "Riset empiris, konseptual, dan terapan bidang bisnis, ekonomi, dan manajemen: pemasaran, SDM, keuangan, akuntansi, ekonomi digital, kewirausahaan, dan UMKM.",
+    "status": "terbit",
+    "unggulan": false,
+    "urutan": 3
+  }
 ]

@@ -1,5 +1,4 @@
 [
-  { "id": "buku", "jenis": "buku", "butir": ["[verify]"] },
   {
     "id": "jurnal",
     "jenis": "jurnal",

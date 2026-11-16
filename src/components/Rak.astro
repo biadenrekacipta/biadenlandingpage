@@ -87,7 +87,7 @@ const cur = item[aktif]!;
       {item.map((j) => {
         const sub = bungkus(j.sub, 28);
         const bid = bungkus(j.bidang.toUpperCase(), 26);
-        const link = j.link.startsWith('https://') ? j.link : null; // "[verify]": tombol tidak dirender (GR-11)
+        const link = j.link?.startsWith('https://') ? j.link : null; // tanpa link: tombol tidak dirender (GR-11)
         return (
           <div class="d-item" data-id={j.id} hidden>
             <div class="d-teks">

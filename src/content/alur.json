@@ -1,5 +1,7 @@
 [
-  { "id": "1", "nomor": 1, "judul": "[verify] Tahap 1", "deskripsi": "[verify]", "penanggungJawab": "[verify]", "durasi": "[verify]", "biaya": "[verify]", "output": "[verify]" },
-  { "id": "2", "nomor": 2, "judul": "[verify] Tahap 2", "deskripsi": "[verify]", "penanggungJawab": "[verify]", "durasi": "[verify]", "biaya": "[verify]", "output": "[verify]" },
-  { "id": "3", "nomor": 3, "judul": "[verify] Tahap 3", "deskripsi": "[verify]", "penanggungJawab": "[verify]", "durasi": "[verify]", "biaya": "[verify]", "output": "[verify]" }
+  { "id": "1", "nomor": 1, "judul": "Kirim naskah", "deskripsi": "Daftar akun di situs jurnal yang dituju, lalu unggah naskah DOCX lewat sistem pengiriman daring." },
+  { "id": "2", "nomor": 2, "judul": "Skrining editorial dan cek plagiasi", "deskripsi": "Editor memeriksa kesesuaian naskah dengan ruang lingkup jurnal dan kemiripannya dengan karya lain." },
+  { "id": "3", "nomor": 3, "judul": "Peer review double-blind", "deskripsi": "Minimal dua reviewer independen menilai naskah tanpa mengetahui identitas Anda, dan sebaliknya." },
+  { "id": "4", "nomor": 4, "judul": "Keputusan dan revisi", "deskripsi": "Editor memutuskan terima, revisi minor, revisi mayor, atau tolak. Bila perlu, Anda merevisi dengan masukan reviewer." },
+  { "id": "5", "nomor": 5, "judul": "Copyediting dan terbit", "deskripsi": "Naskah yang diterima disunting bahasanya, lalu terbit di edisi Juni atau Desember." }
 ]

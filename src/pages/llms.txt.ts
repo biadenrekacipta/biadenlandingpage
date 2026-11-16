@@ -24,10 +24,10 @@ export const GET: APIRoute = async ({ site: base }) => {
   const origin = new URL('/', base).href;
 
   const L: string[] = [`# ${site.nama}`, '', `> ${site.ringkasan}`, '', '## Profil', '', site.profil, ''];
-  L.push('## Kontak', '', `- Email: ${site.email}`, `- WhatsApp: ${site.whatsapp}`, `- Lokasi: ${site.lokasi}`, '');
+  L.push('## Kontak', '', `- Email: ${site.email}`, `- WhatsApp: ${site.whatsapp}`, ...(site.lokasi ? [`- Lokasi: ${site.lokasi}`] : []), '');
   L.push('## Bagian situs', '', ...ada.map((s) => `- [${s.label}](${origin}#${s.id})`), `- [Kebijakan Privasi](${origin}kebijakan-privasi/)`, '');
   if (legal.length) L.push('## Legalitas terverifikasi', '', ...legal.map((l) => `- ${l.label}: ${l.nilai}`), '');
-  L.push(`## Alur terbit (${alur.length} tahap)`, '', ...alur.map((t) => `${t.nomor}. ${t.judul}: durasi ${t.durasi}; biaya ${t.biaya}`), '');
+  L.push(`## Alur terbit (${alur.length} tahap; biaya dan jadwal dijelaskan oleh CS)`, '', ...alur.map((t) => `${t.nomor}. ${t.judul}: ${t.deskripsi}`), '');
   if (buku.length) L.push('## Buku', '', ...buku.map((b) => `- [${b.judul}](${b.link}): ${b.penulis}, ${b.tahun}. ${b.ringkasan}`), '');
   if (jurnal.length) L.push('## Jurnal', '', ...jurnal.map((j) => `- [${j.nama}](${j.link}): ${j.bidang}. ${j.ringkasan}`), '');
   L.push(`Terakhir diperbarui: ${site.lastUpdated}`, '');

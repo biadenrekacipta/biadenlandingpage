@@ -5,7 +5,7 @@ import Kontak from '../components/Kontak.astro';
 import JsonLd from '../components/JsonLd.astro';
 import { formatTanggal } from '../lib/tanggal';
 // BR-16, SEC-6: isi kebijakan privasi. Keputusan t18: pengendali data = nama penerbit dari site.json, dasar pengolahan = persetujuan (checkbox).
-// Semua klausul hukum (UU PDP) ditandai [verify] sampai ditinjau pihak hukum (GR-11).
+// Klausul hukum (UU PDP) belum ditinjau pihak hukum: tidak ditulis di halaman (GR-11) dan tidak ada [verify] yang tampil (keputusan 2026-11-17). Tambahkan setelah ditinjau.
 const site = (await getEntry('site', 'site'))!.data;
 // FR-32: BreadcrumbList hanya di halaman ini (bukan di beranda). URL dari SITE_URL.
 const origin = new URL('/', Astro.site).href;
@@ -25,12 +25,12 @@ const ld = {
   <JsonLd data={ld} />
   <article class="wrap kp">
     <h1>Kebijakan Privasi</h1>
-    <p class="kp-lead">Halaman ini menjelaskan data yang Anda kirim lewat form di situs {site.nama} dan cara kami memakainya. <span class="verify">[verify] Seluruh teks ini perlu ditinjau pihak hukum terhadap UU No. 27 Tahun 2022 tentang Pelindungan Data Pribadi sebelum rilis.</span></p>
+    <p class="kp-lead">Halaman ini menjelaskan data yang Anda kirim lewat form di situs {site.nama} dan cara kami memakainya.</p>
 
     <section aria-labelledby="kp-pengendali">
       <h2 id="kp-pengendali">Pengendali data</h2>
-      <p>{site.nama} bertindak sebagai pengendali data untuk pengajuan yang masuk lewat situs ini. <span class="verify">[verify] Nama badan hukum pengendali data.</span></p>
-      <p>Dasar pengolahan: persetujuan Anda lewat kotak centang di form. <span class="verify">[verify] Dasar hukum pengolahan.</span></p>
+      <p>{site.nama} bertindak sebagai pengendali data untuk pengajuan yang masuk lewat situs ini.</p>
+      <p>Dasar pengolahan: persetujuan Anda lewat kotak centang di form.</p>
     </section>
 
     <section aria-labelledby="kp-data">
@@ -57,19 +57,17 @@ const ld = {
         <li><strong>Hostinger</strong> menyediakan hosting situs dan mailbox email penerbit. Kiriman form dikirim oleh server situs ke mailbox tersebut, sehingga data Anda diproses oleh layanan ini.</li>
         <li><strong>Umami</strong> menghitung kunjungan halaman tanpa cookie dan tanpa data pribadi (nama, email, atau isi form tidak dikirim ke Umami).</li>
       </ul>
-      <p><span class="verify">[verify] Lokasi pemrosesan data dan syarat transfer lintas negara oleh pihak ketiga.</span></p>
     </section>
 
     <section aria-labelledby="kp-retensi">
       <h2 id="kp-retensi">Retensi</h2>
-      <p>Data pengajuan di mailbox email staf disimpan 12 bulan, lalu dihapus. <span class="verify">[verify] Periode retensi.</span></p>
+      <p>Data pengajuan di mailbox email staf disimpan 12 bulan, lalu dihapus.</p>
     </section>
 
     <section aria-labelledby="kp-hak">
       <h2 id="kp-hak">Hak Anda dan kontak</h2>
       <p>Untuk meminta akses, koreksi, atau penghapusan data Anda, hubungi kami:</p>
       <Kontak />
-      <p><span class="verify">[verify] Hak subjek data dan tata cara permintaan sesuai UU PDP.</span></p>
     </section>
 
     <p class="lbl kp-tgl">Terakhir diperbarui: <time datetime={site.lastUpdated}>{formatTanggal(site.lastUpdated)}</time></p>
@@ -83,6 +81,5 @@ const ld = {
   section { border-top: 1px solid var(--rule); padding-top: var(--space-2); display: grid; gap: var(--space-1); }
   h2 { margin: 0; font-weight: 400; font-size: 26px; line-height: 1.15; }
   ul { padding-left: 1.2em; display: grid; gap: 6px; }
-  .verify { background: var(--sheet); border: 1px dashed var(--muted); padding: 0 4px; }
   @media (min-width: 768px) { .kp { padding-block: 96px; } }
 </style>

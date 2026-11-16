@@ -1,7 +1,7 @@
 ---
 import { getEntry, getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
-// FR-15, FR-16, BR-12: langkah berikutnya dari tahap nomor 2 alur.json; SLA hanya bila terisi. noindex, di luar sitemap.
+// FR-15, FR-16, BR-12: langkah berikutnya dari tahap nomor 2 alur.json (tanpa durasi, keputusan 2026-11-17); SLA hanya bila terisi. noindex, di luar sitemap.
 const site = (await getEntry('site', 'site'))!.data;
 const tahap2 = (await getCollection('alur')).map((e) => e.data).find((t) => t.nomor === 2);
 const sla = site.slaBalasanHariKerja;
@@ -18,7 +18,6 @@ const sla = site.slaBalasanHariKerja;
       <section class="tk-next" aria-labelledby="tk-next-title">
         <h2 id="tk-next-title">Langkah berikutnya: {tahap2.judul}</h2>
         <p>{tahap2.deskripsi}</p>
-        <p class="lbl">Durasi: {tahap2.durasi}</p>
       </section>
     )}
     {sla ? <p>Kami membalas dalam {sla} hari kerja.</p> : null}

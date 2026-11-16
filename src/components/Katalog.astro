@@ -28,7 +28,7 @@ const graph = [
     name: j.nama,
     ...(j.issn ? { issn: j.issn } : {}),
     description: j.ringkasan,
-    url: j.link,
+    ...(j.link ? { url: j.link } : {}),
   })),
 ];
 ---
@@ -63,13 +63,13 @@ const graph = [
       <ul class="katalog-grid">
         {jurnal.map((j) => (
           <li class="kartu kartu-jurnal">
-            <Gambar src={j.sampul} alt={j.sampulAlt} width={300} height={400} />
+            {j.sampul && j.sampulAlt && <Gambar src={j.sampul} alt={j.sampulAlt} width={300} height={400} />}
             <div class="kartu-isi">
               {j.status === 'segera-terbit' && <span class="lencana lbl">Segera terbit</span>}
               <h4>{j.nama}</h4>
               <p class="meta">{j.bidang}{j.issn ? ` · ISSN ${j.issn}` : ''}</p>
               <p>{j.ringkasan}</p>
-              <a class="tautan" href={j.link} target="_blank" rel="noopener noreferrer">Kunjungi jurnal<span class="sr"> {j.nama} (tab baru)</span></a>
+              {j.link && <a class="tautan" href={j.link} target="_blank" rel="noopener noreferrer">Kunjungi jurnal<span class="sr"> {j.nama} (tab baru)</span></a>}
             </div>
           </li>
         ))}

@@ -17,6 +17,16 @@ Keputusan teknis:
 
 Desain visual: mengikuti prompt referensi desain milik user. Prompt itu masuk repo di `docs/design-reference.md`. Agent tidak boleh mengarang warna, font, atau gaya sendiri (lihat [GR-12]).
 
+## Keputusan 2026-11-17 (menggantikan bagian lain yang bertentangan)
+
+Pemilik meminta landing ringkas, soft selling, dan lebih visual. Alasan: biaya dan jadwal tiap tahap belum final dan lebih cocok dijawab langsung oleh CS (WhatsApp/email) daripada dipajang sebagai angka di halaman.
+- [FR-9] (diganti) The system shall merender alur terbit ringkas dari `alur.json` berurutan: nomor, judul, deskripsi singkat. Durasi, biaya, penanggung jawab, dan output tidak ditampilkan; section ditutup CTA yang mengarahkan pertanyaan biaya dan jadwal ke CS.
+- [BR-11] (dicabut) Field `durasi` dan `biaya` di `alur.json` tidak lagi wajib dan dihapus dari skema. Pembeda "transparansi" diwujudkan lewat tahapan proses yang jelas, bukan angka.
+- Metrik "Kelengkapan transparansi" (bagian 5) tidak berlaku.
+- Teks `[verify]` tidak boleh tampil ke pengunjung di halaman mana pun. Field yang belum ada datanya (lokasi, sampul, link jurnal, legalitas, jawaban FAQ) disembunyikan atau dihapus dari data, bukan diisi karangan ([GR-11]).
+- ISSN, lisensi CC BY 4.0, dan dewan redaksi tidak ditampilkan sampai pemilik memfinalkan.
+- Visual: halaman memakai satu bahasa visual dengan `docs/design-reference.md` (lihat catatan di sana). Gambar buatan sendiri berupa SVG lokal.
+
 ## 2. Business Case & Go/No-Go
 
 Semua angka adalah estimasi. Tidak ada yang diberikan di brief, jadi semua `[verify]`.

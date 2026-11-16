@@ -434,3 +434,7 @@ User melonggarkan PRD: rak 3D boleh memakai **satu skrip eksternal `'self'`** se
 - Tanpa JS, tiga jurnal tampil sebagai deret statis dengan satu sampul terbuka (CSS). Tab, panah, dan tombol putar tersembunyi sampai skrip menandai `data-js` pada `.rak`.
 - Sampul dan punggung digambar tipografis dari `jurnal.json` (nama dan bidang). Sheet Higgsfield tidak dipakai. `--vermilion` (#c8391f) ditambahkan di `rak.css`: warna ada di deskripsi sampul referensi tetapi belum punya token; nilai dipilih agar teks krem punya kontras ≥4,5.
 - Tahap: 1 markup dan CSS statis, 2 mesin gerak `rak.js`, 3 sheet detail dan verifikasi (ketiganya selesai di branch `rak-vhs`).
+
+## Keputusan 2026-11-17
+
+Landing dibuat ringkas dan soft selling; biaya dan jadwal ke CS (lihat PRD, "Keputusan 2026-11-17"). Seluruh halaman dibuat satu bahasa visual dengan referensi: label `.lbl`/`.box`, Newsreader besar, aksen cobalt, grain, garis `--rule`, reveal hanya mask/clip/scale tanpa fade opacity. Ilustrasi baru berupa SVG lokal duotone (ink, cobalt, vermilion, cream), tanpa foto stok dan tanpa logo mitra.

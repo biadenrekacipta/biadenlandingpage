@@ -1,4 +1,1 @@
-[
-  { "id": "isbn", "label": "ISBN", "nilai": "[verify]", "terverifikasi": false, "tampilDiHero": false },
-  { "id": "asosiasi", "label": "Keanggotaan asosiasi", "nilai": "[verify]", "terverifikasi": false, "tampilDiHero": false }
-]
+[]

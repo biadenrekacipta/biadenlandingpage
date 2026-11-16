@@ -190,7 +190,7 @@ test('FR-7 / GEO-5: kontak di profil dan footer identik (satu sumber site.json)'
   assert.equal(kontak.length, 2, 'harus ada di profil dan footer');
   assert.equal(kontak[0], kontak[1]);
   const s = loadJson('site')[0];
-  for (const v of [s.email, s.whatsapp, s.lokasi]) assert.ok(kontak[0].includes(esc(v)), v);
+  for (const v of [s.email, s.whatsapp, s.lokasi].filter(Boolean)) assert.ok(kontak[0].includes(esc(v)), v);
 });
 
 test('FR-8 / BR-3: setiap klaim angka tampil bersama sumbernya', () => {
@@ -213,25 +213,23 @@ test('FR-6 / SEC-9: dist hanya memuat legalitas terverifikasi, link bukti pakai 
   for (const m of blok.matchAll(/<a [^>]*>/g)) assert.match(m[0], /rel="noopener noreferrer"/);
 });
 
-test('FR-9 / GEO-3: alur punya satu <li> per tahap, durasi dan biaya tiap tahap, kalimat pembuka benar', () => {
+test('FR-9 (2026-11-17): alur punya satu <li> per tahap tanpa durasi/biaya, CTA ke CS', () => {
   const html = readFileSync(join(dist, 'index.html'), 'utf8');
   const sec = /<section id="alur"[\s\S]*?<\/section>/.exec(html)?.[0];
   assert.ok(sec, 'section alur tidak ada');
   const alur = loadJson('alur');
   const items = sec.match(/<li class="alur-item"[\s\S]*?<\/li>/g) || [];
   assert.equal(items.length, alur.length);
-  for (const li of items) {
-    assert.match(li, /<dt[^>]*>Durasi<\/dt><dd[^>]*>[^<]+<\/dd>/);
-    assert.match(li, /<dt[^>]*>Biaya<\/dt><dd[^>]*>[^<]+<\/dd>/);
-  }
-  assert.ok(sec.includes(`Terbit lewat ${alur.length} tahap; durasi dan biaya tiap tahap tertulis di bawah.`));
+  for (const li of items) assert.ok(!/<dt[^>]*>(Durasi|Biaya)<\/dt>/.test(li));
+  assert.ok(sec.includes(`Prosesnya jelas dalam ${alur.length} langkah.`));
+  assert.match(sec, /<a [^>]*href="https:\/\/wa\.me\/\d+[^"]*"[^>]*>Tanya CS di WhatsApp/);
 });
 
-test('FR-10 / FR-11: dua grup syarat sebagai h3 + ul tanpa script, CTA penutup ke #ajukan', () => {
+test('FR-10 / FR-11: grup syarat (hanya yang berdata) sebagai h3 + ul tanpa script, CTA penutup ke #ajukan', () => {
   const html = readFileSync(join(dist, 'index.html'), 'utf8');
   const sec = /<section id="alur"[\s\S]*?<\/section>/.exec(html)?.[0];
   const syarat = /<div class="syarat"[\s\S]*<\/section>/.exec(sec)?.[0] ?? '';
-  assert.equal((syarat.match(/<h3[^>]*>[^<]+<\/h3>\s*<ul/g) || []).length, 2);
+  assert.equal((syarat.match(/<h3[^>]*>[^<]+<\/h3>\s*<ul/g) || []).length, new Set(loadJson('syarat').map((x) => x.jenis)).size);
   assert.ok(!/<script/.test(syarat));
   assert.match(syarat, /<a [^>]*class="btn lbl"[^>]*href="#ajukan"/);
 });
@@ -355,10 +353,22 @@ test('t18: kebijakan privasi punya satu h1, title <=60, description <=155', () =
   assert.ok(/<title>([^<]+)<\/title>/.exec(html)[1].length <= 60);
   assert.ok(/<meta name="description" content="([^"]+)"/.exec(html)[1].length <= 155);
 });
-test('t18: teks menyebut retensi 12 bulan, Hostinger, dan Umami; klausul hukum bertanda [verify]', () => {
+test('t18: teks menyebut retensi 12 bulan, Hostinger, dan Umami', () => {
   const html = kpHtml();
   assert.ok(html.includes('12 bulan') && html.includes('Hostinger') && !/web3forms/i.test(html) && html.includes('Umami'));
-  assert.ok(html.includes('[verify]'));
+});
+// Keputusan 2026-11-17: tidak ada placeholder yang tampil ke pengunjung di halaman mana pun.
+test('GR-11 / 2026-11-17: dist tidak memuat [verify] sama sekali', () => {
+  const daftar = [];
+  const jalan = (dir) => {
+    for (const n of readdirSync(dir, { withFileTypes: true })) {
+      const p = join(dir, n.name);
+      if (n.isDirectory()) jalan(p);
+      else if (/\.(html|txt|xml|json|js|css|svg)$/.test(n.name) && readFileSync(p, 'utf8').includes('[verify]')) daftar.push(p);
+    }
+  };
+  jalan(dist);
+  assert.deepEqual(daftar, []);
 });
 test('t18: footer dan form menaut ke /kebijakan-privasi/, halaman masuk sitemap', () => {
   const idx = readFileSync(join(dist, 'index.html'), 'utf8');
@@ -582,12 +592,12 @@ test('GEO-5 / FR-32: nama, email, lokasi, sameAs di hero/profil, footer, dan JSO
   const org = ldNodes(html).find((n) => n['@type'] === 'Organization');
   assert.equal(org.name, s.nama);
   assert.equal(org.email, s.email);
-  assert.equal(org.address, s.lokasi);
+  assert.equal(org.address, s.lokasi); // lokasi opsional: tanpa lokasi, address tidak ada
   assert.deepEqual(org.sameAs ?? [], s.sameAs);
   const web = ldNodes(html).find((n) => n['@type'] === 'WebSite');
   assert.equal(web.name, s.nama);
   const foot = html.slice(html.indexOf('<footer'));
-  for (const v of [s.nama, s.email, s.lokasi]) {
+  for (const v of [s.nama, s.email, s.lokasi].filter(Boolean)) {
     assert.ok(foot.includes(escHtml(v)), `footer tanpa "${v}"`);
     assert.ok(html.slice(0, html.indexOf('<footer')).includes(escHtml(v)), `konten (profil/kontak) tanpa "${v}"`);
   }
@@ -597,7 +607,7 @@ test('GEO-5 / FR-32: nama, email, lokasi, sameAs di hero/profil, footer, dan JSO
 test('FR-31 / GEO-5: llms.txt memuat nama, email, lokasi dari site.json dan tanpa legalitas terverifikasi:false', () => {
   const s = loadJson('site')[0];
   const t = readFileSync(join(dist, 'llms.txt'), 'utf8');
-  for (const v of [s.nama, s.email, s.lokasi]) assert.ok(t.includes(v), `llms.txt tanpa "${v}"`);
+  for (const v of [s.nama, s.email, s.lokasi].filter(Boolean)) assert.ok(t.includes(v), `llms.txt tanpa "${v}"`);
   assert.ok(t.startsWith(`# ${s.nama}`));
   for (const l of loadJson('legalitas')) {
     if (l.terverifikasi !== true || l.nilai.trim() === '') {
@@ -723,7 +733,7 @@ test('SEO-7: teks hero, alur, dan katalog ada di HTML hasil build (tanpa JS)', (
   assert.ok(teks.includes(site.ringkasan), 'ringkasan hero tidak ada di HTML');
   for (const t of readJson('alur')) {
     assert.ok(teks.includes(t.judul), `judul tahap alur "${t.judul}" tidak ada di HTML`);
-    assert.ok(teks.includes(t.durasi) && teks.includes(t.biaya), `durasi/biaya tahap "${t.judul}" tidak ada`);
+    assert.ok(teks.includes(t.deskripsi), `deskripsi tahap "${t.judul}" tidak ada`);
   }
   const buku = readJson('buku').filter((b) => b.unggulan && b.status !== 'diarsipkan');
   const jurnal = readJson('jurnal').filter((j) => j.unggulan && j.status !== 'diarsipkan');
